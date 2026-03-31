@@ -1,0 +1,97 @@
+# @codespar/mcp-vindi
+
+> MCP server for **Vindi** — recurring billing, subscriptions, and payment plans
+
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-vindi)](https://www.npmjs.com/package/@codespar/mcp-vindi)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+## Quick Start
+
+### Claude Desktop
+
+Add to `~/.config/claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "vindi": {
+      "command": "npx",
+      "args": ["-y", "@codespar/mcp-vindi"],
+      "env": {
+        "VINDI_API_KEY": "your-key"
+      }
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add vindi -- npx @codespar/mcp-vindi
+```
+
+### Cursor / VS Code
+
+Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "vindi": {
+      "command": "npx",
+      "args": ["-y", "@codespar/mcp-vindi"],
+      "env": {
+        "VINDI_API_KEY": "your-key"
+      }
+    }
+  }
+}
+```
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `create_subscription` | Create a recurring subscription in Vindi |
+| `get_subscription` | Get subscription details by ID |
+| `list_subscriptions` | List subscriptions with optional filters |
+| `create_bill` | Create a bill (charge) in Vindi |
+| `get_bill` | Get bill details by ID |
+| `list_bills` | List bills with optional filters |
+| `create_customer` | Create a customer in Vindi |
+| `get_customer` | Get customer details by ID |
+| `create_plan` | Create a billing plan in Vindi |
+| `list_plans` | List available billing plans |
+
+## Authentication
+
+Vindi uses Basic Auth with the API key as username and empty password.
+
+## Sandbox / Testing
+
+Vindi provides a sandbox via the dashboard. Use a sandbox API key for testing.
+
+### Get your credentials
+
+1. Go to [Vindi](https://app.vindi.com.br)
+2. Create an account
+3. Navigate to settings and generate your API key
+4. Set the `VINDI_API_KEY` environment variable
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VINDI_API_KEY` | Yes | API key from Vindi dashboard |
+
+## Links
+
+- [Vindi Website](https://vindi.com.br)
+- [Vindi Documentation](https://atendimento.vindi.com.br/hc/pt-br)
+- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [Landing Page](https://codespar.dev/mcp)
+
+## License
+
+MIT

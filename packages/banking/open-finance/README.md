@@ -1,0 +1,101 @@
+# @codespar/mcp-open-finance
+
+> MCP server for **Open Finance Brasil** — open banking standard for accounts, transactions, and consents
+
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-open-finance)](https://www.npmjs.com/package/@codespar/mcp-open-finance)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+## Quick Start
+
+### Claude Desktop
+
+Add to `~/.config/claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "open-finance": {
+      "command": "npx",
+      "args": ["-y", "@codespar/mcp-open-finance"],
+      "env": {
+        "OPEN_FINANCE_BASE_URL": "https://api.institution.com.br",
+        "OPEN_FINANCE_CLIENT_ID": "your-client-id",
+        "OPEN_FINANCE_CLIENT_SECRET": "your-client-secret"
+      }
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add open-finance -- npx @codespar/mcp-open-finance
+```
+
+### Cursor / VS Code
+
+Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "open-finance": {
+      "command": "npx",
+      "args": ["-y", "@codespar/mcp-open-finance"],
+      "env": {
+        "OPEN_FINANCE_BASE_URL": "https://api.institution.com.br",
+        "OPEN_FINANCE_CLIENT_ID": "your-client-id",
+        "OPEN_FINANCE_CLIENT_SECRET": "your-client-secret"
+      }
+    }
+  }
+}
+```
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `list_accounts` | List customer bank accounts via Open Finance |
+| `get_account_balance` | Get account balance via Open Finance |
+| `list_transactions` | List account transactions via Open Finance |
+| `get_consent` | Get consent details by ID |
+| `create_consent` | Create a new consent request for data access |
+| `list_credit_cards` | List credit card accounts via Open Finance |
+| `get_credit_card_transactions` | Get credit card transactions via Open Finance |
+| `list_investments` | List investment products via Open Finance |
+
+## Authentication
+
+Open Finance Brasil uses OAuth2 client credentials. Each financial institution provides its own base URL and credentials.
+
+## Sandbox / Testing
+
+Sandbox availability varies by institution. Contact your financial institution for Open Finance sandbox access.
+
+### Get your credentials
+
+1. Go to [Open Finance Brasil](https://openfinancebrasil.org.br)
+2. Register with a participating financial institution
+3. Obtain your OAuth2 client credentials
+4. Set the environment variables
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPEN_FINANCE_BASE_URL` | Yes | Institution API base URL |
+| `OPEN_FINANCE_CLIENT_ID` | Yes | OAuth2 client ID |
+| `OPEN_FINANCE_CLIENT_SECRET` | Yes | OAuth2 client secret |
+
+## Links
+
+- [Open Finance Brasil](https://openfinancebrasil.org.br)
+- [Open Finance Brasil Developer Portal](https://openfinancebrasil.atlassian.net)
+- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [Landing Page](https://codespar.dev/mcp)
+
+## License
+
+MIT
