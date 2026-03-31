@@ -88,6 +88,22 @@ Stark Bank provides a sandbox at `sandbox.api.starkbank.com`. Set `STARK_BANK_SA
 | `STARK_BANK_ACCESS_TOKEN` | Yes | API access token |
 | `STARK_BANK_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_payment_request` — Create a payment request
+- `get_payment_request` — Get payment request details
+- `list_payment_requests` — List payment requests with filters
+- `create_brcode_payment` — Create a BR Code (Pix) payment
+- `get_deposit` — Get deposit details
+
+### v0.3 (planned)
+- `create_workspace` — Create a new workspace
+- `tax_payment` — Create a tax payment (DAS, DARF, etc.)
+- `utility_payment` — Create a utility payment (boleto, bills)
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Stark Bank Website](https://starkbank.com)

@@ -89,6 +89,21 @@ Cielo provides a sandbox at `apisandbox.cieloecommerce.cielo.com.br`. Set `CIELO
 | `CIELO_MERCHANT_KEY` | Yes | Merchant Key from Cielo |
 | `CIELO_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_pix` — Create a Pix payment
+- `get_pix` — Get Pix payment details
+- `create_debit` — Create a debit card payment
+- `create_ewallet` — Create an e-wallet payment (Apple Pay, Google Pay)
+- `get_antifraud` — Get anti-fraud analysis for a transaction
+
+### v0.3 (planned)
+- `batch_captures` — Capture multiple pre-authorized transactions
+- `velocity_rules` — Configure velocity/anti-fraud rules
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Cielo Website](https://cielo.com.br)

@@ -88,6 +88,22 @@ Evolution API is self-hosted. Deploy your own instance using Docker for testing.
 | `EVOLUTION_API_URL` | Yes | Base URL of your Evolution API instance |
 | `EVOLUTION_API_KEY` | Yes | API key for authentication |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_group` — Create a WhatsApp group
+- `get_group_info` — Get group details and participants
+- `update_profile` — Update instance profile (name, photo, status)
+- `set_presence` — Set online/offline presence status
+- `get_chat_history` — Get full chat history with a contact
+
+### v0.3 (planned)
+- `bulk_send` — Send messages to multiple contacts
+- `template_messages` — Send WhatsApp Business template messages
+- `label_management` — Create, update, and assign labels to chats
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Evolution API Documentation](https://doc.evolution-api.com)

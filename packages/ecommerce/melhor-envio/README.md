@@ -86,6 +86,22 @@ Melhor Envio provides a sandbox at `sandbox.melhorenvio.com.br`. Set `MELHOR_ENV
 | `MELHOR_ENVIO_TOKEN` | Yes | Bearer token from Melhor Envio |
 | `MELHOR_ENVIO_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_store` — Create a store in Melhor Envio
+- `update_store` — Update store details
+- `get_receipt` — Get shipping receipt/label
+- `list_companies` — List available shipping companies
+- `get_invoice` — Get invoice for a shipment
+
+### v0.3 (planned)
+- `batch_shipments` — Create multiple shipments in a single request
+- `detailed_reports` — Generate detailed shipping reports
+- `webhook_management` — Register, list, and delete webhooks
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Melhor Envio Website](https://melhorenvio.com.br)

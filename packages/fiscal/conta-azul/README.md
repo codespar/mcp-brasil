@@ -85,6 +85,21 @@ Conta Azul provides a sandbox via the OAuth flow. Use sandbox credentials for te
 |----------|----------|-------------|
 | `CONTA_AZUL_ACCESS_TOKEN` | Yes | OAuth2 access token |
 
+## Roadmap
+
+### v0.2 (planned)
+- `list_bank_accounts` — List registered bank accounts
+- `create_bank_account` — Register a new bank account
+- `list_taxes` — List tax entries
+- `create_tax` — Create a tax entry
+- `get_cash_flow` — Get cash flow summary report
+
+### v0.3 (planned)
+- `reconciliation` — Bank reconciliation tools
+- `financial_reports` — Generate financial summary reports
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Conta Azul Website](https://contaazul.com)

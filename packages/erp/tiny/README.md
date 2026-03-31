@@ -85,6 +85,21 @@ Tiny provides test access via account registration.
 |----------|----------|-------------|
 | `TINY_API_TOKEN` | Yes | API token from Tiny ERP |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_product` — Create a new product
+- `update_product` — Update product details
+- `create_contact` — Create a contact (customer/supplier)
+- `update_contact` — Update contact details
+- `get_financial_summary` — Get financial summary report
+
+### v0.3 (planned)
+- `fiscal_reports` — Generate fiscal reports (NF-e, NFS-e)
+- `multi_company` — Multi-company management
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Tiny ERP Website](https://tiny.com.br)

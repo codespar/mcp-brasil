@@ -86,6 +86,22 @@ PagSeguro provides a sandbox at `sandbox.api.pagseguro.com`. Set `PAGSEGURO_SAND
 | `PAGSEGURO_TOKEN` | Yes | Bearer token from PagBank |
 | `PAGSEGURO_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_subscription` — Create a recurring subscription
+- `list_subscriptions` — List all subscriptions with filters
+- `get_notifications` — Get payment notifications/webhooks
+- `create_split` — Create split payments between receivers
+- `get_dispute` — Get dispute/chargeback details
+
+### v0.3 (planned)
+- `create_plan` — Create a subscription plan
+- `get_installments` — Get installment options for a payment
+- `batch_refunds` — Process multiple refunds in a single request
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [PagBank Website](https://pagseguro.uol.com.br)

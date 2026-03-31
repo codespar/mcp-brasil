@@ -84,6 +84,21 @@ Correios provides a homologation environment for testing. Contact Correios for h
 | `CORREIOS_USER` | Yes | Correios API username |
 | `CORREIOS_TOKEN` | Yes | Correios API token |
 
+## Roadmap
+
+### v0.2 (planned)
+- `list_postal_codes` — List postal codes for a region
+- `get_postal_code_range` — Get postal code range for a city
+- `create_collection` — Schedule a package collection
+- `get_collection` — Get collection request details
+- `create_reverse` — Create a reverse logistics (return) request
+
+### v0.3 (planned)
+- `batch_tracking` — Track multiple packages in a single request
+- `international_shipping` — Calculate international shipping rates
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Correios Website](https://correios.com.br)

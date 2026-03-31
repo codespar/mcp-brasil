@@ -74,6 +74,21 @@ No credentials needed. Just install and use.
 
 No environment variables required.
 
+## Roadmap
+
+### v0.2 (planned)
+- `get_pix_participants` — Get list of Pix participant institutions
+- `get_domain_info` — Get domain registration info
+- `get_vehicle_info` — Get vehicle info by license plate (FIPE)
+- `get_ibge_municipalities` — List municipalities by state (IBGE)
+- `get_tax_rates` — Get current tax rates (Selic, CDI, IPCA)
+
+### v0.3 (planned)
+- `get_cvm_funds` — Get investment fund data from CVM
+- `get_election_results` — Get election results by region
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [BrasilAPI Website](https://brasilapi.com.br)

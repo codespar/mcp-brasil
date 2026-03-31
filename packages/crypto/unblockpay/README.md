@@ -85,6 +85,21 @@ UnblockPay provides a sandbox via the developer portal.
 |----------|----------|-------------|
 | `UNBLOCKPAY_API_KEY` | Yes | API key from UnblockPay |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_payment_link` — Create a payment link
+- `get_payment_link` — Get payment link details
+- `list_payment_links` — List all payment links
+- `create_batch_transfer` — Create a batch crypto transfer
+- `get_supported_currencies` — List supported cryptocurrencies
+
+### v0.3 (planned)
+- `multi_currency_wallet` — Multi-currency wallet management
+- `compliance_reports` — Generate compliance/AML reports
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [UnblockPay Website](https://unblockpay.com)

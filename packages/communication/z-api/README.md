@@ -88,6 +88,22 @@ Z-API offers a free trial for testing. Create an account to get started.
 | `ZAPI_INSTANCE_ID` | Yes | Z-API instance ID |
 | `ZAPI_TOKEN` | Yes | Z-API instance token |
 
+## Roadmap
+
+### v0.2 (planned)
+- `send_sticker` — Send a sticker message via WhatsApp
+- `send_reaction` — Send a reaction to a message
+- `get_chat_history` — Get full chat history with a contact
+- `update_group_settings` — Update group name, description, settings
+- `leave_group` — Leave a WhatsApp group
+
+### v0.3 (planned)
+- `bulk_messaging` — Send messages to multiple contacts
+- `template_management` — Create and manage message templates
+- `catalog_products` — Manage WhatsApp Business catalog products
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Z-API Website](https://z-api.io)

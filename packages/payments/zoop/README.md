@@ -88,6 +88,22 @@ Zoop provides a sandbox environment accessible via the dashboard.
 | `ZOOP_API_KEY` | Yes | API key from Zoop dashboard |
 | `ZOOP_MARKETPLACE_ID` | Yes | Marketplace ID |
 
+## Roadmap
+
+### v0.2 (planned)
+- `get_dispute` — Get dispute details by ID
+- `respond_dispute` — Respond to a dispute with evidence
+- `list_plans` — List all subscription plans
+- `update_subscription` — Update a subscription's details
+- `cancel_subscription` — Cancel an active subscription
+
+### v0.3 (planned)
+- `batch_transfers` — Process multiple transfers in a single request
+- `detailed_reports` — Generate detailed financial reports
+- `webhook_management` — Register, list, and delete webhooks
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Zoop Website](https://zoop.com.br)

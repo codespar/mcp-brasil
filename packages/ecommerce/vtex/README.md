@@ -91,6 +91,21 @@ VTEX provides sandbox access via partner accounts. Contact VTEX for developer ac
 | `VTEX_APP_KEY` | Yes | API app key |
 | `VTEX_APP_TOKEN` | Yes | API app token |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_product` — Create a new product
+- `update_product` — Update product details
+- `create_sku` — Create a SKU for a product
+- `create_category` — Create a product category
+- `list_categories` — List all product categories
+
+### v0.3 (planned)
+- `checkout_management` — Manage checkout cart and order form
+- `marketplace_integration` — Marketplace seller and offer management
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [VTEX Website](https://vtex.com)

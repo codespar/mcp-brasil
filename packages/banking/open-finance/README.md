@@ -89,6 +89,21 @@ Sandbox availability varies by institution. Contact your financial institution f
 | `OPEN_FINANCE_CLIENT_ID` | Yes | OAuth2 client ID |
 | `OPEN_FINANCE_CLIENT_SECRET` | Yes | OAuth2 client secret |
 
+## Roadmap
+
+### v0.2 (planned)
+- `revoke_consent` — Revoke a data sharing consent
+- `list_payments` — List initiated payments
+- `create_payment_consent` — Create a payment initiation consent
+- `initiate_payment` — Initiate a payment via Open Finance
+- `get_payment_status` — Get payment initiation status
+
+### v0.3 (planned)
+- `insurance_products` — List insurance products from institutions
+- `pension_products` — List pension products from institutions
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Open Finance Brasil](https://openfinancebrasil.org.br)

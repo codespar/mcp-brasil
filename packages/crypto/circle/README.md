@@ -85,6 +85,21 @@ Circle provides a sandbox at `api-sandbox.circle.com`. Use a sandbox API key for
 |----------|----------|-------------|
 | `CIRCLE_API_KEY` | Yes | API key from Circle |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_card_payment` — Create a card payment
+- `create_wire_payment` — Create a wire transfer payment
+- `create_ach_payment` — Create an ACH payment
+- `get_settlement` — Get settlement details
+- `list_settlements` — List settlements with filters
+
+### v0.3 (planned)
+- `smart_contract_calls` — Execute smart contract calls
+- `cross_chain_transfers` — Transfer assets across blockchains
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Circle Website](https://circle.com)

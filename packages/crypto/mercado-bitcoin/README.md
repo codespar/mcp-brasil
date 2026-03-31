@@ -88,6 +88,21 @@ Mercado Bitcoin provides a sandbox via the dashboard for testing.
 | `MB_API_KEY` | Yes | API key from Mercado Bitcoin |
 | `MB_API_SECRET` | Yes | API secret from Mercado Bitcoin |
 
+## Roadmap
+
+### v0.2 (planned)
+- `get_account_info` — Get account information and limits
+- `list_currencies` — List available cryptocurrencies
+- `get_order_history` — Get order history with filters
+- `create_stop_order` — Create a stop-limit order
+- `get_fees` — Get trading fees for an account
+
+### v0.3 (planned)
+- `margin_trading` — Margin trading operations
+- `lending` — Crypto lending operations
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Mercado Bitcoin Website](https://www.mercadobitcoin.com.br)

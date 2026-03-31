@@ -85,6 +85,21 @@ Bling provides a sandbox via the OAuth flow. Use test credentials for developmen
 |----------|----------|-------------|
 | `BLING_ACCESS_TOKEN` | Yes | OAuth2 access token |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_category` — Create a product category
+- `list_categories` — List all product categories
+- `create_deposit` — Create a stock deposit
+- `list_deposits` — List stock deposits
+- `create_purchase_order` — Create a purchase order
+
+### v0.3 (planned)
+- `production_management` — Manage production orders
+- `multi_store` — Multi-store inventory management
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Bling Website](https://bling.com.br)

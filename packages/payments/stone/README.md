@@ -86,6 +86,21 @@ Stone provides a sandbox via the developer portal.
 | `STONE_CLIENT_ID` | Yes | OAuth2 client ID |
 | `STONE_CLIENT_SECRET` | Yes | OAuth2 client secret |
 
+## Roadmap
+
+### v0.2 (planned)
+- `list_pix_keys` — List registered Pix keys
+- `create_boleto` — Create a boleto payment
+- `get_boleto` — Get boleto details
+- `create_scheduled_payment` — Create a scheduled payment
+- `list_webhooks` — List registered webhooks
+
+### v0.3 (planned)
+- `batch_transfers` — Process multiple transfers in a single request
+- `detailed_statements` — Generate detailed account statements
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Stone Website](https://stone.com.br)

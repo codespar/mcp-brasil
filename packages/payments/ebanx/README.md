@@ -85,6 +85,20 @@ EBANX provides a sandbox at `sandbox.ebanx.com`. Set `EBANX_SANDBOX=true` to use
 | `EBANX_INTEGRATION_KEY` | Yes | Integration key from EBANX dashboard |
 | `EBANX_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_subscription` — Create a recurring subscription
+- `cancel_payment` — Cancel a pending payment
+- `get_merchant_info` — Get merchant account information
+- `create_split` — Create split payment rules
+
+### v0.3 (planned)
+- `batch_payouts` — Process multiple payouts in a single request
+- `detailed_reports` — Generate detailed financial reports
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [EBANX Website](https://ebanx.com)

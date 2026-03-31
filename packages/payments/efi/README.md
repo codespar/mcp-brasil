@@ -89,6 +89,21 @@ EFI provides a sandbox at `pix-h.api.efipay.com.br`. Set `EFI_SANDBOX=true` to u
 | `EFI_CLIENT_SECRET` | Yes | OAuth2 client secret |
 | `EFI_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_devolucao` — Create a Pix refund (devolucao)
+- `get_devolucao` — Get Pix refund details
+- `list_locations` — List Pix payload locations
+- `create_webhook` — Register a webhook for Pix notifications
+- `update_cob` — Update an existing Pix charge
+
+### v0.3 (planned)
+- `batch_charges` — Create multiple charges in a single request
+- `split_payments` — Configure split payment rules
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [EFI Pay Website](https://efipay.com.br)

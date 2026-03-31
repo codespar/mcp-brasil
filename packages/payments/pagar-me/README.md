@@ -85,6 +85,22 @@ Pagar.me provides test mode via the dashboard. Use a test-mode API key to avoid 
 |----------|----------|-------------|
 | `PAGARME_API_KEY` | Yes | Secret key (sk_xxx) from Pagar.me dashboard |
 
+## Roadmap
+
+### v0.2 (planned)
+- `list_charges` — List charges with filters
+- `create_plan` — Create a subscription plan
+- `create_subscription` — Create a recurring subscription
+- `get_payables` — Get receivables/payables details
+- `create_anticipation` — Request anticipation of receivables
+
+### v0.3 (planned)
+- `batch_charges` — Create multiple charges in a single request
+- `get_postback` — Get postback/webhook details
+- `webhook_management` — Register, list, and delete webhooks
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Pagar.me Website](https://pagar.me)

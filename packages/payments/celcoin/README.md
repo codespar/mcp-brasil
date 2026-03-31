@@ -89,6 +89,21 @@ Celcoin provides a sandbox at `sandbox-api.celcoin.com.br`. Set `CELCOIN_SANDBOX
 | `CELCOIN_CLIENT_SECRET` | Yes | OAuth2 client secret |
 | `CELCOIN_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `get_pix_key` — Get Pix key details (DICT lookup)
+- `create_bill_payment` — Create a bill/utility payment
+- `get_bill_payment` — Get bill payment details
+- `create_scheduled_transfer` — Create a scheduled transfer
+- `list_providers` — List available service providers
+
+### v0.3 (planned)
+- `batch_topups` — Process multiple mobile top-ups
+- `detailed_reports` — Generate detailed transaction reports
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Celcoin Website](https://celcoin.com.br)

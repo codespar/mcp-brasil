@@ -83,6 +83,21 @@ RD Station provides an OAuth sandbox for testing. Use sandbox credentials during
 |----------|----------|-------------|
 | `RD_STATION_TOKEN` | Yes | Bearer token from RD Station |
 
+## Roadmap
+
+### v0.2 (planned)
+- `list_deals` — List deals in the CRM pipeline
+- `create_deal` — Create a new deal
+- `update_deal` — Update deal details or stage
+- `list_activities` — List activities for a contact or deal
+- `create_task` — Create a task assigned to a user
+
+### v0.3 (planned)
+- `custom_fields` — Manage custom fields for contacts and deals
+- `automation_triggers` — Trigger marketing automation flows
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [RD Station Website](https://rdstation.com)

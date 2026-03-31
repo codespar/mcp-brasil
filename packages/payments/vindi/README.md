@@ -85,6 +85,21 @@ Vindi provides a sandbox via the dashboard. Use a sandbox API key for testing.
 |----------|----------|-------------|
 | `VINDI_API_KEY` | Yes | API key from Vindi dashboard |
 
+## Roadmap
+
+### v0.2 (planned)
+- `cancel_subscription` — Cancel an active subscription
+- `update_subscription` — Update subscription details
+- `list_payment_profiles` — List payment profiles for a customer
+- `create_discount` — Create a discount for a subscription
+- `get_charges` — Get charge details with filters
+
+### v0.3 (planned)
+- `batch_bills` — Create multiple bills in a single request
+- `financial_reports` — Generate financial summary reports
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Vindi Website](https://vindi.com.br)

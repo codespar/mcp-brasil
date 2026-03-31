@@ -88,6 +88,22 @@ Asaas provides a full sandbox environment at `sandbox.asaas.com`. Set `ASAAS_SAN
 | `ASAAS_API_KEY` | Yes | API key from Asaas dashboard |
 | `ASAAS_SANDBOX` | No | Set to `"true"` for sandbox mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `list_subscriptions` — List all recurring subscriptions with filters
+- `cancel_subscription` — Cancel an active subscription
+- `get_webhook_events` — List webhook events for debugging integrations
+- `create_subaccount` — Create a subaccount for marketplace splits
+- `get_installments` — Get installment details for a payment
+
+### v0.3 (planned)
+- `create_anticipation` — Request anticipation of receivables
+- `get_fiscal_info` — Get fiscal/tax information for payments
+- `batch_payments` — Create multiple payments in a single request
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Asaas Website](https://www.asaas.com)

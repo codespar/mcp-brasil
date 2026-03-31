@@ -88,6 +88,22 @@ Nuvem Fiscal supports a homologation environment (ambiente=2) for testing fiscal
 | `NUVEM_FISCAL_CLIENT_ID` | Yes | OAuth2 client ID |
 | `NUVEM_FISCAL_CLIENT_SECRET` | Yes | OAuth2 client secret |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_cte` — Create a CT-e (electronic transport document)
+- `get_cte` — Get CT-e details by ID
+- `cancel_cte` — Cancel an issued CT-e
+- `create_mdfe` — Create an MDF-e (electronic freight manifest)
+- `get_nfe_events` — Get events for an NF-e (cancellation, correction, etc.)
+
+### v0.3 (planned)
+- `batch_nfe` — Create multiple NF-e in a single request
+- `get_nfe_danfe` — Get DANFE PDF for an NF-e
+- `manifest_recipient` — Manifest recipient awareness of an NF-e
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Nuvem Fiscal Website](https://nuvemfiscal.com.br)

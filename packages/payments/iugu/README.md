@@ -84,6 +84,22 @@ iugu provides test mode via the dashboard. Use a test-mode API token to avoid re
 | `IUGU_API_TOKEN` | Yes | API token from iugu dashboard |
 | `IUGU_SANDBOX` | No | Set to `"true"` for test mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_plan` — Create a subscription plan
+- `list_plans` — List all subscription plans
+- `create_marketplace_account` — Create a marketplace sub-account
+- `get_financial_report` — Get financial summary report
+- `list_payment_methods` — List available payment methods for a customer
+
+### v0.3 (planned)
+- `create_split` — Create split payment rules
+- `get_transfers` — List marketplace transfers
+- `batch_invoices` — Create multiple invoices in a single request
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [iugu Website](https://iugu.com)

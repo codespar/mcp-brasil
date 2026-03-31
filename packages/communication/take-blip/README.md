@@ -86,6 +86,21 @@ Take Blip offers a free account for testing. Create a bot to get started.
 | `TAKE_BLIP_BOT_ID` | Yes | Bot identifier |
 | `TAKE_BLIP_ACCESS_KEY` | Yes | Bot access key |
 
+## Roadmap
+
+### v0.2 (planned)
+- `update_contact` — Update contact information
+- `delete_contact` — Delete a contact
+- `get_message_history` — Get message history for a contact
+- `create_scheduled_message` — Schedule a message for later delivery
+- `get_team_metrics` — Get team performance metrics
+
+### v0.3 (planned)
+- `flow_management` — Create and manage conversational flows
+- `ai_model_integration` — Integrate custom AI models into flows
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Take Blip Website](https://blip.ai)

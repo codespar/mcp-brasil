@@ -92,6 +92,21 @@ Sandbox availability varies by PSP (payment service provider). Contact your bank
 | `PIX_CLIENT_SECRET` | Yes | OAuth2 client secret |
 | `PIX_CERT_PATH` | No | Path to mTLS certificate (.pem or .p12) |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_location` — Create a Pix location (payload URL)
+- `get_location` — Get details of a Pix location
+- `list_locations` — List all Pix locations
+- `create_devolucao` — Create a Pix refund (devolucao)
+- `get_devolucao` — Get Pix refund details
+
+### v0.3 (planned)
+- `create_cobv_batch` — Create a batch of due-date Pix charges (cobv)
+- `webhook_management` — Register, get, and delete Pix webhooks
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Pix API Specification (BCB)](https://bacen.github.io/pix-api/)

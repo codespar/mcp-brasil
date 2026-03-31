@@ -88,6 +88,21 @@ Omie provides a sandbox via app registration. Create an app to get test credenti
 | `OMIE_APP_KEY` | Yes | Omie app key |
 | `OMIE_APP_SECRET` | Yes | Omie app secret |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_service_order` — Create a service order
+- `list_service_orders` — List service orders with filters
+- `create_purchase_order` — Create a purchase order
+- `list_purchase_orders` — List purchase orders with filters
+- `get_bank_accounts` — Get registered bank accounts
+
+### v0.3 (planned)
+- `create_production_order` — Create a production order
+- `accounting_entries` — Create and list accounting entries
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Omie Website](https://omie.com.br)

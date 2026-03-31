@@ -88,6 +88,21 @@ Bitso provides a developer sandbox via the developer account.
 | `BITSO_API_KEY` | Yes | API key from Bitso |
 | `BITSO_API_SECRET` | Yes | API secret for HMAC signature |
 
+## Roadmap
+
+### v0.2 (planned)
+- `get_account_status` — Get account verification status
+- `list_currencies` — List available cryptocurrencies
+- `create_spei_withdrawal` — Create a SPEI (Mexican bank) withdrawal
+- `get_phone_number` — Get phone number associated with account
+- `list_open_orders` — List all open orders
+
+### v0.3 (planned)
+- `recurring_orders` — Create and manage recurring buy/sell orders
+- `advanced_orders` — Advanced order types (OCO, trailing stop)
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Bitso Website](https://bitso.com)

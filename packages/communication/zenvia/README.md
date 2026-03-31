@@ -83,6 +83,21 @@ Zenvia provides a sandbox via the dashboard for testing messages.
 |----------|----------|-------------|
 | `ZENVIA_API_TOKEN` | Yes | API token from Zenvia dashboard |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_contact_list` — Create a contact list for campaigns
+- `send_batch` — Send batch messages to a contact list
+- `get_report` — Get message delivery reports
+- `create_flow` — Create a conversational flow
+- `list_templates` — List approved message templates
+
+### v0.3 (planned)
+- `chatbot_integration` — Integrate with Zenvia chatbot builder
+- `analytics_dashboard` — Get channel analytics and metrics
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Zenvia Website](https://zenvia.com)

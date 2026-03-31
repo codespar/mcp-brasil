@@ -86,6 +86,21 @@ Focus NFe provides a homologation environment at `homologacao.focusnfe.com.br`. 
 | `FOCUS_NFE_TOKEN` | Yes | API token from Focus NFe |
 | `FOCUS_NFE_SANDBOX` | No | Set to `"true"` for homologation mode |
 
+## Roadmap
+
+### v0.2 (planned)
+- `create_cte` — Create a CT-e (electronic transport document)
+- `get_cte` — Get CT-e details by ID
+- `correction_letter` — Issue a correction letter for an NF-e
+- `manifest_recipient` — Manifest recipient awareness of an NF-e
+- `get_nfse_pdf` — Get PDF for a service invoice (NFS-e)
+
+### v0.3 (planned)
+- `batch_nfe` — Create multiple NF-e in a single request
+- `batch_nfse` — Create multiple NFS-e in a single request
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+
 ## Links
 
 - [Focus NFe Website](https://focusnfe.com.br)
