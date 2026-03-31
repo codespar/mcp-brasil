@@ -1,0 +1,246 @@
+#!/usr/bin/env node
+
+/**
+ * MCP Server for Bitso — Latin American cryptocurrency exchange.
+ *
+ * Tools:
+ * - get_ticker: Get ticker data for a trading pair
+ * - list_orderbook: Get order book for a trading pair
+ * - create_order: Create a buy or sell order
+ * - get_order: Get order details by ID
+ * - cancel_order: Cancel an open order
+ * - list_orders: List orders with filters
+ * - get_balances: Get account balances
+ * - list_trades: List executed trades
+ * - list_funding_sources: List available funding sources
+ * - create_withdrawal: Create a withdrawal request
+ *
+ * Environment:
+ *   BITSO_API_KEY — API key from https://bitso.com/
+ *   BITSO_API_SECRET — API secret for HMAC signature
+ */
+
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+import * as crypto from "node:crypto";
+
+const API_KEY = process.env.BITSO_API_KEY || "";
+const API_SECRET = process.env.BITSO_API_SECRET || "";
+const BASE_URL = "https://api.bitso.com/v3";
+
+function generateAuthHeader(method: string, path: string, body?: string): string {
+  const nonce = Date.now().toString();
+  const payload = nonce + method.toUpperCase() + path + (body || "");
+  const signature = crypto.createHmac("sha256", API_SECRET).update(payload).digest("hex");
+  return `Bitso ${API_KEY}:${nonce}:${signature}`;
+}
+
+async function bitsoRequest(method: string, path: string, body?: unknown): Promise<unknown> {
+  const bodyStr = body ? JSON.stringify(body) : undefined;
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": generateAuthHeader(method, `/v3${path}`, bodyStr),
+    },
+    body: bodyStr,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Bitso API ${res.status}: ${err}`);
+  }
+  return res.json();
+}
+
+const server = new Server(
+  { name: "mcp-bitso", version: "0.1.0" },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: "get_ticker",
+      description: "Get ticker data for a trading pair (price, volume, VWAP, etc.)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          book: { type: "string", description: "Order book symbol (e.g. btc_mxn, eth_mxn, usdc_mxn)" },
+        },
+        required: ["book"],
+      },
+    },
+    {
+      name: "list_orderbook",
+      description: "Get order book (bids and asks) for a trading pair",
+      inputSchema: {
+        type: "object",
+        properties: {
+          book: { type: "string", description: "Order book symbol (e.g. btc_mxn)" },
+          aggregate: { type: "boolean", description: "Aggregate orders at same price level (default true)" },
+        },
+        required: ["book"],
+      },
+    },
+    {
+      name: "create_order",
+      description: "Create a buy or sell order",
+      inputSchema: {
+        type: "object",
+        properties: {
+          book: { type: "string", description: "Order book symbol (e.g. btc_mxn)" },
+          side: { type: "string", enum: ["buy", "sell"], description: "Order side" },
+          type: { type: "string", enum: ["limit", "market"], description: "Order type" },
+          major: { type: "string", description: "Amount of major currency (e.g. BTC quantity)" },
+          minor: { type: "string", description: "Amount of minor currency (e.g. MXN amount)" },
+          price: { type: "string", description: "Limit price (required for limit orders)" },
+        },
+        required: ["book", "side", "type"],
+      },
+    },
+    {
+      name: "get_order",
+      description: "Get order details by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          oid: { type: "string", description: "Order ID" },
+        },
+        required: ["oid"],
+      },
+    },
+    {
+      name: "cancel_order",
+      description: "Cancel an open order",
+      inputSchema: {
+        type: "object",
+        properties: {
+          oid: { type: "string", description: "Order ID to cancel" },
+        },
+        required: ["oid"],
+      },
+    },
+    {
+      name: "list_orders",
+      description: "List orders with optional filters",
+      inputSchema: {
+        type: "object",
+        properties: {
+          book: { type: "string", description: "Filter by order book symbol" },
+          status: { type: "string", enum: ["open", "partially_filled", "completed", "cancelled"], description: "Filter by status" },
+          limit: { type: "number", description: "Number of results (default 25, max 100)" },
+          marker: { type: "string", description: "Pagination marker" },
+          sort: { type: "string", enum: ["asc", "desc"], description: "Sort direction" },
+        },
+      },
+    },
+    {
+      name: "get_balances",
+      description: "Get account balances for all assets",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "list_trades",
+      description: "List executed trades for an order book",
+      inputSchema: {
+        type: "object",
+        properties: {
+          book: { type: "string", description: "Order book symbol (e.g. btc_mxn)" },
+          limit: { type: "number", description: "Number of results (default 25, max 100)" },
+          marker: { type: "string", description: "Pagination marker" },
+          sort: { type: "string", enum: ["asc", "desc"], description: "Sort direction" },
+        },
+        required: ["book"],
+      },
+    },
+    {
+      name: "list_funding_sources",
+      description: "List available funding sources (bank accounts, etc.)",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "create_withdrawal",
+      description: "Create a withdrawal request (crypto or fiat)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          currency: { type: "string", description: "Currency to withdraw (e.g. btc, eth, mxn)" },
+          amount: { type: "string", description: "Amount to withdraw" },
+          address: { type: "string", description: "Destination address (for crypto)" },
+          destination_tag: { type: "string", description: "Destination tag (for XRP, etc.)" },
+          network: { type: "string", description: "Blockchain network" },
+        },
+        required: ["currency", "amount"],
+      },
+    },
+  ],
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+
+  try {
+    switch (name) {
+      case "get_ticker":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/ticker?book=${args?.book}`), null, 2) }] };
+      case "list_orderbook": {
+        const params = new URLSearchParams();
+        params.set("book", String(args?.book));
+        if (args?.aggregate !== undefined) params.set("aggregate", String(args.aggregate));
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/order_book?${params}`), null, 2) }] };
+      }
+      case "create_order":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("POST", "/orders", args), null, 2) }] };
+      case "get_order":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/orders/${args?.oid}`), null, 2) }] };
+      case "cancel_order":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("DELETE", `/orders/${args?.oid}`), null, 2) }] };
+      case "list_orders": {
+        const params = new URLSearchParams();
+        if (args?.book) params.set("book", String(args.book));
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.marker) params.set("marker", String(args.marker));
+        if (args?.sort) params.set("sort", String(args.sort));
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/open_orders?${params}`), null, 2) }] };
+      }
+      case "get_balances":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", "/balance"), null, 2) }] };
+      case "list_trades": {
+        const params = new URLSearchParams();
+        params.set("book", String(args?.book));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.marker) params.set("marker", String(args.marker));
+        if (args?.sort) params.set("sort", String(args.sort));
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/user_trades?${params}`), null, 2) }] };
+      }
+      case "list_funding_sources":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", "/funding_destination"), null, 2) }] };
+      case "create_withdrawal":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("POST", "/withdrawals", args), null, 2) }] };
+      default:
+        return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
+    }
+  } catch (err) {
+    return { content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }], isError: true };
+  }
+});
+
+async function main() {
+  if (!API_KEY) {
+    console.error("BITSO_API_KEY environment variable is required");
+    process.exit(1);
+  }
+  if (!API_SECRET) {
+    console.error("BITSO_API_SECRET environment variable is required");
+    process.exit(1);
+  }
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+}
+
+main().catch(console.error);

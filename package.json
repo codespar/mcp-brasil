@@ -10,7 +10,8 @@
     "packages/communication/*",
     "packages/ecommerce/*",
     "packages/banking/*",
-    "packages/erp/*"
+    "packages/erp/*",
+    "packages/crypto/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
