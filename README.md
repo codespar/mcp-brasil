@@ -279,7 +279,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Take Blip](packages/communication/take-blip)** | 18 | `@codespar/mcp-take-blip` | API Key |
 | **[Zenvia](packages/communication/zenvia)** | 18 | `@codespar/mcp-zenvia` | API Key |
 
-### 📦 E-commerce / Logistics (6 servers)
+### 📦 E-commerce / Logistics (7 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -289,6 +289,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Shopee](packages/ecommerce/shopee)** <sub>alpha</sub> | 22 | `@codespar/mcp-shopee` | API Key |
 | **[Correios](packages/ecommerce/correios)** <sub>alpha</sub> | 21 | `@codespar/mcp-correios` | API Key |
 | **[Melhor Envio](packages/ecommerce/melhor-envio)** | 18 | `@codespar/mcp-melhor-envio` | API Key |
+| **[SuperFrete](packages/ecommerce/superfrete)** | 11 | `@codespar/mcp-superfrete` | API Key |
 
 ### 📊 ERP / Accounting (5 servers)
 
