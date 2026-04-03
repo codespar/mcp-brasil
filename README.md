@@ -152,11 +152,12 @@ To orchestrate all 6 steps with governance, approval workflows, and audit trails
 |--------|-------|-------------|------|
 | **[Stark Bank](packages/banking/stark-bank)** | 10 | Transfers, boleto, invoices, Pix, balance | Access Token |
 
-### 📦 E-commerce / Logistics (2 servers)
+### 📦 E-commerce / Logistics (3 servers)
 
 | Server | Tools | Description | Auth |
 |--------|-------|-------------|------|
 | **[Melhor Envio](packages/ecommerce/melhor-envio)** | 8 | Shipping quotes, tracking, labels | Bearer Token |
+| **[SuperFrete](packages/ecommerce/superfrete)** | 11 | Discounted shipping, freight calc, labels, tracking | Bearer Token |
 | **[Correios](packages/ecommerce/correios)** | 6 | Tracking, shipping calc, CEP | OAuth |
 
 ### 📊 ERP (1 server)
