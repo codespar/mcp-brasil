@@ -31,6 +31,18 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+// --- Zod validation helpers ---
+const cpfOrCnpjSchema = z.string().regex(/^\d{11}(\d{3})?$/, "Must be a valid CPF (11 digits) or CNPJ (14 digits)");
+const emailSchema = z.string().email("Invalid email format");
+const positiveAmountSchema = z.number().positive("Amount must be greater than 0");
+const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format");
+const cepSchema = z.string().regex(/^\d{8}$/, "CEP must be 8 digits");
+
+function validationError(msg: string) {
+  return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
+}
 
 const API_KEY = process.env.ASAAS_API_KEY || "";
 const BASE_URL = process.env.ASAAS_SANDBOX === "true"
@@ -254,6 +266,56 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  // --- Input validation ---
+  try {
+    if (name === "create_payment") {
+      const r = positiveAmountSchema.safeParse(args?.value);
+      if (!r.success) return validationError(r.error.issues[0].message);
+      if (args?.dueDate) {
+        const d = dateSchema.safeParse(args.dueDate);
+        if (!d.success) return validationError(d.error.issues[0].message);
+      }
+    }
+    if (name === "create_customer") {
+      if (args?.cpfCnpj) {
+        const r = cpfOrCnpjSchema.safeParse(args.cpfCnpj);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+      if (args?.email) {
+        const r = emailSchema.safeParse(args.email);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+    }
+    if (name === "create_subscription") {
+      const r = positiveAmountSchema.safeParse(args?.value);
+      if (!r.success) return validationError(r.error.issues[0].message);
+      if (args?.nextDueDate) {
+        const d = dateSchema.safeParse(args.nextDueDate);
+        if (!d.success) return validationError(d.error.issues[0].message);
+      }
+    }
+    if (name === "create_subaccount") {
+      if (args?.cpfCnpj) {
+        const r = cpfOrCnpjSchema.safeParse(args.cpfCnpj);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+      if (args?.email) {
+        const r = emailSchema.safeParse(args.email);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+      if (args?.postalCode) {
+        const r = cepSchema.safeParse(args.postalCode);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+    }
+    if (name === "create_transfer") {
+      const r = positiveAmountSchema.safeParse(args?.value);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+  } catch (e) {
+    // Validation should not block — fall through on unexpected errors
+  }
 
   try {
     switch (name) {

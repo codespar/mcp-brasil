@@ -29,6 +29,15 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+// --- Zod validation helpers ---
+const cepSchema = z.string().regex(/^\d{8}$/, "CEP must be 8 digits");
+const cnpjSchema = z.string().regex(/^\d{14}$/, "CNPJ must be 14 digits");
+
+function validationError(msg: string) {
+  return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
+}
 
 const BASE_URL = "https://brasilapi.com.br/api";
 
@@ -210,6 +219,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  // --- Input validation ---
+  try {
+    if (name === "get_cep" && args?.cep) {
+      const r = cepSchema.safeParse(args.cep);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+    if (name === "get_cnpj" && args?.cnpj) {
+      const r = cnpjSchema.safeParse(args.cnpj);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+  } catch (e) {
+    // Validation should not block — fall through on unexpected errors
+  }
 
   try {
     switch (name) {

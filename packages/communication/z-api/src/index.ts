@@ -36,6 +36,14 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+// --- Zod validation helpers ---
+const phoneSchema = z.string().regex(/^\d{10,15}$/, "Phone must be 10-15 digits (with country code, e.g. 5511999999999)");
+
+function validationError(msg: string) {
+  return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
+}
 
 const INSTANCE_ID = process.env.ZAPI_INSTANCE_ID || "";
 const TOKEN = process.env.ZAPI_TOKEN || "";
@@ -291,6 +299,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  // --- Input validation ---
+  try {
+    const toolsWithPhone = [
+      "send_text", "send_image", "send_document", "send_audio",
+      "check_number", "get_profile_picture", "get_messages",
+      "send_button_list", "send_location", "send_contact",
+      "add_label", "read_message", "delete_message",
+    ];
+    if (toolsWithPhone.includes(name) && args?.phone) {
+      const r = phoneSchema.safeParse(args.phone);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+    if (name === "send_contact" && args?.contactPhone) {
+      const r = phoneSchema.safeParse(args.contactPhone);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+    if (name === "add_group_participant" && args?.phone) {
+      const r = phoneSchema.safeParse(args.phone);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+    if (name === "remove_group_participant" && args?.phone) {
+      const r = phoneSchema.safeParse(args.phone);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+  } catch (e) {
+    // Validation should not block — fall through on unexpected errors
+  }
 
   try {
     switch (name) {

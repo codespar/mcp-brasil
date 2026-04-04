@@ -34,6 +34,16 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+// --- Zod validation helpers ---
+const cepSchema = z.string().regex(/^\d{8}$/, "CEP must be 8 digits");
+const emailSchema = z.string().email("Invalid email format");
+const positiveNumberSchema = z.number().positive("Value must be greater than 0");
+
+function validationError(msg: string) {
+  return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
+}
 
 const TOKEN = process.env.MELHOR_ENVIO_TOKEN || "";
 const BASE_URL = process.env.MELHOR_ENVIO_SANDBOX === "true"
@@ -320,6 +330,42 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  // --- Input validation ---
+  try {
+    if (name === "calculate_shipping") {
+      if (args?.from?.postal_code) {
+        const r = cepSchema.safeParse(args.from.postal_code);
+        if (!r.success) return validationError(`Origin CEP: ${r.error.issues[0].message}`);
+      }
+      if (args?.to?.postal_code) {
+        const r = cepSchema.safeParse(args.to.postal_code);
+        if (!r.success) return validationError(`Destination CEP: ${r.error.issues[0].message}`);
+      }
+    }
+    if (name === "create_address") {
+      if (args?.postal_code) {
+        const r = cepSchema.safeParse(args.postal_code);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+      if (args?.email) {
+        const r = emailSchema.safeParse(args.email);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+    }
+    if (name === "list_services_available") {
+      if (args?.from) {
+        const r = cepSchema.safeParse(args.from);
+        if (!r.success) return validationError(`Origin CEP: ${r.error.issues[0].message}`);
+      }
+      if (args?.to) {
+        const r = cepSchema.safeParse(args.to);
+        if (!r.success) return validationError(`Destination CEP: ${r.error.issues[0].message}`);
+      }
+    }
+  } catch (e) {
+    // Validation should not block — fall through on unexpected errors
+  }
 
   try {
     switch (name) {

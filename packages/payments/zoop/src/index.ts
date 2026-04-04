@@ -36,6 +36,20 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+
+// --- Zod validation helpers ---
+const cpfSchema = z.string().regex(/^\d{11}$/, "CPF must be 11 digits");
+const cnpjSchema = z.string().regex(/^\d{14}$/, "CNPJ must be 14 digits");
+const cpfOrCnpjSchema = z.string().regex(/^\d{11}(\d{3})?$/, "Must be a valid CPF (11 digits) or CNPJ (14 digits)");
+const emailSchema = z.string().email("Invalid email format");
+const positiveAmountSchema = z.number().positive("Amount must be greater than 0");
+const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format");
+const cepSchema = z.string().regex(/^\d{8}$/, "CEP must be 8 digits");
+
+function validationError(msg: string) {
+  return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
+}
 
 const API_KEY = process.env.ZOOP_API_KEY || "";
 const MARKETPLACE_ID = process.env.ZOOP_MARKETPLACE_ID || "";
@@ -396,6 +410,52 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  // --- Input validation ---
+  try {
+    if (name === "create_transaction") {
+      const r = positiveAmountSchema.safeParse(args?.amount);
+      if (!r.success) return validationError(r.error.issues[0].message);
+      if (args?.payment_method?.expiration_date) {
+        const d = dateSchema.safeParse(args.payment_method.expiration_date);
+        if (!d.success) return validationError(d.error.issues[0].message);
+      }
+    }
+    if (name === "create_seller") {
+      if (args?.ein) {
+        const r = cpfOrCnpjSchema.safeParse(args.ein);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+      if (args?.email) {
+        const r = emailSchema.safeParse(args.email);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+      if (args?.address?.postal_code) {
+        const r = cepSchema.safeParse(args.address.postal_code);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+    }
+    if (name === "create_buyer") {
+      if (args?.taxpayer_id) {
+        const r = cpfSchema.safeParse(args.taxpayer_id);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+      if (args?.email) {
+        const r = emailSchema.safeParse(args.email);
+        if (!r.success) return validationError(r.error.issues[0].message);
+      }
+    }
+    if (name === "create_transfer") {
+      const r = positiveAmountSchema.safeParse(args?.amount);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+    if (name === "refund_transaction" && args?.amount != null) {
+      const r = positiveAmountSchema.safeParse(args.amount);
+      if (!r.success) return validationError(r.error.issues[0].message);
+    }
+  } catch (e) {
+    // Validation should not block — fall through on unexpected errors
+  }
 
   try {
     switch (name) {
