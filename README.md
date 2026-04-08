@@ -5,7 +5,7 @@
     <em>Plus the agentic payment protocols to bridge them all.</em>
   </p>
   <p align="center">
-    36 MCP servers · ~380 tools · 9 verticals · MIT License
+    37 MCP servers · ~400 tools · 9 verticals · MIT License
   </p>
   <p align="center">
     <a href="https://codespar.dev/mcp">Landing Page</a> ·
@@ -17,8 +17,8 @@
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-    <img src="https://img.shields.io/badge/servers-36-green" alt="36 servers">
-    <img src="https://img.shields.io/badge/tools-~380-orange" alt="~380 tools">
+    <img src="https://img.shields.io/badge/servers-37-green" alt="37 servers">
+    <img src="https://img.shields.io/badge/tools-~400-orange" alt="~400 tools">
     <img src="https://img.shields.io/badge/MCP-compatible-purple" alt="MCP compatible">
   </p>
 </p>
@@ -59,6 +59,7 @@ Three new servers that bridge the emerging agentic payment stack:
 
 | Protocol | Server | Tools | What it does |
 |----------|--------|-------|-------------|
+| **[Google UCP](packages/payments/ucp)** | `@codespar/mcp-ucp` | 21 | Universal Commerce Protocol — agentic shopping, cart, checkout, orders, delivery, identity. Google's full commerce stack for AI agents. |
 | **[Stripe ACP](packages/payments/stripe-acp)** | `@codespar/mcp-stripe-acp` | 16 | Agentic Commerce Protocol — AI agent checkout, payment delegation, products, invoices. Live in ChatGPT with 1M+ Shopify merchants. |
 | **[x402](packages/crypto/x402)** | `@codespar/mcp-x402` | 10 | HTTP-native micropayments by Coinbase — when an agent hits a 402, it pays USDC on Base/Solana and retries. Pure HTTP, no checkout UI. |
 | **[AP2](packages/payments/ap2)** | `@codespar/mcp-ap2` | 13 | Google's Agent-to-Agent Payment Protocol — authorization, audit trails, scoped spend limits. 60+ partners including Visa, Mastercard, Stripe, PayPal. |
@@ -67,6 +68,7 @@ Three new servers that bridge the emerging agentic payment stack:
 
 ```
 Agent needs to buy something
+  ├── Full commerce?       → Google UCP (search → cart → checkout → delivery)
   ├── Retail checkout?     → Stripe ACP (create_checkout → complete_checkout)
   ├── API micropayment?    → x402 (pay_request → USDC $0.001 → data returned)
   ├── Agent-to-agent?      → AP2 (authorize_payment → execute_payment)
@@ -78,6 +80,9 @@ All via MCP. Same interface. One agent.
 ### Quick Start — Agentic Protocols
 
 ```bash
+# Google UCP — full agentic commerce (early access)
+npx @codespar/mcp-ucp
+
 # Stripe ACP — agentic checkout (test mode, free)
 npx @codespar/mcp-stripe-acp
 
@@ -164,10 +169,11 @@ To orchestrate all 6 steps with governance, approval workflows, and audit trails
 
 ## Servers
 
-### ⚡ Agentic Protocols (3 servers)
+### ⚡ Agentic Protocols (4 servers)
 
 | Server | Tools | Description | Auth |
 |--------|-------|-------------|------|
+| **[Google UCP](packages/payments/ucp)** | 21 | Universal Commerce Protocol — shopping, cart, checkout, orders, delivery, identity | UCP API Key |
 | **[Stripe ACP](packages/payments/stripe-acp)** | 16 | Agentic Commerce Protocol — checkout sessions, payment delegation, products, invoices | Stripe API Key |
 | **[x402](packages/crypto/x402)** | 10 | HTTP micropayments — USDC on Base/Solana, paywalls, machine-to-machine | Facilitator Key |
 | **[AP2](packages/payments/ap2)** | 13 | Agent authorization, audit trails, scoped spend limits | AP2 API Key |
