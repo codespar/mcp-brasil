@@ -347,8 +347,8 @@ async function main() {
     const app = express();
     app.use(express.json());
     const transports = new Map<string, StreamableHTTPServerTransport>();
-    app.get("/health", (_req, res) => res.json({ status: "ok", sessions: transports.size }));
-    app.post("/mcp", async (req, res) => {
+    app.get("/health", (_req: any, res: any) => res.json({ status: "ok", sessions: transports.size }));
+    app.post("/mcp", async (req: any, res: any) => {
       const sid = req.headers["mcp-session-id"] as string | undefined;
       if (sid && transports.has(sid)) { await transports.get(sid)!.handleRequest(req, res, req.body); return; }
       if (!sid && isInitializeRequest(req.body)) {
@@ -359,8 +359,8 @@ async function main() {
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
     });
-    app.get("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
-    app.delete("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    app.get("/mcp", async (req: any, res: any) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    app.delete("/mcp", async (req: any, res: any) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
     const port = Number(process.env.MCP_PORT) || 3000;
     app.listen(port, () => { console.error(`MCP HTTP server on http://localhost:${port}/mcp`); });
   } else {
