@@ -30,6 +30,8 @@
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -270,7 +272,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
+  const { name, arguments: rawArgs } = request.params;
+  const args = rawArgs as Record<string, unknown> | undefined;
 
   try {
     switch (name) {
@@ -278,7 +281,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/geral/clientes/", "ListarClientes", [{
           pagina: args?.pagina || 1,
           registros_por_pagina: args?.registros_por_pagina || 50,
-          ...(args?.clientesFiltro && { clientesFiltro: args.clientesFiltro }),
+          ...(args?.clientesFiltro ? { clientesFiltro: args.clientesFiltro } : {}),
         }]), null, 2) }] };
       case "create_customer":
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/geral/clientes/", "IncluirCliente", [args || {}]), null, 2) }] };
@@ -286,7 +289,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/geral/produtos/", "ListarProdutos", [{
           pagina: args?.pagina || 1,
           registros_por_pagina: args?.registros_por_pagina || 50,
-          ...(args?.apenas_importado_api && { apenas_importado_api: args.apenas_importado_api }),
+          ...(args?.apenas_importado_api ? { apenas_importado_api: args.apenas_importado_api } : {}),
         }]), null, 2) }] };
       case "create_product":
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/geral/produtos/", "IncluirProduto", [args || {}]), null, 2) }] };
@@ -296,21 +299,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/produtos/pedido/", "ListarPedidos", [{
           pagina: args?.pagina || 1,
           registros_por_pagina: args?.registros_por_pagina || 50,
-          ...(args?.etapa && { etapa: args.etapa }),
+          ...(args?.etapa ? { etapa: args.etapa } : {}),
         }]), null, 2) }] };
       case "list_invoices":
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/produtos/nfconsultar/", "ListarNF", [{
           pagina: args?.pagina || 1,
           registros_por_pagina: args?.registros_por_pagina || 50,
-          ...(args?.dEmiInicial && { dEmiInicial: args.dEmiInicial }),
-          ...(args?.dEmiFinal && { dEmiFinal: args.dEmiFinal }),
+          ...(args?.dEmiInicial ? { dEmiInicial: args.dEmiInicial } : {}),
+          ...(args?.dEmiFinal ? { dEmiFinal: args.dEmiFinal } : {}),
         }]), null, 2) }] };
       case "get_financial":
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/financas/contareceber/", "ListarContasReceber", [{
           pagina: args?.pagina || 1,
           registros_por_pagina: args?.registros_por_pagina || 50,
-          ...(args?.dDtEmiInicial && { dDtEmiInicial: args.dDtEmiInicial }),
-          ...(args?.dDtEmiFinal && { dDtEmiFinal: args.dDtEmiFinal }),
+          ...(args?.dDtEmiInicial ? { dDtEmiInicial: args.dDtEmiInicial } : {}),
+          ...(args?.dDtEmiFinal ? { dDtEmiFinal: args.dDtEmiFinal } : {}),
         }]), null, 2) }] };
       case "create_invoice":
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/produtos/nfconsultar/", "ConsultarNF", [{
@@ -327,7 +330,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/servicos/os/", "ListarOS", [{
           pagina: args?.pagina || 1,
           registros_por_pagina: args?.registros_por_pagina || 50,
-          ...(args?.etapa && { etapa: args.etapa }),
+          ...(args?.etapa ? { etapa: args.etapa } : {}),
         }]), null, 2) }] };
       case "create_purchase_order":
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/produtos/pedidocompra/", "IncluirPedidoCompra", [args || {}]), null, 2) }] };
@@ -335,7 +338,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/produtos/pedidocompra/", "ListarPedidosCompra", [{
           pagina: args?.pagina || 1,
           registros_por_pagina: args?.registros_por_pagina || 50,
-          ...(args?.etapa && { etapa: args.etapa }),
+          ...(args?.etapa ? { etapa: args.etapa } : {}),
         }]), null, 2) }] };
       case "get_bank_accounts":
         return { content: [{ type: "text", text: JSON.stringify(await omieRequest("/geral/contacorrente/", "ListarContasCorrentes", [{
@@ -351,12 +354,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  if (!APP_KEY || !APP_SECRET) {
-    console.error("OMIE_APP_KEY and OMIE_APP_SECRET environment variables are required");
-    process.exit(1);
+  if (process.argv.includes("--http") || process.env.MCP_HTTP === "true") {
+    const { default: express } = await import("express");
+    const { randomUUID } = await import("node:crypto");
+    const app = express();
+    app.use(express.json());
+    const transports = new Map<string, StreamableHTTPServerTransport>();
+    app.get("/health", (_req, res) => res.json({ status: "ok", sessions: transports.size }));
+    app.post("/mcp", async (req, res) => {
+      const sid = req.headers["mcp-session-id"] as string | undefined;
+      if (sid && transports.has(sid)) { await transports.get(sid)!.handleRequest(req, res, req.body); return; }
+      if (!sid && isInitializeRequest(req.body)) {
+        const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
+        t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
+        await server.connect(t);
+        await t.handleRequest(req, res, req.body); return;
+      }
+      res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
+    });
+    app.get("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    app.delete("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    const port = Number(process.env.MCP_PORT) || 3000;
+    app.listen(port, () => { console.error(`MCP HTTP server on http://localhost:${port}/mcp`); });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
   }
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
 }
 
 main().catch(console.error);

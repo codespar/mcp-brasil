@@ -11,7 +11,8 @@
     "packages/ecommerce/*",
     "packages/banking/*",
     "packages/erp/*",
-    "packages/crypto/*"
+    "packages/crypto/*",
+    "packages/shared"
   ],
   "scripts": {
     "build": "npm run build --workspaces",

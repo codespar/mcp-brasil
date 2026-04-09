@@ -27,6 +27,8 @@
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -333,12 +335,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  if (!CLIENT_ID || !CLIENT_SECRET) {
-    console.error("NUVEM_FISCAL_CLIENT_ID and NUVEM_FISCAL_CLIENT_SECRET environment variables are required");
-    process.exit(1);
+  if (process.argv.includes("--http") || process.env.MCP_HTTP === "true") {
+    const { default: express } = await import("express");
+    const { randomUUID } = await import("node:crypto");
+    const app = express();
+    app.use(express.json());
+    const transports = new Map<string, StreamableHTTPServerTransport>();
+    app.get("/health", (_req, res) => res.json({ status: "ok", sessions: transports.size }));
+    app.post("/mcp", async (req, res) => {
+      const sid = req.headers["mcp-session-id"] as string | undefined;
+      if (sid && transports.has(sid)) { await transports.get(sid)!.handleRequest(req, res, req.body); return; }
+      if (!sid && isInitializeRequest(req.body)) {
+        const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
+        t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
+        await server.connect(t);
+        await t.handleRequest(req, res, req.body); return;
+      }
+      res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
+    });
+    app.get("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    app.delete("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    const port = Number(process.env.MCP_PORT) || 3000;
+    app.listen(port, () => { console.error(`MCP HTTP server on http://localhost:${port}/mcp`); });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
   }
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
 }
 
 main().catch(console.error);

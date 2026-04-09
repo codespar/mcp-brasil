@@ -32,6 +32,8 @@
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -409,15 +411,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
+  const { name, arguments: rawArgs } = request.params;
+  const args = rawArgs as Record<string, unknown> | undefined;
 
   // --- Input validation ---
   try {
     if (name === "create_transaction") {
       const r = positiveAmountSchema.safeParse(args?.amount);
       if (!r.success) return validationError(r.error.issues[0].message);
-      if (args?.payment_method?.expiration_date) {
-        const d = dateSchema.safeParse(args.payment_method.expiration_date);
+      if ((args?.payment_method as Record<string, unknown>)?.expiration_date) {
+        const d = dateSchema.safeParse((args!.payment_method as Record<string, unknown>).expiration_date);
         if (!d.success) return validationError(d.error.issues[0].message);
       }
     }
@@ -430,8 +433,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const r = emailSchema.safeParse(args.email);
         if (!r.success) return validationError(r.error.issues[0].message);
       }
-      if (args?.address?.postal_code) {
-        const r = cepSchema.safeParse(args.address.postal_code);
+      if ((args?.address as Record<string, unknown>)?.postal_code) {
+        const r = cepSchema.safeParse((args!.address as Record<string, unknown>).postal_code);
         if (!r.success) return validationError(r.error.issues[0].message);
       }
     }
@@ -549,16 +552,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  if (!API_KEY) {
-    console.error("ZOOP_API_KEY environment variable is required");
-    process.exit(1);
+  if (process.argv.includes("--http") || process.env.MCP_HTTP === "true") {
+    const { default: express } = await import("express");
+    const { randomUUID } = await import("node:crypto");
+    const app = express();
+    app.use(express.json());
+    const transports = new Map<string, StreamableHTTPServerTransport>();
+    app.get("/health", (_req, res) => res.json({ status: "ok", sessions: transports.size }));
+    app.post("/mcp", async (req, res) => {
+      const sid = req.headers["mcp-session-id"] as string | undefined;
+      if (sid && transports.has(sid)) { await transports.get(sid)!.handleRequest(req, res, req.body); return; }
+      if (!sid && isInitializeRequest(req.body)) {
+        const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
+        t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
+        await server.connect(t);
+        await t.handleRequest(req, res, req.body); return;
+      }
+      res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
+    });
+    app.get("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    app.delete("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    const port = Number(process.env.MCP_PORT) || 3000;
+    app.listen(port, () => { console.error(`MCP HTTP server on http://localhost:${port}/mcp`); });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
   }
-  if (!MARKETPLACE_ID) {
-    console.error("ZOOP_MARKETPLACE_ID environment variable is required");
-    process.exit(1);
-  }
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
 }
 
 main().catch(console.error);

@@ -26,6 +26,8 @@
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -258,7 +260,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
+  const { name, arguments: rawArgs } = request.params;
+  const args = rawArgs as Record<string, unknown> | undefined;
 
   try {
     switch (name) {
@@ -367,7 +370,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           Payment: {
             Type: "Pix",
             Amount: args?.amount,
-            ...(args?.expirationDate && { QrCodeExpiration: args.expirationDate }),
+            ...(args?.expirationDate ? { QrCodeExpiration: args.expirationDate } : {}),
           },
         };
         return { content: [{ type: "text", text: JSON.stringify(await cieloRequest("POST", "/sales", payload), null, 2) }] };
@@ -420,12 +423,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  if (!MERCHANT_ID || !MERCHANT_KEY) {
-    console.error("CIELO_MERCHANT_ID and CIELO_MERCHANT_KEY environment variables are required");
-    process.exit(1);
+  if (process.argv.includes("--http") || process.env.MCP_HTTP === "true") {
+    const { default: express } = await import("express");
+    const { randomUUID } = await import("node:crypto");
+    const app = express();
+    app.use(express.json());
+    const transports = new Map<string, StreamableHTTPServerTransport>();
+    app.get("/health", (_req, res) => res.json({ status: "ok", sessions: transports.size }));
+    app.post("/mcp", async (req, res) => {
+      const sid = req.headers["mcp-session-id"] as string | undefined;
+      if (sid && transports.has(sid)) { await transports.get(sid)!.handleRequest(req, res, req.body); return; }
+      if (!sid && isInitializeRequest(req.body)) {
+        const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
+        t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
+        await server.connect(t);
+        await t.handleRequest(req, res, req.body); return;
+      }
+      res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
+    });
+    app.get("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    app.delete("/mcp", async (req, res) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
+    const port = Number(process.env.MCP_PORT) || 3000;
+    app.listen(port, () => { console.error(`MCP HTTP server on http://localhost:${port}/mcp`); });
+  } else {
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
   }
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
 }
 
 main().catch(console.error);
