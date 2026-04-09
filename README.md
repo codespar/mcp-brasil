@@ -309,8 +309,26 @@ Brazilian API / Agentic Protocol (Stripe ACP, x402, Zoop, etc.)
 Each MCP server in this repo:
 - Exposes **typed tools** with input/output schemas
 - Handles **authentication** (OAuth, API keys, Basic Auth)
+- Supports **dual transport** — stdio (default) and **Streamable HTTP** (`--http` flag)
+- Compatible with **Claude Managed Agents** via MCP Connector
 - Supports **sandbox mode** for safe testing
 - Returns **structured JSON** responses
+
+### Running in HTTP mode
+
+Any server can run as an HTTP server for remote/cloud use:
+
+```bash
+# stdio (default — local, Claude Desktop, Cursor)
+npx @codespar/mcp-asaas
+
+# HTTP (remote — Managed Agents, cloud deployments)
+npx @codespar/mcp-asaas --http
+# or
+MCP_HTTP=true npx @codespar/mcp-asaas
+```
+
+HTTP mode exposes `/mcp` (Streamable HTTP) and `/health` (status check).
 
 ---
 
