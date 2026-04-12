@@ -34,6 +34,17 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
+const DEMO_MODE = process.argv.includes("--demo") || process.env.MCP_DEMO === "true";
+
+const DEMO_RESPONSES: Record<string, unknown> = {
+  create_nfe: { id: "nfe_demo_001", status: "autorizada", numero: 1234, serie: 1, chave: "35260412345678000190550010000012341000000001", valorTotal: 150.00, dataEmissao: "2026-04-12T10:30:00Z", xml_url: "https://api.nuvemfiscal.com.br/demo/nfe.xml", pdf_url: "https://api.nuvemfiscal.com.br/demo/danfe.pdf" },
+  consult_cnpj: { cnpj: "12345678000190", razaoSocial: "Demo Comércio LTDA", nomeFantasia: "Demo Shop", situacao: "ATIVA", uf: "SP" },
+  get_nfe: { id: "nfe_demo_001", status: "autorizada", numero: 1234, serie: 1, chave: "35260412345678000190550010000012341000000001", valorTotal: 150.00 },
+  cancel_nfe: { id: "nfe_demo_001", status: "cancelada", protocolo: "135260000000001" },
+  create_nfse: { id: "nfse_demo_001", status: "autorizada", numero: 567, valorServico: 500.00, dataEmissao: "2026-04-12T10:30:00Z" },
+  consult_cep: { cep: "01001000", logradouro: "Praça da Sé", bairro: "Sé", cidade: "São Paulo", uf: "SP" },
+};
+
 const CLIENT_ID = process.env.NUVEM_FISCAL_CLIENT_ID || "";
 const CLIENT_SECRET = process.env.NUVEM_FISCAL_CLIENT_SECRET || "";
 const BASE_URL = "https://api.nuvemfiscal.com.br";
@@ -293,6 +304,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  if (DEMO_MODE) {
+    return { content: [{ type: "text", text: JSON.stringify(DEMO_RESPONSES[name] || { demo: true, tool: name }, null, 2) }] };
+  }
 
   try {
     switch (name) {

@@ -34,6 +34,18 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
+const DEMO_MODE = process.argv.includes("--demo") || process.env.MCP_DEMO === "true";
+
+const DEMO_RESPONSES: Record<string, unknown> = {
+  get_balance: { amount: 154205000, currency: "BRL", id: "balance_demo" },
+  list_transfers: { transfers: [{ id: "txn_demo_001", amount: 15000, name: "João Silva", status: "success", created: "2026-04-12T10:30:00Z" }] },
+  create_transfer: { id: "txn_demo_002", amount: 15000, name: "Fornecedor Demo", status: "processing", taxId: "12345678000190" },
+  get_transfer: { id: "txn_demo_001", amount: 15000, name: "João Silva", status: "success", created: "2026-04-12T10:30:00Z" },
+  create_invoice: { id: "inv_demo_001", amount: 50000, name: "Cliente Demo", taxId: "12345678901", status: "created", due: "2026-04-15" },
+  list_invoices: { invoices: [{ id: "inv_demo_001", amount: 50000, name: "Cliente Demo", status: "paid" }] },
+  create_boleto: { id: "bol_demo_001", status: "created", amount: 15000, line: "23793.38128 60000.000003 00000.000400 1 87120000015000" },
+};
+
 const ACCESS_TOKEN = process.env.STARK_BANK_ACCESS_TOKEN || "";
 const BASE_URL = process.env.STARK_BANK_SANDBOX === "true"
   ? "https://sandbox.api.starkbank.com/v2"
@@ -264,6 +276,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  if (DEMO_MODE) {
+    return { content: [{ type: "text", text: JSON.stringify(DEMO_RESPONSES[name] || { demo: true, tool: name }, null, 2) }] };
+  }
 
   try {
     switch (name) {

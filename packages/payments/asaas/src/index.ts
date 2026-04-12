@@ -55,6 +55,21 @@ function validationError(msg: string) {
   return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
 }
 
+const DEMO_MODE = process.argv.includes("--demo") || process.env.MCP_DEMO === "true";
+
+const DEMO_RESPONSES: Record<string, unknown> = {
+  create_payment: { id: "pay_demo_001", status: "PENDING", billingType: "PIX", value: 150.00, customer: "cus_demo_001", dueDate: "2026-04-15", invoiceUrl: "https://sandbox.asaas.com/i/demo001" },
+  get_pix_qrcode: { encodedImage: "data:image/png;base64,iVBOR...(truncated)", payload: "00020126580014br.gov.bcb.pix0136demo-pix-key", expirationDate: "2026-04-15T23:59:59Z" },
+  create_customer: { id: "cus_demo_001", name: "João Silva", email: "joao@demo.com", cpfCnpj: "12345678901" },
+  get_balance: { balance: 15420.50, statistics: { income: 28500.00, expense: 13079.50 } },
+  get_payment: { id: "pay_demo_001", status: "RECEIVED", billingType: "PIX", value: 150.00, customer: "cus_demo_001", dueDate: "2026-04-15" },
+  list_payments: { totalCount: 1, data: [{ id: "pay_demo_001", status: "RECEIVED", billingType: "PIX", value: 150.00, customer: "cus_demo_001" }] },
+  list_customers: { totalCount: 1, data: [{ id: "cus_demo_001", name: "João Silva", email: "joao@demo.com", cpfCnpj: "12345678901" }] },
+  create_subscription: { id: "sub_demo_001", status: "ACTIVE", billingType: "PIX", value: 99.90, cycle: "MONTHLY", nextDueDate: "2026-05-15" },
+  create_transfer: { id: "txn_demo_001", value: 500.00, status: "PENDING", pixAddressKey: "demo@pix.com" },
+  list_transfers: { totalCount: 1, data: [{ id: "txn_demo_001", value: 500.00, status: "DONE" }] },
+};
+
 const API_KEY = process.env.ASAAS_API_KEY || "";
 const BASE_URL = process.env.ASAAS_SANDBOX === "true"
   ? "https://sandbox.asaas.com/api/v3"
@@ -394,6 +409,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  if (DEMO_MODE) {
+    return { content: [{ type: "text", text: JSON.stringify(DEMO_RESPONSES[name] || { demo: true, tool: name }, null, 2) }] };
+  }
 
   // --- Input validation ---
   try {

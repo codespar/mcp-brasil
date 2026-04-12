@@ -47,6 +47,19 @@ function validationError(msg: string) {
   return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
 }
 
+const DEMO_MODE = process.argv.includes("--demo") || process.env.MCP_DEMO === "true";
+
+const DEMO_RESPONSES: Record<string, unknown> = {
+  send_text: { messageId: "msg_demo_001", status: "sent", phone: "5511999990000", text: "Seu pedido #1234 foi enviado! Tracking: ME123456789BR", timestamp: "2026-04-12T10:35:00Z" },
+  send_image: { messageId: "msg_demo_002", status: "sent", type: "image" },
+  get_contacts: { contacts: [{ phone: "5511999990000", name: "João Silva", isMyContact: true }, { phone: "5511888880000", name: "Maria Santos", isMyContact: true }] },
+  send_document: { messageId: "msg_demo_003", status: "sent", type: "document" },
+  send_audio: { messageId: "msg_demo_004", status: "sent", type: "audio" },
+  check_number: { exists: true, phone: "5511999990000" },
+  get_status: { connected: true, phone: "5511999990000", instanceId: "demo_instance" },
+  get_messages: { messages: [{ messageId: "msg_demo_010", from: "5511999990000", body: "Olá, tudo bem?", timestamp: "2026-04-12T10:00:00Z" }] },
+};
+
 const INSTANCE_ID = process.env.ZAPI_INSTANCE_ID || "";
 const TOKEN = process.env.ZAPI_TOKEN || "";
 const BASE_URL = `https://api.z-api.io/instances/${INSTANCE_ID}/token/${TOKEN}`;
@@ -301,6 +314,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+
+  if (DEMO_MODE) {
+    return { content: [{ type: "text", text: JSON.stringify(DEMO_RESPONSES[name] || { demo: true, tool: name }, null, 2) }] };
+  }
 
   // --- Input validation ---
   try {

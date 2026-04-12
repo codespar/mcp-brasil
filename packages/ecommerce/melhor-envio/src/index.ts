@@ -47,6 +47,18 @@ function validationError(msg: string) {
   return { content: [{ type: "text" as const, text: `Validation error: ${msg}` }], isError: true as const };
 }
 
+const DEMO_MODE = process.argv.includes("--demo") || process.env.MCP_DEMO === "true";
+
+const DEMO_RESPONSES: Record<string, unknown> = {
+  create_shipment: { id: "ship_demo_001", status: "posted", tracking: "ME123456789BR", service: "SEDEX", price: 25.90, delivery_estimate: "3-5 business days", from: { city: "São Paulo" }, to: { city: "Rio de Janeiro" } },
+  calculate_shipping: { rates: [{ service: "SEDEX", price: 25.90, days: 3 }, { service: "PAC", price: 15.50, days: 7 }, { service: "Mini Envios", price: 12.00, days: 10 }] },
+  track_shipment: { tracking: "ME123456789BR", status: "in_transit", events: [{ date: "2026-04-12T08:00:00Z", status: "Objeto postado", location: "São Paulo/SP" }, { date: "2026-04-12T14:00:00Z", status: "Em trânsito", location: "Curitiba/PR" }] },
+  get_balance: { balance: 245.80, currency: "BRL" },
+  get_shipment: { id: "ship_demo_001", status: "posted", tracking: "ME123456789BR", service: "SEDEX", price: 25.90 },
+  list_shipments: { data: [{ id: "ship_demo_001", status: "posted", tracking: "ME123456789BR", service: "SEDEX", price: 25.90 }] },
+  get_tracking_history: { tracking: "ME123456789BR", events: [{ date: "2026-04-12T08:00:00Z", status: "Objeto postado", location: "São Paulo/SP" }, { date: "2026-04-12T14:00:00Z", status: "Em trânsito", location: "Curitiba/PR" }] },
+};
+
 const TOKEN = process.env.MELHOR_ENVIO_TOKEN || "";
 const BASE_URL = process.env.MELHOR_ENVIO_SANDBOX === "true"
   ? "https://sandbox.melhorenvio.com.br/api/v2"
@@ -333,6 +345,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: rawArgs } = request.params;
   const args = rawArgs as Record<string, unknown> | undefined;
+
+  if (DEMO_MODE) {
+    return { content: [{ type: "text", text: JSON.stringify(DEMO_RESPONSES[name] || { demo: true, tool: name }, null, 2) }] };
+  }
 
   // --- Input validation ---
   try {
