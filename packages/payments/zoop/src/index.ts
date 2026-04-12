@@ -24,6 +24,14 @@
  * - get_transfer: Get transfer details
  * - create_subscription: Create a recurring subscription
  * - list_receivables: List all receivables for the marketplace
+ * - create_pix_payment: Create a PIX payment
+ * - get_pix_payment: Get PIX payment details
+ * - cancel_subscription: Cancel a subscription
+ * - list_subscriptions: List subscriptions
+ * - list_disputes: List disputes/chargebacks
+ * - get_marketplace: Get marketplace info
+ * - get_dispute: Get dispute details
+ * - get_subscription: Get subscription details
  *
  * Environment:
  *   ZOOP_API_KEY — API key from https://docs.zoop.co/
@@ -407,6 +415,102 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
+    {
+      name: "create_pix_payment",
+      description: "Create a PIX payment transaction",
+      inputSchema: {
+        type: "object",
+        properties: {
+          on_behalf_of: { type: "string", description: "Seller ID to receive the payment" },
+          amount: { type: "number", description: "Amount in cents (BRL)" },
+          customer: { type: "string", description: "Buyer ID" },
+          description: { type: "string", description: "Payment description" },
+          payment_method: {
+            type: "object",
+            description: "PIX payment method details",
+            properties: {
+              expiration_date: { type: "string", description: "Expiration date (YYYY-MM-DD)" },
+            },
+          },
+        },
+        required: ["on_behalf_of", "amount"],
+      },
+    },
+    {
+      name: "get_pix_payment",
+      description: "Get PIX payment details including QR code and copy-paste payload",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Transaction ID of the PIX payment" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "cancel_subscription",
+      description: "Cancel a recurring subscription",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Subscription ID" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "list_subscriptions",
+      description: "List subscriptions in the marketplace",
+      inputSchema: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["active", "canceled", "suspended"], description: "Filter by status" },
+          customer_id: { type: "string", description: "Filter by customer ID" },
+          limit: { type: "number", description: "Number of results" },
+          offset: { type: "number", description: "Pagination offset" },
+        },
+      },
+    },
+    {
+      name: "list_disputes",
+      description: "List disputes/chargebacks in the marketplace",
+      inputSchema: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["opened", "pending", "won", "lost"], description: "Filter by status" },
+          limit: { type: "number", description: "Number of results" },
+          offset: { type: "number", description: "Pagination offset" },
+          sort: { type: "string", enum: ["time-descending", "time-ascending"], description: "Sort order" },
+        },
+      },
+    },
+    {
+      name: "get_marketplace",
+      description: "Get marketplace information and settings",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "get_dispute",
+      description: "Get dispute details by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Dispute ID" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "get_subscription",
+      description: "Get subscription details by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Subscription ID" },
+        },
+        required: ["id"],
+      },
+    },
   ],
 }));
 
@@ -543,6 +647,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.offset) params.set("offset", String(args.offset));
         return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("GET", `/receivables?${params}`), null, 2) }] };
       }
+      case "create_pix_payment": {
+        const payload: Record<string, unknown> = {
+          on_behalf_of: args?.on_behalf_of,
+          amount: args?.amount,
+          currency: "BRL",
+          payment_type: "pix",
+          customer: args?.customer,
+          description: args?.description,
+        };
+        if (args?.payment_method) payload.payment_method = args.payment_method;
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("POST", "/transactions", payload), null, 2) }] };
+      }
+      case "get_pix_payment":
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("GET", `/transactions/${args?.id}`), null, 2) }] };
+      case "cancel_subscription":
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("DELETE", `/subscriptions/${args?.id}`), null, 2) }] };
+      case "list_subscriptions": {
+        const params = new URLSearchParams();
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.customer_id) params.set("customer_id", String(args.customer_id));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.offset) params.set("offset", String(args.offset));
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("GET", `/subscriptions?${params}`), null, 2) }] };
+      }
+      case "list_disputes": {
+        const params = new URLSearchParams();
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.offset) params.set("offset", String(args.offset));
+        if (args?.sort) params.set("sort", String(args.sort));
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("GET", `/disputes?${params}`), null, 2) }] };
+      }
+      case "get_marketplace":
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("GET", ""), null, 2) }] };
+      case "get_dispute":
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("GET", `/disputes/${args?.id}`), null, 2) }] };
+      case "get_subscription":
+        return { content: [{ type: "text", text: JSON.stringify(await zoopRequest("GET", `/subscriptions/${args?.id}`), null, 2) }] };
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }

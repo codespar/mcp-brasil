@@ -29,6 +29,14 @@
  * - list_prices: List prices for products
  * - create_invoice: Create a draft invoice
  * - list_subscriptions: List active subscriptions
+ * - create_subscription: Create a subscription for a customer
+ * - cancel_subscription: Cancel a subscription
+ * - create_invoice_item: Add a line item to an invoice
+ * - finalize_invoice: Finalize a draft invoice
+ * - create_coupon: Create a discount coupon
+ * - list_disputes: List payment disputes
+ * - create_checkout_session: Create a Stripe Checkout Session
+ * - get_account: Get Stripe account info
  *
  * Environment:
  *   STRIPE_API_KEY     — Stripe secret or restricted API key
@@ -355,6 +363,138 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
+    {
+      name: "create_subscription",
+      description: "Create a subscription for a customer with a recurring price",
+      inputSchema: {
+        type: "object",
+        properties: {
+          customer: { type: "string", description: "Customer ID" },
+          items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                price: { type: "string", description: "Price ID" },
+                quantity: { type: "number", description: "Quantity (default: 1)" },
+              },
+              required: ["price"],
+            },
+            description: "Subscription items (price + quantity)",
+          },
+          trial_period_days: { type: "number", description: "Number of trial days" },
+          default_payment_method: { type: "string", description: "Default payment method ID" },
+          metadata: { type: "object", description: "Custom metadata" },
+        },
+        required: ["customer", "items"],
+      },
+    },
+    {
+      name: "cancel_subscription",
+      description: "Cancel a Stripe subscription immediately or at period end",
+      inputSchema: {
+        type: "object",
+        properties: {
+          subscription_id: { type: "string", description: "Subscription ID" },
+          cancel_at_period_end: { type: "boolean", description: "If true, cancel at end of current period instead of immediately" },
+        },
+        required: ["subscription_id"],
+      },
+    },
+    {
+      name: "create_invoice_item",
+      description: "Add a line item to an upcoming or specific invoice",
+      inputSchema: {
+        type: "object",
+        properties: {
+          customer: { type: "string", description: "Customer ID" },
+          amount: { type: "number", description: "Amount in cents" },
+          currency: { type: "string", description: "Currency code (e.g. 'usd')" },
+          description: { type: "string", description: "Line item description" },
+          invoice: { type: "string", description: "Invoice ID (omit to add to next upcoming invoice)" },
+          price: { type: "string", description: "Price ID (alternative to amount)" },
+          quantity: { type: "number", description: "Quantity (when using price)" },
+          metadata: { type: "object", description: "Custom metadata" },
+        },
+        required: ["customer"],
+      },
+    },
+    {
+      name: "finalize_invoice",
+      description: "Finalize a draft invoice so it can be paid",
+      inputSchema: {
+        type: "object",
+        properties: {
+          invoice_id: { type: "string", description: "Invoice ID to finalize" },
+          auto_advance: { type: "boolean", description: "Whether to auto-send the invoice to the customer" },
+        },
+        required: ["invoice_id"],
+      },
+    },
+    {
+      name: "create_coupon",
+      description: "Create a discount coupon",
+      inputSchema: {
+        type: "object",
+        properties: {
+          percent_off: { type: "number", description: "Percentage discount (1-100). Use this OR amount_off." },
+          amount_off: { type: "number", description: "Fixed discount in cents. Use this OR percent_off." },
+          currency: { type: "string", description: "Currency (required if amount_off is set)" },
+          duration: { type: "string", enum: ["forever", "once", "repeating"], description: "How long the coupon applies" },
+          duration_in_months: { type: "number", description: "Number of months (when duration is 'repeating')" },
+          name: { type: "string", description: "Coupon display name" },
+          max_redemptions: { type: "number", description: "Maximum number of times coupon can be redeemed" },
+          metadata: { type: "object", description: "Custom metadata" },
+        },
+        required: ["duration"],
+      },
+    },
+    {
+      name: "list_disputes",
+      description: "List payment disputes (chargebacks)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          charge: { type: "string", description: "Filter by charge ID" },
+          payment_intent: { type: "string", description: "Filter by payment intent ID" },
+          limit: { type: "number", description: "Max results (1-100)" },
+          starting_after: { type: "string", description: "Pagination cursor" },
+        },
+      },
+    },
+    {
+      name: "create_checkout_session",
+      description: "Create a Stripe Checkout Session (hosted payment page)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          line_items: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                price: { type: "string", description: "Price ID" },
+                quantity: { type: "number", description: "Quantity" },
+              },
+              required: ["price", "quantity"],
+            },
+            description: "Items in the checkout",
+          },
+          mode: { type: "string", enum: ["payment", "subscription", "setup"], description: "Checkout mode" },
+          success_url: { type: "string", description: "URL to redirect on success" },
+          cancel_url: { type: "string", description: "URL to redirect on cancel" },
+          customer: { type: "string", description: "Existing customer ID" },
+          customer_email: { type: "string", description: "Pre-fill customer email" },
+          metadata: { type: "object", description: "Custom metadata" },
+        },
+        required: ["line_items", "mode", "success_url"],
+      },
+    },
+    {
+      name: "get_account",
+      description: "Get Stripe account info for the authenticated account",
+      inputSchema: { type: "object", properties: {} },
+    },
   ],
 }));
 
@@ -489,6 +629,40 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.limit) params.set("limit", String(args.limit));
         return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("GET", `/subscriptions?${params}`), null, 2) }] };
       }
+
+      case "create_subscription":
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("POST", "/subscriptions", args as Record<string, unknown>), null, 2) }] };
+
+      case "cancel_subscription": {
+        if (args?.cancel_at_period_end) {
+          return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("POST", `/subscriptions/${args?.subscription_id}`, { cancel_at_period_end: true }), null, 2) }] };
+        }
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("DELETE", `/subscriptions/${args?.subscription_id}`), null, 2) }] };
+      }
+
+      case "create_invoice_item":
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("POST", "/invoiceitems", args as Record<string, unknown>), null, 2) }] };
+
+      case "finalize_invoice":
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("POST", `/invoices/${args?.invoice_id}/finalize`, args?.auto_advance !== undefined ? { auto_advance: args.auto_advance } : undefined), null, 2) }] };
+
+      case "create_coupon":
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("POST", "/coupons", args as Record<string, unknown>), null, 2) }] };
+
+      case "list_disputes": {
+        const params = new URLSearchParams();
+        if (args?.charge) params.set("charge", String(args.charge));
+        if (args?.payment_intent) params.set("payment_intent", String(args.payment_intent));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.starting_after) params.set("starting_after", String(args.starting_after));
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("GET", `/disputes?${params}`), null, 2) }] };
+      }
+
+      case "create_checkout_session":
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("POST", "/checkout/sessions", args as Record<string, unknown>), null, 2) }] };
+
+      case "get_account":
+        return { content: [{ type: "text", text: JSON.stringify(await stripeRequest("GET", "/account"), null, 2) }] };
 
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };

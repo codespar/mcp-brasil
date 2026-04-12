@@ -19,6 +19,15 @@
  * - get_webhook_events: List webhook events
  * - create_subaccount: Create a subaccount (split)
  * - get_installments: Get installment details for a payment
+ * - create_pix_qrcode: Generate PIX QR code for receiving payments
+ * - list_transfers: List transfers with filters
+ * - create_notification: Create webhook notification config
+ * - list_notifications: List notification configs
+ * - get_customer: Get customer details by ID
+ * - update_payment: Update a pending payment
+ * - delete_payment: Delete a payment
+ * - refund_payment: Refund a received payment
+ * - get_subscription: Get subscription details by ID
  *
  * Environment:
  *   ASAAS_API_KEY — API key from https://www.asaas.com/
@@ -263,6 +272,123 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["value"],
       },
     },
+    {
+      name: "create_pix_qrcode",
+      description: "Generate a static PIX QR code for receiving payments",
+      inputSchema: {
+        type: "object",
+        properties: {
+          addressKey: { type: "string", description: "Pix key to receive payment" },
+          description: { type: "string", description: "QR code description" },
+          value: { type: "number", description: "Fixed amount (omit for open value)" },
+          format: { type: "string", enum: ["ALL", "IMAGE", "PAYLOAD"], description: "Response format" },
+          expirationDate: { type: "string", description: "Expiration date (YYYY-MM-DD)" },
+          expirationSeconds: { type: "number", description: "Expiration in seconds" },
+          allowsMultiplePayments: { type: "boolean", description: "Whether multiple payments are allowed" },
+        },
+        required: ["addressKey"],
+      },
+    },
+    {
+      name: "list_transfers",
+      description: "List transfers with optional filters",
+      inputSchema: {
+        type: "object",
+        properties: {
+          type: { type: "string", enum: ["BANK_ACCOUNT_TRANSFER", "ASAAS_ACCOUNT_TRANSFER"], description: "Filter by transfer type" },
+          status: { type: "string", enum: ["PENDING", "BANK_PROCESSING", "DONE", "CANCELLED", "FAILED"], description: "Filter by status" },
+          limit: { type: "number", description: "Number of results (default 10)" },
+          offset: { type: "number", description: "Pagination offset" },
+        },
+      },
+    },
+    {
+      name: "create_notification",
+      description: "Create a webhook notification configuration",
+      inputSchema: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "Webhook URL to receive notifications" },
+          email: { type: "string", description: "Email for notifications" },
+          enabled: { type: "boolean", description: "Whether the notification is enabled" },
+          interrupted: { type: "boolean", description: "Whether the notification is interrupted" },
+          apiVersion: { type: "number", description: "API version (3)" },
+          authToken: { type: "string", description: "Authentication token for webhook validation" },
+        },
+        required: ["url", "enabled"],
+      },
+    },
+    {
+      name: "list_notifications",
+      description: "List webhook notification configurations",
+      inputSchema: {
+        type: "object",
+        properties: {
+          limit: { type: "number", description: "Number of results (default 10)" },
+          offset: { type: "number", description: "Pagination offset" },
+        },
+      },
+    },
+    {
+      name: "get_customer",
+      description: "Get customer details by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Customer ID (cus_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "update_payment",
+      description: "Update a pending payment",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Payment ID (pay_xxx)" },
+          value: { type: "number", description: "Updated amount in BRL" },
+          dueDate: { type: "string", description: "Updated due date (YYYY-MM-DD)" },
+          description: { type: "string", description: "Updated description" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "delete_payment",
+      description: "Delete a payment by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Payment ID (pay_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "refund_payment",
+      description: "Refund a received payment",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Payment ID (pay_xxx)" },
+          value: { type: "number", description: "Refund amount (omit for full refund)" },
+          description: { type: "string", description: "Refund reason" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "get_subscription",
+      description: "Get subscription details by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Subscription ID (sub_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
   ],
 }));
 
@@ -373,6 +499,36 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("GET", `/payments/${args?.id}/installments`), null, 2) }] };
       case "create_transfer":
         return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("POST", "/transfers", args), null, 2) }] };
+      case "create_pix_qrcode":
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("POST", "/pix/qrCodes/static", args), null, 2) }] };
+      case "list_transfers": {
+        const params = new URLSearchParams();
+        if (args?.type) params.set("type", String(args.type));
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.offset) params.set("offset", String(args.offset));
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("GET", `/transfers?${params}`), null, 2) }] };
+      }
+      case "create_notification":
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("POST", "/webhook", args), null, 2) }] };
+      case "list_notifications": {
+        const params = new URLSearchParams();
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.offset) params.set("offset", String(args.offset));
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("GET", `/webhook?${params}`), null, 2) }] };
+      }
+      case "get_customer":
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("GET", `/customers/${args?.id}`), null, 2) }] };
+      case "update_payment": {
+        const { id, ...updateBody } = args as Record<string, unknown>;
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("PUT", `/payments/${id}`, updateBody), null, 2) }] };
+      }
+      case "delete_payment":
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("DELETE", `/payments/${args?.id}`), null, 2) }] };
+      case "refund_payment":
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("POST", `/payments/${args?.id}/refund`, args?.value ? { value: args.value, description: args?.description } : undefined), null, 2) }] };
+      case "get_subscription":
+        return { content: [{ type: "text", text: JSON.stringify(await asaasRequest("GET", `/subscriptions/${args?.id}`), null, 2) }] };
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }

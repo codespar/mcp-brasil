@@ -16,6 +16,14 @@
  * - create_pix_payment: Create PIX payment
  * - get_merchant_order: Get merchant order by ID
  * - get_balance: Get account balance
+ * - create_subscription: Create a recurring subscription (preapproval)
+ * - get_subscription: Get subscription details
+ * - cancel_subscription: Cancel a subscription
+ * - create_card_token: Tokenize a card
+ * - get_payment_method_details: Get details of a specific payment method
+ * - create_store: Create a store
+ * - list_stores: List stores
+ * - create_pos: Create a point of sale
  *
  * Environment:
  *   MERCADO_PAGO_ACCESS_TOKEN — Access token for API authentication
@@ -212,6 +220,160 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description: "Get account balance",
       inputSchema: { type: "object", properties: {} },
     },
+    {
+      name: "create_subscription",
+      description: "Create a recurring subscription (preapproval)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          payer_email: { type: "string", description: "Payer email" },
+          reason: { type: "string", description: "Subscription reason/title" },
+          auto_recurring: {
+            type: "object",
+            description: "Recurring configuration",
+            properties: {
+              frequency: { type: "number", description: "Frequency value (e.g. 1)" },
+              frequency_type: { type: "string", enum: ["days", "months"], description: "Frequency unit" },
+              transaction_amount: { type: "number", description: "Amount per period" },
+              currency_id: { type: "string", description: "Currency (e.g. BRL)" },
+              start_date: { type: "string", description: "Start date (ISO 8601)" },
+              end_date: { type: "string", description: "End date (ISO 8601)" },
+            },
+            required: ["frequency", "frequency_type", "transaction_amount", "currency_id"],
+          },
+          back_url: { type: "string", description: "Return URL after authorization" },
+          external_reference: { type: "string", description: "External reference ID" },
+        },
+        required: ["payer_email", "reason", "auto_recurring"],
+      },
+    },
+    {
+      name: "get_subscription",
+      description: "Get subscription (preapproval) details by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          preapproval_id: { type: "string", description: "Preapproval/subscription ID" },
+        },
+        required: ["preapproval_id"],
+      },
+    },
+    {
+      name: "cancel_subscription",
+      description: "Cancel a subscription (preapproval)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          preapproval_id: { type: "string", description: "Preapproval/subscription ID" },
+        },
+        required: ["preapproval_id"],
+      },
+    },
+    {
+      name: "create_card_token",
+      description: "Tokenize a card for secure payments",
+      inputSchema: {
+        type: "object",
+        properties: {
+          card_number: { type: "string", description: "Card number" },
+          expiration_month: { type: "string", description: "Expiration month (MM)" },
+          expiration_year: { type: "string", description: "Expiration year (YYYY)" },
+          security_code: { type: "string", description: "CVV security code" },
+          cardholder: {
+            type: "object",
+            description: "Cardholder info",
+            properties: {
+              name: { type: "string", description: "Name as on card" },
+              identification: {
+                type: "object",
+                properties: {
+                  type: { type: "string", description: "Document type (e.g. CPF)" },
+                  number: { type: "string", description: "Document number" },
+                },
+              },
+            },
+          },
+        },
+        required: ["card_number", "expiration_month", "expiration_year", "security_code", "cardholder"],
+      },
+    },
+    {
+      name: "get_payment_method_details",
+      description: "Get details of a specific payment method by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          payment_method_id: { type: "string", description: "Payment method ID (e.g. visa, pix, bolbradesco)" },
+        },
+        required: ["payment_method_id"],
+      },
+    },
+    {
+      name: "create_store",
+      description: "Create a store (physical location or POS group)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Store name" },
+          business_hours: {
+            type: "object",
+            description: "Business hours configuration",
+            properties: {
+              monday: { type: "array", items: { type: "object", properties: { open: { type: "string" }, close: { type: "string" } } } },
+              tuesday: { type: "array", items: { type: "object", properties: { open: { type: "string" }, close: { type: "string" } } } },
+              wednesday: { type: "array", items: { type: "object", properties: { open: { type: "string" }, close: { type: "string" } } } },
+              thursday: { type: "array", items: { type: "object", properties: { open: { type: "string" }, close: { type: "string" } } } },
+              friday: { type: "array", items: { type: "object", properties: { open: { type: "string" }, close: { type: "string" } } } },
+              saturday: { type: "array", items: { type: "object", properties: { open: { type: "string" }, close: { type: "string" } } } },
+              sunday: { type: "array", items: { type: "object", properties: { open: { type: "string" }, close: { type: "string" } } } },
+            },
+          },
+          location: {
+            type: "object",
+            description: "Store location",
+            properties: {
+              street_name: { type: "string" },
+              street_number: { type: "string" },
+              city_name: { type: "string" },
+              state_name: { type: "string" },
+              zip_code: { type: "string" },
+              latitude: { type: "number" },
+              longitude: { type: "number" },
+            },
+          },
+          external_id: { type: "string", description: "External reference ID" },
+        },
+        required: ["name"],
+      },
+    },
+    {
+      name: "list_stores",
+      description: "List stores",
+      inputSchema: {
+        type: "object",
+        properties: {
+          external_id: { type: "string", description: "Filter by external ID" },
+          limit: { type: "number", description: "Results limit" },
+          offset: { type: "number", description: "Results offset" },
+        },
+      },
+    },
+    {
+      name: "create_pos",
+      description: "Create a point of sale (POS) linked to a store",
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "POS name" },
+          store_id: { type: "string", description: "Store ID to link this POS to" },
+          fixed_amount: { type: "boolean", description: "Whether the POS has a fixed amount" },
+          category: { type: "number", description: "MCC category code" },
+          external_id: { type: "string", description: "External reference ID" },
+          external_store_id: { type: "string", description: "External store reference" },
+        },
+        required: ["name", "external_id"],
+      },
+    },
   ],
 }));
 
@@ -291,6 +453,51 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/merchant_orders/${args?.orderId}`), null, 2) }] };
       case "get_balance":
         return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", "/users/me/mercadopago_account/balance"), null, 2) }] };
+      case "create_subscription":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("POST", "/preapproval", {
+          payer_email: args?.payer_email,
+          reason: args?.reason,
+          auto_recurring: args?.auto_recurring,
+          back_url: args?.back_url,
+          external_reference: args?.external_reference,
+        }), null, 2) }] };
+      case "get_subscription":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/preapproval/${args?.preapproval_id}`), null, 2) }] };
+      case "cancel_subscription":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("PUT", `/preapproval/${args?.preapproval_id}`, { status: "cancelled" }), null, 2) }] };
+      case "create_card_token":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("POST", "/v1/card_tokens", {
+          card_number: args?.card_number,
+          expiration_month: args?.expiration_month,
+          expiration_year: args?.expiration_year,
+          security_code: args?.security_code,
+          cardholder: args?.cardholder,
+        }), null, 2) }] };
+      case "get_payment_method_details":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/v1/payment_methods/${args?.payment_method_id}`), null, 2) }] };
+      case "create_store":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("POST", "/users/me/stores", {
+          name: args?.name,
+          business_hours: args?.business_hours,
+          location: args?.location,
+          external_id: args?.external_id,
+        }), null, 2) }] };
+      case "list_stores": {
+        const params = new URLSearchParams();
+        if (args?.external_id) params.set("external_id", String(args.external_id));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.offset) params.set("offset", String(args.offset));
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/users/me/stores/search?${params}`), null, 2) }] };
+      }
+      case "create_pos":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("POST", "/pos", {
+          name: args?.name,
+          store_id: args?.store_id,
+          fixed_amount: args?.fixed_amount,
+          category: args?.category,
+          external_id: args?.external_id,
+          external_store_id: args?.external_store_id,
+        }), null, 2) }] };
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
