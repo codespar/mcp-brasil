@@ -6,4 +6,4 @@ dist/
 !tsconfig.json
 !package.json
 .env
-.env.local
+*.local*
