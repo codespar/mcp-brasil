@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
 /**
- * MCP Server for Adyen Checkout API v71 — global enterprise payments.
+ * MCP Server for Adyen — global enterprise payments.
  *
  * Adyen is the default payment rail for global LatAm enterprise (iFood, Uber,
  * Spotify, AirBnB in BR). Distinct from every other payments server in our
  * catalog: it's the one enterprise merchants choose when a single gateway
  * has to cover BR + EU + US + APAC under one contract.
  *
- * This server covers **Checkout API v71** only. Payouts API, Management API,
- * and Balance Platform API are separate surfaces that can be added in
- * follow-up packages when demand emerges.
+ * This server covers **Checkout API v71** plus surgical coverage of Disputes,
+ * Balance Platform (BCL v2), Transfers (BTL v4), and Management API v3 — the
+ * companion surfaces agents most commonly need.
  *
- * Tools (15):
+ * Tools (26):
  *   Payments
  *     create_payment           POST /payments
  *     payment_details          POST /payments/details         (3DS challenge response)
@@ -39,19 +39,39 @@
  *
  *   Sessions (for Drop-in/Components)
  *     create_session           POST /sessions
+ *     get_session              GET  /sessions/{sessionId}     (poll session result)
+ *
+ *   Disputes (Dispute Service v30)
+ *     retrieve_applicable_defense_reasons  POST /retrieveApplicableDefenseReasons
+ *     accept_dispute                       POST /acceptDispute
+ *     defend_dispute                       POST /defendDispute
+ *     supply_defense_document              POST /supplyDefenseDocument
+ *
+ *   Balance Platform (BCL v2)
+ *     list_balance_accounts    GET /accountHolders/{id}/balanceAccounts
+ *     get_balance_account      GET /balanceAccounts/{id}
+ *
+ *   Transfers (BTL v4)
+ *     create_transfer          POST /transfers
+ *     get_transfer             GET  /transfers/{id}
+ *
+ *   Management API (v3)
+ *     list_merchants           GET /merchants
  *
  * Authentication
  *   X-API-Key header. Keys are generated in Customer Area → Developers →
  *   API credentials. Test keys hit checkout-test.adyen.com; live keys need
  *   a merchant-specific URL prefix (e.g. 1797a841fbb37ca7-AdyenDemo).
+ *   Balance Platform, Transfers, Disputes, and Management each use their own
+ *   base hostname but share the same X-API-Key scheme.
  *
  * Environment
  *   ADYEN_API_KEY           API key (Bearer equivalent; sent as X-API-Key)
  *   ADYEN_MERCHANT_ACCOUNT  merchant account code, injected into every call
  *   ADYEN_ENV               test | live. Defaults to test.
- *   ADYEN_LIVE_URL_PREFIX   required when ADYEN_ENV=live
+ *   ADYEN_LIVE_URL_PREFIX   required when ADYEN_ENV=live (Checkout only)
  *
- * Docs: https://docs.adyen.com/api-explorer/Checkout/71/overview
+ * Docs: https://docs.adyen.com/api-explorer/
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -78,8 +98,36 @@ function checkoutBaseUrl(): string {
   return "https://checkout-test.adyen.com/v71";
 }
 
-async function adyenRequest(method: string, path: string, body?: unknown): Promise<unknown> {
-  const url = `${checkoutBaseUrl()}${path}`;
+/** Classic Dispute Service v30 base (same host family as Pay / BIN lookup). */
+function disputesBaseUrl(): string {
+  return ENV === "live"
+    ? "https://ca-live.adyen.com/ca/services/DisputeService/v30"
+    : "https://ca-test.adyen.com/ca/services/DisputeService/v30";
+}
+
+/** Balance Platform — BCL v2 (balance accounts, account holders). */
+function balancePlatformBaseUrl(): string {
+  return ENV === "live"
+    ? "https://balanceplatform-api-live.adyen.com/bcl/v2"
+    : "https://balanceplatform-api-test.adyen.com/bcl/v2";
+}
+
+/** Transfers API — BTL v4. */
+function transfersBaseUrl(): string {
+  return ENV === "live"
+    ? "https://balanceplatform-api-live.adyen.com/btl/v4"
+    : "https://balanceplatform-api-test.adyen.com/btl/v4";
+}
+
+/** Management API v3 (merchants, stores, API credentials). */
+function managementBaseUrl(): string {
+  return ENV === "live"
+    ? "https://management-live.adyen.com/v3"
+    : "https://management-test.adyen.com/v3";
+}
+
+async function callAdyen(baseUrl: string, method: string, path: string, body?: unknown): Promise<unknown> {
+  const url = `${baseUrl}${path}`;
   const res = await fetch(url, {
     method,
     headers: {
@@ -96,6 +144,10 @@ async function adyenRequest(method: string, path: string, body?: unknown): Promi
   return text ? JSON.parse(text) : { status: res.status };
 }
 
+async function adyenRequest(method: string, path: string, body?: unknown): Promise<unknown> {
+  return callAdyen(checkoutBaseUrl(), method, path, body);
+}
+
 /** Inject merchantAccount into a payload if the caller didn't supply one. */
 function withMerchant(body: Record<string, unknown> | undefined): Record<string, unknown> {
   const b = body ?? {};
@@ -104,7 +156,7 @@ function withMerchant(body: Record<string, unknown> | undefined): Record<string,
 }
 
 const server = new Server(
-  { name: "mcp-adyen", version: "0.1.0" },
+  { name: "mcp-adyen", version: "0.2.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -335,6 +387,134 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["amount", "reference", "returnUrl", "countryCode"],
       },
     },
+    {
+      name: "get_session",
+      description: "Retrieve the status/result of a Checkout session (poll after the shopper finishes Drop-in).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          sessionId: { type: "string" },
+          sessionResult: { type: "string", description: "Opaque token returned by Drop-in onPaymentCompleted" },
+        },
+        required: ["sessionId", "sessionResult"],
+      },
+    },
+    {
+      name: "retrieve_applicable_defense_reasons",
+      description: "List the defense reason codes Adyen will accept for a given dispute (Dispute Service v30).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          disputePspReference: { type: "string", description: "pspReference of the dispute notification" },
+          merchantAccountCode: { type: "string", description: "Overrides ADYEN_MERCHANT_ACCOUNT" },
+        },
+        required: ["disputePspReference"],
+      },
+    },
+    {
+      name: "accept_dispute",
+      description: "Accept a dispute — forfeit the funds and close the case (Dispute Service v30).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          disputePspReference: { type: "string" },
+          merchantAccountCode: { type: "string" },
+        },
+        required: ["disputePspReference"],
+      },
+    },
+    {
+      name: "defend_dispute",
+      description: "Defend a dispute using one of the applicable defense reason codes (Dispute Service v30).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          disputePspReference: { type: "string" },
+          defenseReasonCode: { type: "string", description: "Must match a code from retrieve_applicable_defense_reasons" },
+          merchantAccountCode: { type: "string" },
+        },
+        required: ["disputePspReference", "defenseReasonCode"],
+      },
+    },
+    {
+      name: "supply_defense_document",
+      description: "Upload a supporting document for an ongoing dispute defense (Dispute Service v30).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          disputePspReference: { type: "string" },
+          defenseDocumentTypeCode: { type: "string", description: "e.g. TIDReceipt, GoodsOrServicesProvided, Other" },
+          content: { type: "string", description: "Base64-encoded document bytes" },
+          contentType: { type: "string", description: "MIME type (image/jpeg, application/pdf, ...)" },
+          merchantAccountCode: { type: "string" },
+        },
+        required: ["disputePspReference", "defenseDocumentTypeCode", "content", "contentType"],
+      },
+    },
+    {
+      name: "list_balance_accounts",
+      description: "List the balance accounts owned by an account holder (Balance Platform BCL v2).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          accountHolderId: { type: "string" },
+          offset: { type: "integer" },
+          limit: { type: "integer", description: "1-100" },
+        },
+        required: ["accountHolderId"],
+      },
+    },
+    {
+      name: "get_balance_account",
+      description: "Fetch a single balance account by id (Balance Platform BCL v2).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          balanceAccountId: { type: "string" },
+        },
+        required: ["balanceAccountId"],
+      },
+    },
+    {
+      name: "create_transfer",
+      description: "Initiate a transfer (bank payout, internal move, third-party card push) from a balance account (Transfers BTL v4).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          amount: { type: "object", description: "{ value, currency }" },
+          balanceAccountId: { type: "string", description: "Source balance account" },
+          category: { type: "string", enum: ["bank", "internal", "issuedCard", "platformPayment", "card"] },
+          counterparty: { type: "object", description: "Destination — shape depends on category (bankAccount, transferInstrumentId, balanceAccount, etc)" },
+          description: { type: "string" },
+          reference: { type: "string" },
+          referenceForBeneficiary: { type: "string" },
+          priority: { type: "string", enum: ["regular", "fast", "wire", "instant", "crossBorder", "internal"] },
+        },
+        required: ["amount", "balanceAccountId", "category", "counterparty"],
+      },
+    },
+    {
+      name: "get_transfer",
+      description: "Retrieve a transfer by id (Transfers BTL v4).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          transferId: { type: "string" },
+        },
+        required: ["transferId"],
+      },
+    },
+    {
+      name: "list_merchants",
+      description: "List merchant accounts visible to the API credential (Management API v3).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          pageNumber: { type: "integer" },
+          pageSize: { type: "integer", description: "10-100" },
+        },
+      },
+    },
   ],
 }));
 
@@ -404,6 +584,69 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       case "create_session":
         return { content: [{ type: "text", text: JSON.stringify(await adyenRequest("POST", "/sessions", withMerchant(a)), null, 2) }] };
+      case "get_session": {
+        const sid = String(a.sessionId);
+        const params = new URLSearchParams();
+        params.set("sessionResult", String(a.sessionResult));
+        return { content: [{ type: "text", text: JSON.stringify(await adyenRequest("GET", `/sessions/${sid}?${params}`), null, 2) }] };
+      }
+      case "retrieve_applicable_defense_reasons": {
+        const body = {
+          disputePspReference: a.disputePspReference,
+          merchantAccountCode: (a.merchantAccountCode as string | undefined) ?? MERCHANT_ACCOUNT,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(disputesBaseUrl(), "POST", "/retrieveApplicableDefenseReasons", body), null, 2) }] };
+      }
+      case "accept_dispute": {
+        const body = {
+          disputePspReference: a.disputePspReference,
+          merchantAccountCode: (a.merchantAccountCode as string | undefined) ?? MERCHANT_ACCOUNT,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(disputesBaseUrl(), "POST", "/acceptDispute", body), null, 2) }] };
+      }
+      case "defend_dispute": {
+        const body = {
+          disputePspReference: a.disputePspReference,
+          defenseReasonCode: a.defenseReasonCode,
+          merchantAccountCode: (a.merchantAccountCode as string | undefined) ?? MERCHANT_ACCOUNT,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(disputesBaseUrl(), "POST", "/defendDispute", body), null, 2) }] };
+      }
+      case "supply_defense_document": {
+        const body = {
+          disputePspReference: a.disputePspReference,
+          defenseDocuments: [
+            {
+              content: a.content,
+              contentType: a.contentType,
+              defenseDocumentTypeCode: a.defenseDocumentTypeCode,
+            },
+          ],
+          merchantAccountCode: (a.merchantAccountCode as string | undefined) ?? MERCHANT_ACCOUNT,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(disputesBaseUrl(), "POST", "/supplyDefenseDocument", body), null, 2) }] };
+      }
+      case "list_balance_accounts": {
+        const params = new URLSearchParams();
+        if (a.offset !== undefined) params.set("offset", String(a.offset));
+        if (a.limit !== undefined) params.set("limit", String(a.limit));
+        const qs = params.toString();
+        const path = `/accountHolders/${a.accountHolderId}/balanceAccounts${qs ? `?${qs}` : ""}`;
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(balancePlatformBaseUrl(), "GET", path), null, 2) }] };
+      }
+      case "get_balance_account":
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(balancePlatformBaseUrl(), "GET", `/balanceAccounts/${a.balanceAccountId}`), null, 2) }] };
+      case "create_transfer":
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(transfersBaseUrl(), "POST", "/transfers", a), null, 2) }] };
+      case "get_transfer":
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(transfersBaseUrl(), "GET", `/transfers/${a.transferId}`), null, 2) }] };
+      case "list_merchants": {
+        const params = new URLSearchParams();
+        if (a.pageNumber !== undefined) params.set("pageNumber", String(a.pageNumber));
+        if (a.pageSize !== undefined) params.set("pageSize", String(a.pageSize));
+        const qs = params.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await callAdyen(managementBaseUrl(), "GET", `/merchants${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -426,7 +669,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-adyen", version: "0.1.0" }, { capabilities: { tools: {} } });
+        const s = new Server({ name: "mcp-adyen", version: "0.2.0" }, { capabilities: { tools: {} } });
         (server as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.forEach((v, k) => (s as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.set(k, v));
         (server as unknown as { _notificationHandlers?: Map<unknown, unknown> })._notificationHandlers?.forEach((v, k) => (s as unknown as { _notificationHandlers: Map<unknown, unknown> })._notificationHandlers.set(k, v));
         await s.connect(t);
