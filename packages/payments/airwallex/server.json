@@ -1,0 +1,44 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-airwallex",
+  "description": "MCP server for Airwallex — embedded finance for cross-border collection and payouts. Global accounts, FX conversions, beneficiary transfers.",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-brasil",
+    "source": "github",
+    "subfolder": "packages/payments/airwallex"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-airwallex",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "AIRWALLEX_CLIENT_ID",
+          "description": "Airwallex client id (sent as x-client-id on /authentication/login)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "AIRWALLEX_API_KEY",
+          "description": "Airwallex API key, secret (sent as x-api-key on /authentication/login)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "AIRWALLEX_ENV",
+          "description": "Airwallex environment. 'demo' (default, https://api-demo.airwallex.com) or 'production' (https://api.airwallex.com).",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
