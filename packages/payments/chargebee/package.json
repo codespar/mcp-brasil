@@ -1,0 +1,32 @@
+{
+  "name": "@codespar/mcp-chargebee",
+  "version": "0.1.0",
+  "description": "MCP server for Chargebee — global subscription billing, recurring revenue orchestration",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-chargebee": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "chargebee",
+    "payments",
+    "subscriptions",
+    "billing",
+    "saas",
+    "recurring"
+  ],
+  "mcpName": "io.github.codespar/mcp-chargebee"
+}
