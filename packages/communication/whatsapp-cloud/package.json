@@ -1,0 +1,33 @@
+{
+  "name": "@codespar/mcp-whatsapp-cloud",
+  "version": "0.1.0",
+  "description": "MCP server for WhatsApp Cloud API (Meta direct) — official Graph API integration for messages, media, and templates",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-whatsapp-cloud": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "whatsapp",
+    "whatsapp-cloud",
+    "meta",
+    "graph-api",
+    "messaging",
+    "waba",
+    "business"
+  ],
+  "mcpName": "io.github.codespar/mcp-whatsapp-cloud"
+}

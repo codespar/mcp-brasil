@@ -1,0 +1,51 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-whatsapp-cloud",
+  "description": "MCP server for WhatsApp Cloud API (Meta direct) — official Graph API integration for messages, media, and templates",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-brasil",
+    "source": "github",
+    "subfolder": "packages/communication/whatsapp-cloud"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-whatsapp-cloud",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "WHATSAPP_ACCESS_TOKEN",
+          "description": "Meta system-user access token (permanent). Used as Bearer token for Graph API.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "WHATSAPP_PHONE_NUMBER_ID",
+          "description": "WhatsApp Business phone number ID registered with Meta.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "WHATSAPP_BUSINESS_ACCOUNT_ID",
+          "description": "WhatsApp Business Account (WABA) ID. Used for template management.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "WHATSAPP_GRAPH_VERSION",
+          "description": "Graph API version. Defaults to v21.0. Meta bumps quarterly.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
