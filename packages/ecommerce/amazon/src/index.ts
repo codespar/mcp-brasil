@@ -8,20 +8,31 @@
  * (Brazil + SEA), this trio gives agents full marketplace reach for LatAm
  * commerce.
  *
- * Tools (13):
- *   list_orders               — GET  /orders/v0/orders
- *   get_order                 — GET  /orders/v0/orders/{orderId}
- *   get_order_items           — GET  /orders/v0/orders/{orderId}/orderItems
- *   get_listings_item         — GET  /listings/2021-08-01/items/{sellerId}/{sku}
- *   put_listings_item         — PUT  /listings/2021-08-01/items/{sellerId}/{sku}
- *   delete_listings_item      — DEL  /listings/2021-08-01/items/{sellerId}/{sku}
- *   search_catalog_items      — GET  /catalog/2022-04-01/items
- *   get_inventory_summary     — GET  /fba/inventory/v1/summaries
- *   create_report             — POST /reports/2021-06-30/reports
- *   get_report                — GET  /reports/2021-06-30/reports/{reportId}
- *   list_financial_events     — GET  /finances/v0/financialEvents
- *   get_order_shipment_status — GET  /shipping/v1/shipments/{shipmentId}
- *   create_subscription       — POST /notifications/v1/subscriptions/{notificationType}
+ * Tools (24):
+ *   list_orders                     — GET   /orders/v0/orders
+ *   get_order                       — GET   /orders/v0/orders/{orderId}
+ *   get_order_items                 — GET   /orders/v0/orders/{orderId}/orderItems
+ *   confirm_shipment                — POST  /orders/v0/orders/{orderId}/shipmentConfirmation
+ *   update_shipment_status          — POST  /orders/v0/orders/{orderId}/shipment
+ *   get_listings_item               — GET   /listings/2021-08-01/items/{sellerId}/{sku}
+ *   put_listings_item               — PUT   /listings/2021-08-01/items/{sellerId}/{sku}
+ *   patch_listings_item             — PATCH /listings/2021-08-01/items/{sellerId}/{sku}
+ *   delete_listings_item            — DEL   /listings/2021-08-01/items/{sellerId}/{sku}
+ *   search_catalog_items            — GET   /catalog/2022-04-01/items
+ *   get_inventory_summary           — GET   /fba/inventory/v1/summaries
+ *   create_report                   — POST  /reports/2021-06-30/reports
+ *   get_report                      — GET   /reports/2021-06-30/reports/{reportId}
+ *   list_reports                    — GET   /reports/2021-06-30/reports
+ *   cancel_report                   — DEL   /reports/2021-06-30/reports/{reportId}
+ *   create_feed                     — POST  /feeds/2021-06-30/feeds
+ *   get_feed                        — GET   /feeds/2021-06-30/feeds/{feedId}
+ *   list_financial_events           — GET   /finances/v0/financialEvents
+ *   list_financial_events_by_order  — GET   /finances/v0/orders/{orderId}/financialEvents
+ *   get_my_fees_estimate_for_asin   — POST  /products/fees/v0/items/{asin}/feesEstimate
+ *   get_order_shipment_status       — GET   /shipping/v1/shipments/{shipmentId}
+ *   create_subscription             — POST  /notifications/v1/subscriptions/{notificationType}
+ *   list_subscriptions              — GET   /notifications/v1/subscriptions/{notificationType}
+ *   get_marketplace_participations  — GET   /sellers/v1/marketplaceParticipations
  *
  * Authentication
  *   Dual-step LWA (Login with Amazon) OAuth:
@@ -141,7 +152,7 @@ async function amazonRequest(
 }
 
 const server = new Server(
-  { name: "mcp-amazon", version: "0.1.0-alpha.1" },
+  { name: "mcp-amazon", version: "0.2.0-alpha.1" },
   { capabilities: { tools: {} } }
 );
 
@@ -337,6 +348,152 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["notificationType", "payloadVersion", "destinationId"],
       },
     },
+    {
+      name: "patch_listings_item",
+      description: "Partially update a listing item for the seller by SKU using a JSON Patch list of operations. Use this to change specific attributes without replacing the full listing.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          sellerId: { type: "string", description: "Seller merchant token. Defaults to AMAZON_SELLER_ID env." },
+          sku: { type: "string", description: "Merchant-defined SKU." },
+          marketplaceIds: { type: "array", items: { type: "string" }, description: "Marketplace ids. Defaults to AMAZON_MARKETPLACE_ID env." },
+          productType: { type: "string", description: "Amazon product type (e.g. SHOES, LUGGAGE)." },
+          patches: { type: "array", items: { type: "object" }, description: "Array of JSON Patch operations — each with op (add|replace|delete|merge), path (e.g. '/attributes/standard_price'), and value." },
+          issueLocale: { type: "string", description: "Locale for issue localization (e.g. en_US, pt_BR)." },
+        },
+        required: ["sku", "productType", "patches"],
+      },
+    },
+    {
+      name: "confirm_shipment",
+      description: "Confirm shipment of an order's items (Orders API v0). Required for MFN sellers to mark items as shipped and trigger customer notification + charge.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          AmazonOrderId: { type: "string", description: "19-character order id." },
+          marketplaceId: { type: "string", description: "Marketplace id. Defaults to AMAZON_MARKETPLACE_ID env." },
+          packageDetail: { type: "object", description: "Package details: packageReferenceId, carrierCode, trackingNumber, shipDate, orderItems[] (orderItemId + quantity)." },
+          codCollectionMethod: { type: "string", description: "Optional COD collection method (JP only)." },
+        },
+        required: ["AmazonOrderId", "packageDetail"],
+      },
+    },
+    {
+      name: "update_shipment_status",
+      description: "Update the shipment status of an order (Orders API v0). Used to mark MFN orders as ReadyForPickup, PickedUp, or RefusedPickup.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          AmazonOrderId: { type: "string", description: "19-character order id." },
+          marketplaceId: { type: "string", description: "Marketplace id. Defaults to AMAZON_MARKETPLACE_ID env." },
+          shipmentStatus: { type: "string", description: "ReadyForPickup | PickedUp | RefusedPickup." },
+          orderItems: { type: "array", items: { type: "object" }, description: "Optional list of { orderItemId, quantity } — omit for all items." },
+        },
+        required: ["AmazonOrderId", "shipmentStatus"],
+      },
+    },
+    {
+      name: "list_reports",
+      description: "List reports the seller has requested. Filter by reportTypes, processingStatuses, and created-time window.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          reportTypes: { type: "array", items: { type: "string" }, description: "Filter by up to 10 report-type codes." },
+          processingStatuses: { type: "array", items: { type: "string" }, description: "CANCELLED | DONE | FATAL | IN_PROGRESS | IN_QUEUE." },
+          marketplaceIds: { type: "array", items: { type: "string" }, description: "Marketplace ids. Defaults to [AMAZON_MARKETPLACE_ID] env." },
+          pageSize: { type: "number", description: "Max 100. Default 10." },
+          createdSince: { type: "string", description: "ISO-8601 — only reports created after this time (default: 90 days ago)." },
+          createdUntil: { type: "string", description: "ISO-8601 — only reports created before this time." },
+          nextToken: { type: "string", description: "Pagination token." },
+        },
+      },
+    },
+    {
+      name: "cancel_report",
+      description: "Cancel a report that is IN_QUEUE and has not yet started processing. Reports that are IN_PROGRESS or DONE cannot be cancelled.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          reportId: { type: "string", description: "Report id to cancel." },
+        },
+        required: ["reportId"],
+      },
+    },
+    {
+      name: "create_feed",
+      description: "Submit a feed to SP-API (e.g. POST_PRODUCT_DATA, POST_INVENTORY_AVAILABILITY_DATA, JSON_LISTINGS_FEED). Feed contents must first be uploaded via the Feed Document API to get an inputFeedDocumentId.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          feedType: { type: "string", description: "Feed type code (e.g. JSON_LISTINGS_FEED, POST_PRODUCT_PRICING_DATA, POST_FLAT_FILE_INVLOADER_DATA)." },
+          marketplaceIds: { type: "array", items: { type: "string" }, description: "Marketplace ids. Defaults to [AMAZON_MARKETPLACE_ID] env." },
+          inputFeedDocumentId: { type: "string", description: "Feed document id from POST /feeds/2021-06-30/documents (where you uploaded the feed contents)." },
+          feedOptions: { type: "object", description: "Feed-type-specific options map." },
+        },
+        required: ["feedType", "inputFeedDocumentId"],
+      },
+    },
+    {
+      name: "get_feed",
+      description: "Get a feed's status and (when DONE) its resultFeedDocumentId — fetch the result from the Feed Document API for processing details.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          feedId: { type: "string", description: "Feed id from create_feed." },
+        },
+        required: ["feedId"],
+      },
+    },
+    {
+      name: "list_financial_events_by_order",
+      description: "List financial events scoped to a single order (shipment, refund, service fee, adjustment). Cleaner than list_financial_events when reconciling one order.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          AmazonOrderId: { type: "string", description: "19-character order id." },
+          MaxResultsPerPage: { type: "number", description: "Page size (1-100). Default 100." },
+          NextToken: { type: "string", description: "Pagination token." },
+        },
+        required: ["AmazonOrderId"],
+      },
+    },
+    {
+      name: "get_my_fees_estimate_for_asin",
+      description: "Estimate referral fee + FBA fees for selling an ASIN at a given price. Useful before creating a listing or when repricing.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          Asin: { type: "string", description: "Amazon ASIN." },
+          MarketplaceId: { type: "string", description: "Marketplace id. Defaults to AMAZON_MARKETPLACE_ID env." },
+          IdValueForSeller: { type: "string", description: "Free-form identifier echoed in the response (for correlation)." },
+          IsAmazonFulfilled: { type: "boolean", description: "true for FBA offers, false for MFN." },
+          PriceToEstimateFees: { type: "object", description: "{ ListingPrice: { CurrencyCode, Amount }, Shipping?: {...}, Points?: {...} }." },
+          Identifier: { type: "string", description: "Request identifier (echoed in response)." },
+          OptionalFulfillmentProgram: { type: "string", description: "Optional FBA program (e.g. FBA_CORE, FBA_SNL, FBA_EFN)." },
+        },
+        required: ["Asin", "PriceToEstimateFees", "Identifier"],
+      },
+    },
+    {
+      name: "list_subscriptions",
+      description: "Get the current subscription for a notificationType (one subscription per notificationType per app). Use to check whether a subscription already exists before creating one.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          notificationType: { type: "string", description: "Event type (e.g. ANY_OFFER_CHANGED, ORDER_CHANGE, FBA_INVENTORY_AVAILABILITY_CHANGES)." },
+          payloadVersion: { type: "string", description: "Optional payload version filter." },
+        },
+        required: ["notificationType"],
+      },
+    },
+    {
+      name: "get_marketplace_participations",
+      description: "List all marketplaces the seller is registered to sell in (Sellers API). Returns marketplace ids, names, default currency/language, and participation status. Use this to discover which marketplaces the authorized seller can transact in.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+      },
+    },
   ],
 }));
 
@@ -475,6 +632,108 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("POST", `/notifications/v1/subscriptions/${notificationType}`, body), null, 2) }] };
       }
 
+      case "patch_listings_item": {
+        const sellerId = encodeURIComponent(String(a?.sellerId ?? SELLER_ID));
+        const sku = encodeURIComponent(String(a?.sku));
+        const q: Record<string, unknown> = {
+          marketplaceIds: a?.marketplaceIds ?? (MARKETPLACE_ID ? [MARKETPLACE_ID] : undefined),
+        };
+        if (a?.issueLocale !== undefined) q.issueLocale = a.issueLocale;
+        const body: Record<string, unknown> = {
+          productType: a?.productType,
+          patches: a?.patches,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("PATCH", `/listings/2021-08-01/items/${sellerId}/${sku}`, body, { query: q }), null, 2) }] };
+      }
+
+      case "confirm_shipment": {
+        const id = encodeURIComponent(String(a?.AmazonOrderId));
+        const body: Record<string, unknown> = {
+          marketplaceId: a?.marketplaceId ?? MARKETPLACE_ID,
+          packageDetail: a?.packageDetail,
+        };
+        if (a?.codCollectionMethod !== undefined) body.codCollectionMethod = a.codCollectionMethod;
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("POST", `/orders/v0/orders/${id}/shipmentConfirmation`, body), null, 2) }] };
+      }
+
+      case "update_shipment_status": {
+        const id = encodeURIComponent(String(a?.AmazonOrderId));
+        const body: Record<string, unknown> = {
+          marketplaceId: a?.marketplaceId ?? MARKETPLACE_ID,
+          shipmentStatus: a?.shipmentStatus,
+        };
+        if (a?.orderItems !== undefined) body.orderItems = a.orderItems;
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("POST", `/orders/v0/orders/${id}/shipment`, body), null, 2) }] };
+      }
+
+      case "list_reports": {
+        const q: Record<string, unknown> = {
+          marketplaceIds: a?.marketplaceIds ?? (MARKETPLACE_ID ? [MARKETPLACE_ID] : undefined),
+        };
+        for (const k of [
+          "reportTypes", "processingStatuses", "pageSize",
+          "createdSince", "createdUntil", "nextToken",
+        ]) {
+          if (a?.[k] !== undefined) q[k] = a[k];
+        }
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("GET", "/reports/2021-06-30/reports", undefined, { query: q }), null, 2) }] };
+      }
+
+      case "cancel_report": {
+        const id = encodeURIComponent(String(a?.reportId));
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("DELETE", `/reports/2021-06-30/reports/${id}`), null, 2) }] };
+      }
+
+      case "create_feed": {
+        const body: Record<string, unknown> = {
+          feedType: a?.feedType,
+          marketplaceIds: a?.marketplaceIds ?? (MARKETPLACE_ID ? [MARKETPLACE_ID] : []),
+          inputFeedDocumentId: a?.inputFeedDocumentId,
+        };
+        if (a?.feedOptions !== undefined) body.feedOptions = a.feedOptions;
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("POST", "/feeds/2021-06-30/feeds", body), null, 2) }] };
+      }
+
+      case "get_feed": {
+        const id = encodeURIComponent(String(a?.feedId));
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("GET", `/feeds/2021-06-30/feeds/${id}`), null, 2) }] };
+      }
+
+      case "list_financial_events_by_order": {
+        const id = encodeURIComponent(String(a?.AmazonOrderId));
+        const q: Record<string, unknown> = {};
+        if (a?.MaxResultsPerPage !== undefined) q.MaxResultsPerPage = a.MaxResultsPerPage;
+        if (a?.NextToken !== undefined) q.NextToken = a.NextToken;
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("GET", `/finances/v0/orders/${id}/financialEvents`, undefined, { query: q }), null, 2) }] };
+      }
+
+      case "get_my_fees_estimate_for_asin": {
+        const asin = encodeURIComponent(String(a?.Asin));
+        const body = {
+          FeesEstimateRequest: {
+            MarketplaceId: a?.MarketplaceId ?? MARKETPLACE_ID,
+            IdType: "ASIN",
+            IdValue: String(a?.Asin),
+            IsAmazonFulfilled: a?.IsAmazonFulfilled ?? false,
+            PriceToEstimateFees: a?.PriceToEstimateFees,
+            Identifier: a?.Identifier,
+            ...(a?.OptionalFulfillmentProgram !== undefined ? { OptionalFulfillmentProgram: a.OptionalFulfillmentProgram } : {}),
+          },
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("POST", `/products/fees/v0/items/${asin}/feesEstimate`, body), null, 2) }] };
+      }
+
+      case "list_subscriptions": {
+        const notificationType = encodeURIComponent(String(a?.notificationType));
+        const q: Record<string, unknown> = {};
+        if (a?.payloadVersion !== undefined) q.payloadVersion = a.payloadVersion;
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("GET", `/notifications/v1/subscriptions/${notificationType}`, undefined, { query: q }), null, 2) }] };
+      }
+
+      case "get_marketplace_participations": {
+        return { content: [{ type: "text", text: JSON.stringify(await amazonRequest("GET", "/sellers/v1/marketplaceParticipations"), null, 2) }] };
+      }
+
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -497,7 +756,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-amazon", version: "0.1.0-alpha.1" }, { capabilities: { tools: {} } });
+        const s = new Server({ name: "mcp-amazon", version: "0.2.0-alpha.1" }, { capabilities: { tools: {} } });
         (server as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.forEach((v, k) => (s as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.set(k, v));
         (server as unknown as { _notificationHandlers?: Map<unknown, unknown> })._notificationHandlers?.forEach((v, k) => (s as unknown as { _notificationHandlers: Map<unknown, unknown> })._notificationHandlers.set(k, v));
         await s.connect(t);
