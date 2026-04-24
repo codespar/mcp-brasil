@@ -1,0 +1,36 @@
+{
+  "name": "@codespar/mcp-sendgrid",
+  "version": "0.1.0",
+  "description": "MCP server for SendGrid — global transactional + marketing email (Twilio-owned). Pairs with @codespar/mcp-twilio for full messaging coverage.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-sendgrid": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "sendgrid",
+    "twilio",
+    "email",
+    "transactional-email",
+    "marketing-email",
+    "smtp",
+    "contacts",
+    "templates",
+    "suppressions",
+    "communication"
+  ],
+  "mcpName": "io.github.codespar/mcp-sendgrid"
+}
