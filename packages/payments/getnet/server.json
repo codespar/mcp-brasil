@@ -1,0 +1,51 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-getnet",
+  "description": "MCP server for Getnet — Santander-owned Brazilian acquirer. Credit, debit, Pix, boleto + marketplace seller onboarding and split.",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-brasil",
+    "source": "github",
+    "subfolder": "packages/payments/getnet"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-getnet",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "GETNET_CLIENT_ID",
+          "description": "Getnet OAuth client_id",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GETNET_CLIENT_SECRET",
+          "description": "Getnet OAuth client_secret",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "GETNET_SELLER_ID",
+          "description": "Getnet seller_id issued with your merchant contract",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "GETNET_BASE_URL",
+          "description": "Getnet API base URL. Defaults to production (https://api.getnet.com.br). Use https://api-homologacao.getnet.com.br for sandbox.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
