@@ -3,27 +3,29 @@
 /**
  * MCP Server for Mercado Pago — payment gateway for LATAM.
  *
- * Tools:
- * - create_payment: Create a payment
- * - get_payment: Get payment by ID
- * - search_payments: Search payments with filters
- * - create_refund: Refund a payment (full or partial)
- * - create_preference: Create checkout preference
- * - get_preference: Get preference by ID
- * - create_customer: Create customer
- * - list_customers: List customers
- * - get_payment_methods: List available payment methods
- * - create_pix_payment: Create PIX payment
- * - get_merchant_order: Get merchant order by ID
- * - get_balance: Get account balance
- * - create_subscription: Create a recurring subscription (preapproval)
- * - get_subscription: Get subscription details
- * - cancel_subscription: Cancel a subscription
- * - create_card_token: Tokenize a card
- * - get_payment_method_details: Get details of a specific payment method
- * - create_store: Create a store
- * - list_stores: List stores
- * - create_pos: Create a point of sale
+ * Payments & checkout:
+ * - create_payment, get_payment, search_payments, create_refund
+ * - create_preference, get_preference
+ * - create_pix_payment, create_card_token
+ *
+ * Customers & merchant ops:
+ * - create_customer, list_customers
+ * - get_merchant_order, search_merchant_orders, get_balance
+ * - create_store, list_stores, create_pos
+ *
+ * Payment methods & metadata:
+ * - get_payment_methods, get_payment_method_details
+ * - get_payment_methods_by_site, get_identification_types
+ *
+ * Subscriptions (preapprovals):
+ * - create_subscription, get_subscription, update_subscription, cancel_subscription
+ *
+ * Marketplace (split payments & seller onboarding):
+ * - oauth_token_exchange, create_advanced_payment, get_advanced_payment
+ *
+ * Disputes & reconciliation:
+ * - get_chargeback, upload_chargeback_evidence
+ * - create_settlement_report
  *
  * Environment:
  *   MERCADO_PAGO_ACCESS_TOKEN — Access token for API authentication
@@ -54,11 +56,50 @@ async function mpRequest(method: string, path: string, body?: unknown): Promise<
     const err = await res.text();
     throw new Error(`Mercado Pago API ${res.status}: ${err}`);
   }
+  const text = await res.text();
+  if (!text) return { status: res.status };
+  try { return JSON.parse(text); } catch { return { status: res.status, body: text }; }
+}
+
+async function mpFormRequest(path: string, form: Record<string, string>): Promise<unknown> {
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(form)) if (v !== undefined && v !== null) params.set(k, v);
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Mercado Pago API ${res.status}: ${err}`);
+  }
   return res.json();
 }
 
+async function mpMultipartRequest(
+  path: string,
+  files: Array<{ filename: string; content_base64: string; mime_type: string }>,
+): Promise<unknown> {
+  const form = new FormData();
+  for (const f of files) {
+    const bytes = Buffer.from(f.content_base64, "base64");
+    const blob = new Blob([bytes], { type: f.mime_type });
+    form.append("files[]", blob, f.filename);
+  }
+  const headers: Record<string, string> = {};
+  if (ACCESS_TOKEN) headers["Authorization"] = `Bearer ${ACCESS_TOKEN}`;
+  const res = await fetch(`${BASE_URL}${path}`, { method: "POST", headers, body: form as any });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Mercado Pago API ${res.status}: ${err}`);
+  }
+  const text = await res.text();
+  if (!text) return { status: res.status };
+  try { return JSON.parse(text); } catch { return { status: res.status, body: text }; }
+}
+
 const server = new Server(
-  { name: "mcp-mercado-pago", version: "0.1.0" },
+  { name: "mcp-mercado-pago", version: "0.2.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -374,6 +415,197 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["name", "external_id"],
       },
     },
+    {
+      name: "update_subscription",
+      description: "Update a subscription (preapproval) — amount, status, reason, card token, etc.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          preapproval_id: { type: "string", description: "Preapproval/subscription ID" },
+          reason: { type: "string", description: "New subscription reason/title" },
+          external_reference: { type: "string", description: "New external reference" },
+          status: { type: "string", enum: ["paused", "authorized", "cancelled"], description: "New subscription status" },
+          card_token_id: { type: "string", description: "New card token to charge" },
+          auto_recurring: {
+            type: "object",
+            description: "Updated recurring configuration",
+            properties: {
+              transaction_amount: { type: "number", description: "New amount per period" },
+              currency_id: { type: "string", description: "Currency (e.g. BRL)" },
+            },
+          },
+        },
+        required: ["preapproval_id"],
+      },
+    },
+    {
+      name: "oauth_token_exchange",
+      description: "Exchange an authorization code for a seller access token (marketplace onboarding). Also supports refresh_token grant.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          client_id: { type: "string", description: "Marketplace application client_id" },
+          client_secret: { type: "string", description: "Marketplace application client_secret" },
+          grant_type: { type: "string", enum: ["authorization_code", "refresh_token"], description: "OAuth grant type (default authorization_code)" },
+          code: { type: "string", description: "Authorization code returned from /authorization (required for authorization_code)" },
+          redirect_uri: { type: "string", description: "Redirect URI registered with the app (required for authorization_code)" },
+          refresh_token: { type: "string", description: "Refresh token (required for refresh_token grant)" },
+          code_verifier: { type: "string", description: "PKCE code verifier (optional)" },
+        },
+        required: ["client_id", "client_secret"],
+      },
+    },
+    {
+      name: "create_advanced_payment",
+      description: "Create a marketplace split payment with per-recipient disbursements (application_fee, money_release_days, collector_id per seller)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          description: { type: "string", description: "Payment description" },
+          external_reference: { type: "string", description: "External reference ID" },
+          binary_mode: { type: "boolean", description: "If true, payment is approved or rejected (no pending)" },
+          capture: { type: "boolean", description: "Whether to capture the payment immediately" },
+          payer: {
+            type: "object",
+            description: "Buyer information",
+            properties: {
+              email: { type: "string" },
+              first_name: { type: "string" },
+              last_name: { type: "string" },
+              identification: {
+                type: "object",
+                properties: { type: { type: "string" }, number: { type: "string" } },
+              },
+              type: { type: "string", description: "Payer type (e.g. customer, guest)" },
+              id: { type: "string", description: "Mercado Pago customer ID" },
+            },
+          },
+          payments: {
+            type: "array",
+            description: "Buyer's payment methods covering the total amount",
+            items: {
+              type: "object",
+              properties: {
+                payment_method_id: { type: "string" },
+                payment_type_id: { type: "string" },
+                token: { type: "string" },
+                installments: { type: "number" },
+                transaction_amount: { type: "number" },
+                issuer_id: { type: "string" },
+              },
+            },
+          },
+          disbursements: {
+            type: "array",
+            description: "Split rules per seller",
+            items: {
+              type: "object",
+              properties: {
+                amount: { type: "number", description: "Amount destined to this seller" },
+                external_reference: { type: "string", description: "Per-disbursement external reference" },
+                collector_id: { type: "string", description: "Seller's Mercado Pago user ID" },
+                application_fee: { type: "number", description: "Marketplace commission on this disbursement" },
+                money_release_days: { type: "number", description: "Days to release money to the seller after approval" },
+              },
+              required: ["amount", "collector_id"],
+            },
+          },
+          additional_info: { type: "object", description: "Additional info (items, shipments, payer details)" },
+        },
+        required: ["payer", "payments", "disbursements"],
+      },
+    },
+    {
+      name: "get_advanced_payment",
+      description: "Get an advanced (split) payment by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          advanced_payment_id: { type: "string", description: "Advanced payment ID" },
+        },
+        required: ["advanced_payment_id"],
+      },
+    },
+    {
+      name: "get_chargeback",
+      description: "Get chargeback details by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          chargeback_id: { type: "string", description: "Chargeback ID (or payment ID)" },
+        },
+        required: ["chargeback_id"],
+      },
+    },
+    {
+      name: "upload_chargeback_evidence",
+      description: "Upload documentation/evidence for a chargeback dispute. Accepts one or more files as base64 content.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          chargeback_id: { type: "string", description: "Chargeback ID" },
+          files: {
+            type: "array",
+            description: "Files to upload (.jpg, .png, .pdf; 10MB total max)",
+            items: {
+              type: "object",
+              properties: {
+                filename: { type: "string", description: "File name with extension" },
+                content_base64: { type: "string", description: "File content encoded as base64" },
+                mime_type: { type: "string", description: "MIME type (e.g. image/png, application/pdf)" },
+              },
+              required: ["filename", "content_base64", "mime_type"],
+            },
+          },
+        },
+        required: ["chargeback_id", "files"],
+      },
+    },
+    {
+      name: "get_identification_types",
+      description: "Get document/identification types available per country (CPF, CNPJ, DNI, RUT, etc.). Use the seller's access token — response is country-scoped.",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "get_payment_methods_by_site",
+      description: "List available payment methods for a specific Mercado Pago site (MLB=Brazil, MLA=Argentina, MLM=Mexico, MLC=Chile, MCO=Colombia, MPE=Peru, MLU=Uruguay)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          site_id: { type: "string", enum: ["MLB", "MLA", "MLM", "MLC", "MCO", "MPE", "MLU"], description: "Marketplace site ID" },
+        },
+        required: ["site_id"],
+      },
+    },
+    {
+      name: "create_settlement_report",
+      description: "Manually generate a settlement (account money) report for a date range. Returns 202; poll the report list endpoint to download when ready.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          begin_date: { type: "string", description: "Start date, ISO 8601 UTC (e.g. 2026-04-01T00:00:00Z)" },
+          end_date: { type: "string", description: "End date, ISO 8601 UTC (e.g. 2026-04-30T23:59:59Z)" },
+        },
+        required: ["begin_date", "end_date"],
+      },
+    },
+    {
+      name: "search_merchant_orders",
+      description: "Search merchant orders with filters (last 90 days). Useful for reconciliation of Checkout Pro / Bricks flows.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          status: { type: "string", description: "Order status (e.g. opened, closed, expired)" },
+          preference_id: { type: "string", description: "Filter by preference ID" },
+          external_reference: { type: "string", description: "Filter by external reference" },
+          application_id: { type: "string", description: "Filter by application ID" },
+          payer_id: { type: "string", description: "Filter by payer (buyer) user ID" },
+          sponsor_id: { type: "string", description: "Filter by marketplace sponsor user ID" },
+          limit: { type: "number", description: "Results limit" },
+          offset: { type: "number", description: "Results offset" },
+        },
+      },
+    },
   ],
 }));
 
@@ -498,6 +730,69 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
           external_id: args?.external_id,
           external_store_id: args?.external_store_id,
         }), null, 2) }] };
+      case "update_subscription": {
+        const payload: any = {};
+        if (args?.reason !== undefined) payload.reason = args.reason;
+        if (args?.external_reference !== undefined) payload.external_reference = args.external_reference;
+        if (args?.status !== undefined) payload.status = args.status;
+        if (args?.card_token_id !== undefined) payload.card_token_id = args.card_token_id;
+        if (args?.auto_recurring !== undefined) payload.auto_recurring = args.auto_recurring;
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("PUT", `/preapproval/${args?.preapproval_id}`, payload), null, 2) }] };
+      }
+      case "oauth_token_exchange": {
+        const form: Record<string, string> = {
+          client_id: String(args?.client_id ?? ""),
+          client_secret: String(args?.client_secret ?? ""),
+          grant_type: String(args?.grant_type ?? "authorization_code"),
+        };
+        if (args?.code) form.code = String(args.code);
+        if (args?.redirect_uri) form.redirect_uri = String(args.redirect_uri);
+        if (args?.refresh_token) form.refresh_token = String(args.refresh_token);
+        if (args?.code_verifier) form.code_verifier = String(args.code_verifier);
+        return { content: [{ type: "text", text: JSON.stringify(await mpFormRequest("/oauth/token", form), null, 2) }] };
+      }
+      case "create_advanced_payment": {
+        const payload: any = {
+          payer: args?.payer,
+          payments: args?.payments,
+          disbursements: args?.disbursements,
+        };
+        if (args?.description !== undefined) payload.description = args.description;
+        if (args?.external_reference !== undefined) payload.external_reference = args.external_reference;
+        if (args?.binary_mode !== undefined) payload.binary_mode = args.binary_mode;
+        if (args?.capture !== undefined) payload.capture = args.capture;
+        if (args?.additional_info !== undefined) payload.additional_info = args.additional_info;
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("POST", "/v1/advanced_payments", payload), null, 2) }] };
+      }
+      case "get_advanced_payment":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/v1/advanced_payments/${args?.advanced_payment_id}`), null, 2) }] };
+      case "get_chargeback":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/v1/chargebacks/${args?.chargeback_id}`), null, 2) }] };
+      case "upload_chargeback_evidence": {
+        const files = Array.isArray(args?.files) ? args.files : [];
+        return { content: [{ type: "text", text: JSON.stringify(await mpMultipartRequest(`/v1/chargebacks/${args?.chargeback_id}/documentation`, files), null, 2) }] };
+      }
+      case "get_identification_types":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", "/v1/identification_types"), null, 2) }] };
+      case "get_payment_methods_by_site":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/sites/${args?.site_id}/payment_methods`), null, 2) }] };
+      case "create_settlement_report":
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("POST", "/v1/account/settlement_report", {
+          begin_date: args?.begin_date,
+          end_date: args?.end_date,
+        }), null, 2) }] };
+      case "search_merchant_orders": {
+        const params = new URLSearchParams();
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.preference_id) params.set("preference_id", String(args.preference_id));
+        if (args?.external_reference) params.set("external_reference", String(args.external_reference));
+        if (args?.application_id) params.set("application_id", String(args.application_id));
+        if (args?.payer_id) params.set("payer.id", String(args.payer_id));
+        if (args?.sponsor_id) params.set("sponsor.id", String(args.sponsor_id));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.offset) params.set("offset", String(args.offset));
+        return { content: [{ type: "text", text: JSON.stringify(await mpRequest("GET", `/merchant_orders/search?${params}`), null, 2) }] };
+      }
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -520,7 +815,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-mercado-pago", version: "0.1.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
+        const s = new Server({ name: "mcp-mercado-pago", version: "0.2.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
         await t.handleRequest(req, res, req.body); return;
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
