@@ -1,0 +1,37 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-sendgrid",
+  "description": "MCP server for SendGrid — global transactional + marketing email (Twilio-owned). Pairs with @codespar/mcp-twilio for full messaging coverage.",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-brasil",
+    "source": "github",
+    "subfolder": "packages/communication/sendgrid"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-sendgrid",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SENDGRID_API_KEY",
+          "description": "SendGrid API key. Used as Bearer token in the Authorization header.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "SENDGRID_FROM_EMAIL",
+          "description": "Optional default From address used by send_mail / send_template when `from.email` is omitted. Must be a Verified Sender or authenticated domain.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
