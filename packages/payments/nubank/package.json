@@ -1,6 +1,6 @@
 {
   "name": "@codespar/mcp-nubank",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.1",
   "description": "MCP server for Nubank — Brazilian neobank via Open Finance, accounts, PIX, transfers",
   "type": "module",
   "main": "dist/index.js",

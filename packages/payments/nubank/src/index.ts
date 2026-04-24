@@ -14,6 +14,18 @@
  * - get_statement: Get account statement
  * - get_profile: Get authenticated user profile
  * - list_cards: List debit/credit cards
+ * - get_pix_transfer: Get status of a specific PIX transfer
+ * - schedule_pix: Schedule a future-dated PIX transfer
+ * - cancel_scheduled_pix: Cancel a previously scheduled PIX
+ * - create_pix_key: Register a new PIX key
+ * - delete_pix_key: Remove a registered PIX key
+ * - get_card_details: Get details for a single card
+ * - block_card: Block a card
+ * - unblock_card: Unblock a card
+ * - get_credit_card_transactions: List transactions for a given bill/card
+ * - pay_credit_card_bill: Pay a credit card bill from an account
+ * - get_boleto: Retrieve boleto details by barcode/digitable line
+ * - pay_boleto: Pay a boleto
  *
  * Environment:
  *   NUBANK_CLIENT_ID     — OAuth2 client ID
@@ -80,7 +92,7 @@ async function nubankRequest(method: string, path: string, body?: unknown): Prom
 }
 
 const server = new Server(
-  { name: "mcp-nubank", version: "0.1.0" },
+  { name: "mcp-nubank", version: "0.2.0-alpha.1" },
   { capabilities: { tools: {} } }
 );
 
@@ -176,6 +188,149 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       description: "List debit and credit cards",
       inputSchema: { type: "object", properties: {} },
     },
+    {
+      name: "get_pix_transfer",
+      description: "Get status and details of a specific PIX transfer",
+      inputSchema: {
+        type: "object",
+        properties: {
+          transferId: { type: "string", description: "PIX transfer ID" },
+        },
+        required: ["transferId"],
+      },
+    },
+    {
+      name: "schedule_pix",
+      description: "Schedule a future-dated PIX transfer",
+      inputSchema: {
+        type: "object",
+        properties: {
+          amount: { type: "number", description: "Transfer amount in BRL" },
+          pix_key: { type: "string", description: "Recipient PIX key" },
+          pix_key_type: { type: "string", enum: ["cpf", "cnpj", "email", "phone", "random"], description: "PIX key type" },
+          scheduled_date: { type: "string", description: "Execution date (YYYY-MM-DD)" },
+          description: { type: "string", description: "Transfer description" },
+        },
+        required: ["amount", "pix_key", "pix_key_type", "scheduled_date"],
+      },
+    },
+    {
+      name: "cancel_scheduled_pix",
+      description: "Cancel a previously scheduled PIX transfer",
+      inputSchema: {
+        type: "object",
+        properties: {
+          transferId: { type: "string", description: "Scheduled PIX transfer ID" },
+        },
+        required: ["transferId"],
+      },
+    },
+    {
+      name: "create_pix_key",
+      description: "Register a new PIX key for the authenticated account",
+      inputSchema: {
+        type: "object",
+        properties: {
+          key: { type: "string", description: "PIX key value (cpf/cnpj/email/phone, or omit for random)" },
+          key_type: { type: "string", enum: ["cpf", "cnpj", "email", "phone", "random"], description: "PIX key type" },
+          accountId: { type: "string", description: "Account ID to attach the key to" },
+        },
+        required: ["key_type", "accountId"],
+      },
+    },
+    {
+      name: "delete_pix_key",
+      description: "Remove a registered PIX key",
+      inputSchema: {
+        type: "object",
+        properties: {
+          keyId: { type: "string", description: "PIX key ID to delete" },
+        },
+        required: ["keyId"],
+      },
+    },
+    {
+      name: "get_card_details",
+      description: "Get details for a single debit or credit card",
+      inputSchema: {
+        type: "object",
+        properties: {
+          cardId: { type: "string", description: "Card ID" },
+        },
+        required: ["cardId"],
+      },
+    },
+    {
+      name: "block_card",
+      description: "Block a card (reports lost/stolen or temporarily disables it)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          cardId: { type: "string", description: "Card ID" },
+          reason: { type: "string", enum: ["lost", "stolen", "damaged", "temporary"], description: "Reason for block" },
+        },
+        required: ["cardId"],
+      },
+    },
+    {
+      name: "unblock_card",
+      description: "Unblock a previously blocked card (only valid for temporary blocks)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          cardId: { type: "string", description: "Card ID" },
+        },
+        required: ["cardId"],
+      },
+    },
+    {
+      name: "get_credit_card_transactions",
+      description: "List transactions for a given credit card bill",
+      inputSchema: {
+        type: "object",
+        properties: {
+          billId: { type: "string", description: "Credit card bill ID" },
+        },
+        required: ["billId"],
+      },
+    },
+    {
+      name: "pay_credit_card_bill",
+      description: "Pay a credit card bill from a linked account",
+      inputSchema: {
+        type: "object",
+        properties: {
+          billId: { type: "string", description: "Credit card bill ID" },
+          accountId: { type: "string", description: "Debit account ID" },
+          amount: { type: "number", description: "Payment amount in BRL (partial or full)" },
+        },
+        required: ["billId", "accountId", "amount"],
+      },
+    },
+    {
+      name: "get_boleto",
+      description: "Retrieve boleto details by barcode or digitable line",
+      inputSchema: {
+        type: "object",
+        properties: {
+          barcode: { type: "string", description: "Boleto barcode or digitable line" },
+        },
+        required: ["barcode"],
+      },
+    },
+    {
+      name: "pay_boleto",
+      description: "Pay a boleto from a linked account",
+      inputSchema: {
+        type: "object",
+        properties: {
+          barcode: { type: "string", description: "Boleto barcode or digitable line" },
+          accountId: { type: "string", description: "Debit account ID" },
+          amount: { type: "number", description: "Payment amount in BRL (optional — uses boleto amount if omitted)" },
+        },
+        required: ["barcode", "accountId"],
+      },
+    },
   ],
 }));
 
@@ -224,6 +379,49 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
         return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("GET", "/api/profile"), null, 2) }] };
       case "list_cards":
         return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("GET", "/api/cards"), null, 2) }] };
+      case "get_pix_transfer":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("GET", `/api/pix/transfers/${args?.transferId}`), null, 2) }] };
+      case "schedule_pix":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("POST", "/api/pix/transfers/scheduled", {
+          amount: args?.amount,
+          pix_key: args?.pix_key,
+          pix_key_type: args?.pix_key_type,
+          scheduled_date: args?.scheduled_date,
+          description: args?.description,
+        }), null, 2) }] };
+      case "cancel_scheduled_pix":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("DELETE", `/api/pix/transfers/scheduled/${args?.transferId}`), null, 2) }] };
+      case "create_pix_key":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("POST", "/api/pix/keys", {
+          key: args?.key,
+          key_type: args?.key_type,
+          account_id: args?.accountId,
+        }), null, 2) }] };
+      case "delete_pix_key":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("DELETE", `/api/pix/keys/${args?.keyId}`), null, 2) }] };
+      case "get_card_details":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("GET", `/api/cards/${args?.cardId}`), null, 2) }] };
+      case "block_card":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("POST", `/api/cards/${args?.cardId}/block`, {
+          reason: args?.reason,
+        }), null, 2) }] };
+      case "unblock_card":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("POST", `/api/cards/${args?.cardId}/unblock`), null, 2) }] };
+      case "get_credit_card_transactions":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("GET", `/api/credit-card/bills/${args?.billId}/transactions`), null, 2) }] };
+      case "pay_credit_card_bill":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("POST", `/api/credit-card/bills/${args?.billId}/payments`, {
+          account_id: args?.accountId,
+          amount: args?.amount,
+        }), null, 2) }] };
+      case "get_boleto":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("GET", `/api/boletos/${encodeURIComponent(String(args?.barcode))}`), null, 2) }] };
+      case "pay_boleto":
+        return { content: [{ type: "text", text: JSON.stringify(await nubankRequest("POST", "/api/boletos/payments", {
+          barcode: args?.barcode,
+          account_id: args?.accountId,
+          amount: args?.amount,
+        }), null, 2) }] };
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -246,7 +444,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-nubank", version: "0.1.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
+        const s = new Server({ name: "mcp-nubank", version: "0.2.0-alpha.1" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
         await t.handleRequest(req, res, req.body); return;
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
