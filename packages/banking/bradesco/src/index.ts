@@ -7,23 +7,35 @@
  * directly with Bradesco instead of going through a PSP. This server exposes
  * the four Developer Portal product families that every tier-1 BR bank ships:
  *
- *   Pix          — send, receive, QR, DICT lookup, refund
- *   Cobrança     — boleto lifecycle (create, query, cancel)
- *   Arrecadação  — pay utility / tax / concessionária bills
- *   Extrato      — account statement / transactions
+ *   Pix          — send, receive, QR, DICT lookup/register/delete, refund, cobv
+ *   Cobrança     — boleto lifecycle (create, query, list, cancel, PDF)
+ *   Arrecadação  — pay utility / tax / concessionária bills, DARF/GRU
+ *   Extrato      — account statement / transactions / balance
+ *   Cash-mgmt    — TED / TEF transfers
  *
- * Tools (11):
- *   get_oauth_token   — mint/return a cached OAuth bearer (exposed for inspection)
- *   send_pix          — initiate an outbound Pix payment
- *   create_pix_qr     — create a dynamic Pix charge + QR (cobv / cob)
- *   get_pix           — retrieve a Pix by endToEndId
- *   resolve_dict_key  — resolve a DICT key (CPF, CNPJ, email, phone, EVP) to account data
- *   refund_pix        — refund / devolução of a received Pix
- *   create_boleto     — issue a boleto
- *   get_boleto        — retrieve a boleto by id / nosso_numero
- *   cancel_boleto     — cancel (baixa) a boleto
- *   get_statement     — account statement transactions
- *   arrecadacao_pay   — pay a utility / tax / concessionária bill
+ * Tools (22):
+ *   get_oauth_token         — mint/return a cached OAuth bearer (exposed for inspection)
+ *   send_pix                — initiate an outbound Pix payment
+ *   create_pix_qr           — create a dynamic Pix charge + QR (cob)
+ *   get_pix                 — retrieve a Pix by endToEndId
+ *   resolve_dict_key        — resolve a DICT key to account data
+ *   refund_pix              — refund / devolução of a received Pix
+ *   list_pix_received       — list Pix received during a period (BACEN /pix)
+ *   create_pix_due_charge   — create a Pix charge with due date (cobv)
+ *   get_pix_due_charge      — retrieve a Pix due charge by txid
+ *   update_pix_due_charge   — patch a Pix due charge (cobv)
+ *   register_dict_key       — register a DICT key owned by the merchant
+ *   delete_dict_key         — delete/unlink a DICT key owned by the merchant
+ *   create_boleto           — issue a boleto
+ *   get_boleto              — retrieve a boleto by id / nosso_numero
+ *   list_boletos            — list boletos by status/period
+ *   get_boleto_pdf          — download the boleto PDF (base64)
+ *   cancel_boleto           — cancel (baixa) a boleto
+ *   get_statement           — account statement transactions
+ *   get_account_balance     — current account balance (saldo)
+ *   transfer_ted            — TED/TEF transfer to a bank account
+ *   arrecadacao_pay         — pay a utility / concessionária bill
+ *   pay_tax_darf            — pay a tax (DARF/GRU) bill
  *
  * Authentication
  *   OAuth 2.0 client_credentials + mandatory mTLS. BACEN requires mTLS for
@@ -32,7 +44,7 @@
  *   env) and routes all HTTPS requests through a Node https.Agent that
  *   presents them.
  *
- * Version: 0.1.0-alpha.1
+ * Version: 0.2.0-alpha.1
  *   developers.bradesco.com.br is contract-gated — full OpenAPI specs are
  *   only visible to onboarded merchants. Endpoint paths below are best-guess
  *   based on (a) BACEN Pix v2 standard paths, (b) Bradesco public marketing
@@ -195,7 +207,7 @@ async function bradescoRequest(method: string, path: string, body?: unknown): Pr
 }
 
 const server = new Server(
-  { name: "mcp-bradesco", version: "0.1.0-alpha.1" },
+  { name: "mcp-bradesco", version: "0.2.0-alpha.1" },
   { capabilities: { tools: {} } }
 );
 
@@ -381,6 +393,193 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["barcode", "payer_account", "idempotency_key"],
       },
     },
+    {
+      name: "list_pix_received",
+      description: "List Pix transactions received by the merchant during a period. Uses BACEN Pix v2 /pix collection with ISO-8601 bounds.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          from: { type: "string", description: "Start timestamp ISO-8601 (e.g. 2026-04-01T00:00:00Z)" },
+          to: { type: "string", description: "End timestamp ISO-8601" },
+          cpf: { type: "string", description: "Filter by payer CPF (digits only)" },
+          cnpj: { type: "string", description: "Filter by payer CNPJ (digits only)" },
+          page_size: { type: "number", description: "Items per page (BACEN max 1000)" },
+          page: { type: "number", description: "Page number (0-indexed per BACEN spec)" },
+        },
+        required: ["from", "to"],
+      },
+    },
+    {
+      name: "create_pix_due_charge",
+      description: "Create a Pix charge with a due date (cobv) — commonly used for installments and scheduled invoices. Returns txid, location URL, and EMV payload.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          txid: { type: "string", description: "Merchant-generated txid (26-35 alphanumeric chars per BACEN)" },
+          amount: { type: "string", description: "Original amount in BRL major units, e.g. '250.00'" },
+          due_date: { type: "string", description: "Due date ISO-8601 (YYYY-MM-DD)" },
+          validity_after_due: { type: "number", description: "Days after due date the QR remains payable (default 30)" },
+          debtor: {
+            type: "object",
+            description: "Debtor (devedor) identification — required for cobv",
+            properties: {
+              document: { type: "string", description: "CPF or CNPJ digits only" },
+              name: { type: "string" },
+            },
+            required: ["document", "name"],
+          },
+          description: { type: "string", description: "Payer-visible description (solicitacaoPagador)" },
+          fine: { type: "object", description: "Multa config: { modalidade: 1|2, valorPerc: string }" },
+          interest: { type: "object", description: "Juros config: { modalidade: 1..7, valorPerc: string }" },
+          discount: { type: "object", description: "Desconto config: { modalidade, descontoDataFixa: [...] }" },
+        },
+        required: ["txid", "amount", "due_date", "debtor"],
+      },
+    },
+    {
+      name: "get_pix_due_charge",
+      description: "Retrieve a Pix due charge (cobv) by txid.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          txid: { type: "string", description: "Pix cobv txid" },
+        },
+        required: ["txid"],
+      },
+    },
+    {
+      name: "update_pix_due_charge",
+      description: "Patch a Pix due charge (cobv) — revise amount, due date, discount, or debtor before payment.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          txid: { type: "string", description: "Pix cobv txid to update" },
+          amount: { type: "string", description: "New original amount in BRL major units" },
+          due_date: { type: "string", description: "New due date (YYYY-MM-DD)" },
+          validity_after_due: { type: "number", description: "New validity window in days after due date" },
+          description: { type: "string", description: "New payer-visible description" },
+          status: { type: "string", description: "Set 'REMOVIDA_PELO_USUARIO_RECEBEDOR' to cancel" },
+        },
+        required: ["txid"],
+      },
+    },
+    {
+      name: "register_dict_key",
+      description: "Register a DICT key (CPF, CNPJ, email, phone, or EVP) pointing to a merchant account at Bradesco. Only the account holder may register their own key.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          key: { type: "string", description: "DICT key value. Omit for EVP (random UUID) — set key_type='EVP'." },
+          key_type: { type: "string", description: "CPF | CNPJ | EMAIL | PHONE | EVP" },
+          account: { type: "string", description: "Agência-conta to link the key to" },
+          account_type: { type: "string", description: "CACC (checking) | SVGS (savings) | SLRY | TRAN" },
+          owner_document: { type: "string", description: "Account holder CPF/CNPJ (digits only)" },
+          owner_name: { type: "string", description: "Account holder name" },
+        },
+        required: ["key_type", "account", "owner_document", "owner_name"],
+      },
+    },
+    {
+      name: "delete_dict_key",
+      description: "Delete (unlink) a DICT key that points to a merchant account at Bradesco. BACEN enforces cooldown before re-registration.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          key: { type: "string", description: "DICT key value to delete" },
+          reason: { type: "string", description: "Reason code: USER_REQUESTED | ACCOUNT_CLOSED | FRAUD | OTHER" },
+        },
+        required: ["key"],
+      },
+    },
+    {
+      name: "list_boletos",
+      description: "List boletos issued by the merchant filtered by status and issue/due period. Paginated.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          status: { type: "string", description: "REGISTERED | PAID | CANCELED | EXPIRED (or Bradesco-native code)" },
+          from: { type: "string", description: "Start date ISO-8601 (YYYY-MM-DD)" },
+          to: { type: "string", description: "End date ISO-8601 (YYYY-MM-DD)" },
+          filter_by: { type: "string", description: "'issue' to filter by issue date or 'due' by due date (default 'issue')" },
+          page: { type: "number", description: "Page number (1-indexed)" },
+          page_size: { type: "number", description: "Items per page (default 50)" },
+        },
+        required: ["from", "to"],
+      },
+    },
+    {
+      name: "get_boleto_pdf",
+      description: "Download the boleto PDF as base64. Useful for attaching to emails or portal downloads.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Boleto id or nosso_numero" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "get_account_balance",
+      description: "Retrieve the current available balance (saldo disponível) for a merchant account.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          account: { type: "string", description: "Agência-conta identifier of the merchant account" },
+        },
+        required: ["account"],
+      },
+    },
+    {
+      name: "transfer_ted",
+      description: "Execute a TED (or TEF when intra-Bradesco) transfer from the merchant's account to a beneficiary bank account. Settles same-day before BACEN cutoff.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          amount: { type: "string", description: "Amount in BRL major units, e.g. '1000.00'" },
+          payer_account: { type: "string", description: "Merchant account to debit (agência-conta)" },
+          beneficiary: {
+            type: "object",
+            description: "Beneficiary (favorecido) bank account",
+            properties: {
+              name: { type: "string" },
+              document: { type: "string", description: "CPF or CNPJ digits only" },
+              bank_ispb: { type: "string", description: "8-digit ISPB of beneficiary bank" },
+              bank_compe: { type: "string", description: "3-digit compe code (alternative to ISPB)" },
+              branch: { type: "string" },
+              account: { type: "string" },
+              account_type: { type: "string", description: "CC | PP (conta corrente | poupança)" },
+            },
+            required: ["name", "document", "branch", "account"],
+          },
+          purpose_code: { type: "string", description: "BACEN finalidade code (e.g. '10' credit to account, '1' payment)" },
+          description: { type: "string", description: "Free-text description shown on the statement" },
+          idempotency_key: { type: "string", description: "Merchant-side idempotency key (UUID recommended)" },
+        },
+        required: ["amount", "payer_account", "beneficiary", "idempotency_key"],
+      },
+    },
+    {
+      name: "pay_tax_darf",
+      description: "Pay a federal tax (DARF) or union fee (GRU) via Bradesco Arrecadação. Distinct product surface from utility arrecadação because DARF/GRU require tax-code fields (código de receita, período apuração, referência).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          tax_type: { type: "string", description: "DARF | DARF_SIMPLES | GRU | GPS (social security)" },
+          revenue_code: { type: "string", description: "Código de receita (e.g. '0220' for IRPF mensal)" },
+          amount: { type: "string", description: "Principal amount in BRL major units" },
+          fine: { type: "string", description: "Multa amount (optional)" },
+          interest: { type: "string", description: "Juros amount (optional)" },
+          total: { type: "string", description: "Valor total a pagar (principal + multa + juros)" },
+          reference: { type: "string", description: "Número de referência (required for GRU/GPS; optional for DARF)" },
+          assessment_period: { type: "string", description: "Período de apuração (YYYY-MM or YYYY-MM-DD)" },
+          due_date: { type: "string", description: "Vencimento ISO-8601 (YYYY-MM-DD)" },
+          taxpayer_document: { type: "string", description: "CPF or CNPJ of the taxpayer (digits only)" },
+          payer_account: { type: "string", description: "Merchant account to debit" },
+          idempotency_key: { type: "string", description: "Merchant-side idempotency key (UUID recommended)" },
+        },
+        required: ["tax_type", "revenue_code", "total", "taxpayer_document", "payer_account", "idempotency_key"],
+      },
+    },
   ],
 }));
 
@@ -451,6 +650,112 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // /arrecadacao/v1/pagamentos.
         return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("POST", "/arrecadacao/v1/pagamentos", a), null, 2) }] };
       }
+      case "list_pix_received": {
+        // TODO(verify): BACEN Pix v2 standard is GET /pix?inicio=...&fim=....
+        // Bradesco exposes this under the Pix recebidos collection.
+        const params = new URLSearchParams();
+        params.set("inicio", String(a.from ?? ""));
+        params.set("fim", String(a.to ?? ""));
+        if (a.cpf !== undefined) params.set("cpf", String(a.cpf));
+        if (a.cnpj !== undefined) params.set("cnpj", String(a.cnpj));
+        if (a.page_size !== undefined) params.set("paginacao.itensPorPagina", String(a.page_size));
+        if (a.page !== undefined) params.set("paginacao.paginaAtual", String(a.page));
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("GET", `/pix/v2/pix?${params}`), null, 2) }] };
+      }
+      case "create_pix_due_charge": {
+        // TODO(verify): BACEN Pix v2 cobv uses PUT /cobv/{txid}. Bradesco may
+        // expose an alias under /cobrancas/v2/cobrancas-vencimento.
+        const txid = encodeURIComponent(String(a.txid ?? ""));
+        const body: Record<string, unknown> = {
+          calendario: { dataDeVencimento: a.due_date, validadeAposVencimento: a.validity_after_due ?? 30 },
+          devedor: a.debtor,
+          valor: { original: a.amount },
+          chave: undefined,
+          solicitacaoPagador: a.description,
+        };
+        if (a.fine !== undefined) (body.valor as Record<string, unknown>).multa = a.fine;
+        if (a.interest !== undefined) (body.valor as Record<string, unknown>).juros = a.interest;
+        if (a.discount !== undefined) (body.valor as Record<string, unknown>).desconto = a.discount;
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("PUT", `/pix/v2/cobv/${txid}`, body), null, 2) }] };
+      }
+      case "get_pix_due_charge": {
+        const txid = encodeURIComponent(String(a.txid ?? ""));
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("GET", `/pix/v2/cobv/${txid}`), null, 2) }] };
+      }
+      case "update_pix_due_charge": {
+        // TODO(verify): BACEN Pix v2 cobv update is PATCH /cobv/{txid}.
+        const txid = encodeURIComponent(String(a.txid ?? ""));
+        const body: Record<string, unknown> = {};
+        const valor: Record<string, unknown> = {};
+        if (a.amount !== undefined) valor.original = a.amount;
+        if (Object.keys(valor).length > 0) body.valor = valor;
+        const calendario: Record<string, unknown> = {};
+        if (a.due_date !== undefined) calendario.dataDeVencimento = a.due_date;
+        if (a.validity_after_due !== undefined) calendario.validadeAposVencimento = a.validity_after_due;
+        if (Object.keys(calendario).length > 0) body.calendario = calendario;
+        if (a.description !== undefined) body.solicitacaoPagador = a.description;
+        if (a.status !== undefined) body.status = a.status;
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("PATCH", `/pix/v2/cobv/${txid}`, body), null, 2) }] };
+      }
+      case "register_dict_key": {
+        // TODO(verify): BACEN DICT register is POST /dict/v2/entries (portal
+        // spec); Bradesco surfaces it under /pix/v2/dict as well. Body shape
+        // follows BACEN's ClaimRequest.
+        const body: Record<string, unknown> = {
+          key: a.key,
+          keyType: a.key_type,
+          account: {
+            participant: "60746948", // Bradesco ISPB
+            branch: undefined,
+            accountNumber: a.account,
+            accountType: a.account_type ?? "CACC",
+          },
+          owner: {
+            type: String(a.key_type).toUpperCase() === "CNPJ" ? "LEGAL_PERSON" : "NATURAL_PERSON",
+            taxIdNumber: a.owner_document,
+            name: a.owner_name,
+          },
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("POST", `/pix/v2/dict`, body), null, 2) }] };
+      }
+      case "delete_dict_key": {
+        // TODO(verify): BACEN DICT delete is DELETE /dict/v2/entries/{key}.
+        const key = encodeURIComponent(String(a.key ?? ""));
+        const qs = a.reason ? `?reason=${encodeURIComponent(String(a.reason))}` : "";
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("DELETE", `/pix/v2/dict/${key}${qs}`), null, 2) }] };
+      }
+      case "list_boletos": {
+        // TODO(verify): Bradesco Cobrança listing commonly /cobranca/v2/boletos?...
+        const params = new URLSearchParams();
+        params.set("dataInicio", String(a.from ?? ""));
+        params.set("dataFim", String(a.to ?? ""));
+        if (a.status !== undefined) params.set("situacao", String(a.status));
+        if (a.filter_by !== undefined) params.set("filtrarPor", String(a.filter_by));
+        if (a.page !== undefined) params.set("pagina", String(a.page));
+        if (a.page_size !== undefined) params.set("tamanhoPagina", String(a.page_size));
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("GET", `/cobranca/v2/boletos?${params}`), null, 2) }] };
+      }
+      case "get_boleto_pdf": {
+        // TODO(verify): PDF download under /cobranca/v2/boletos/{id}/pdf.
+        const id = encodeURIComponent(String(a.id ?? ""));
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("GET", `/cobranca/v2/boletos/${id}/pdf`), null, 2) }] };
+      }
+      case "get_account_balance": {
+        // TODO(verify): Open Finance-aligned path /contas/v1/contas/{account}/saldos.
+        const account = encodeURIComponent(String(a.account ?? ""));
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("GET", `/contas/v1/contas/${account}/saldos`), null, 2) }] };
+      }
+      case "transfer_ted": {
+        // TODO(verify): TED/TEF surface typically /transferencias/v1/ted or
+        // /pagamentos/v1/transferencias. Bradesco consolidates under
+        // /cashmanagement/v1/transferencias for corporate clients.
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("POST", "/cashmanagement/v1/transferencias", a), null, 2) }] };
+      }
+      case "pay_tax_darf": {
+        // TODO(verify): Bradesco Arrecadação Tributos typically
+        // /arrecadacao/v1/tributos or /pagamentos/v1/darf.
+        return { content: [{ type: "text", text: JSON.stringify(await bradescoRequest("POST", "/arrecadacao/v1/tributos", a), null, 2) }] };
+      }
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -473,7 +778,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-bradesco", version: "0.1.0-alpha.1" }, { capabilities: { tools: {} } });
+        const s = new Server({ name: "mcp-bradesco", version: "0.2.0-alpha.1" }, { capabilities: { tools: {} } });
         (server as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.forEach((v, k) => (s as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.set(k, v));
         (server as unknown as { _notificationHandlers?: Map<unknown, unknown> })._notificationHandlers?.forEach((v, k) => (s as unknown as { _notificationHandlers: Map<unknown, unknown> })._notificationHandlers.set(k, v));
         await s.connect(t);
