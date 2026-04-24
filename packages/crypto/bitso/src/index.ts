@@ -14,6 +14,16 @@
  * - list_trades: List executed trades
  * - list_funding_sources: List available funding sources
  * - create_withdrawal: Create a withdrawal request
+ * - list_ledger: List account ledger entries (trades, fees, fundings, withdrawals)
+ * - list_open_orders: List currently open orders
+ * - lookup_order: Look up an order by origin_id / client_id
+ * - cancel_all_orders: Cancel all open orders
+ * - list_fundings: List account fundings (deposits)
+ * - list_withdrawals: List account withdrawals
+ * - get_withdrawal: Retrieve a specific withdrawal by ID
+ * - list_fees: List applicable fees for the authenticated user
+ * - get_account_status: Retrieve account KYC and verification status
+ * - list_funding_destinations: Get funding destination info for a currency
  *
  * Environment:
  *   BITSO_API_KEY — API key from https://bitso.com/
@@ -59,7 +69,7 @@ async function bitsoRequest(method: string, path: string, body?: unknown): Promi
 }
 
 const server = new Server(
-  { name: "mcp-bitso", version: "0.1.0" },
+  { name: "mcp-bitso", version: "0.2.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -179,6 +189,110 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["currency", "amount"],
       },
     },
+    {
+      name: "list_ledger",
+      description: "List account ledger entries (trades, fees, fundings, withdrawals)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          operation: { type: "string", enum: ["trade", "fee", "funding", "withdrawal"], description: "Filter by operation type" },
+          limit: { type: "number", description: "Number of results (default 25, max 100)" },
+          marker: { type: "string", description: "Pagination marker" },
+          sort: { type: "string", enum: ["asc", "desc"], description: "Sort direction" },
+        },
+      },
+    },
+    {
+      name: "list_open_orders",
+      description: "List currently open orders for the authenticated user",
+      inputSchema: {
+        type: "object",
+        properties: {
+          book: { type: "string", description: "Filter by order book symbol (e.g. btc_mxn)" },
+          marker: { type: "string", description: "Pagination marker" },
+          sort: { type: "string", enum: ["asc", "desc"], description: "Sort direction" },
+          limit: { type: "number", description: "Number of results (default 25, max 100)" },
+        },
+      },
+    },
+    {
+      name: "lookup_order",
+      description: "Look up one or more orders by origin_id (client_id)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          origin_ids: { type: "string", description: "Comma-separated origin_id values (client IDs)" },
+        },
+        required: ["origin_ids"],
+      },
+    },
+    {
+      name: "cancel_all_orders",
+      description: "Cancel all open orders for the authenticated user",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "list_fundings",
+      description: "List account fundings (deposits)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          fids: { type: "string", description: "Comma-separated funding IDs to filter" },
+          status: { type: "string", enum: ["pending", "complete", "cancelled"], description: "Filter by status" },
+          method: { type: "string", description: "Funding method (e.g. spei, bitcoin)" },
+          limit: { type: "number", description: "Number of results (default 25, max 100)" },
+          marker: { type: "string", description: "Pagination marker" },
+          sort: { type: "string", enum: ["asc", "desc"], description: "Sort direction" },
+        },
+      },
+    },
+    {
+      name: "list_withdrawals",
+      description: "List account withdrawals",
+      inputSchema: {
+        type: "object",
+        properties: {
+          wids: { type: "string", description: "Comma-separated withdrawal IDs to filter" },
+          status: { type: "string", enum: ["pending", "processing", "complete", "failed"], description: "Filter by status" },
+          method: { type: "string", description: "Withdrawal method (e.g. spei, bitcoin)" },
+          limit: { type: "number", description: "Number of results (default 25, max 100)" },
+          marker: { type: "string", description: "Pagination marker" },
+          sort: { type: "string", enum: ["asc", "desc"], description: "Sort direction" },
+        },
+      },
+    },
+    {
+      name: "get_withdrawal",
+      description: "Retrieve a specific withdrawal by its ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          wid: { type: "string", description: "Withdrawal ID" },
+        },
+        required: ["wid"],
+      },
+    },
+    {
+      name: "list_fees",
+      description: "List applicable fees for the authenticated user across trading pairs",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "get_account_status",
+      description: "Retrieve account KYC and verification status (tier, limits, required docs)",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "list_funding_destinations",
+      description: "Get funding destination details (address/CLABE) for a given currency",
+      inputSchema: {
+        type: "object",
+        properties: {
+          fund_currency: { type: "string", description: "Currency code (e.g. btc, mxn, ars)" },
+        },
+        required: ["fund_currency"],
+      },
+    },
   ],
 }));
 
@@ -224,6 +338,61 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", "/funding_destination"), null, 2) }] };
       case "create_withdrawal":
         return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("POST", "/withdrawals", args), null, 2) }] };
+      case "list_ledger": {
+        const params = new URLSearchParams();
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.marker) params.set("marker", String(args.marker));
+        if (args?.sort) params.set("sort", String(args.sort));
+        const op = args?.operation ? `/${args.operation}s` : "";
+        const qs = params.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/ledger${op}${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
+      case "list_open_orders": {
+        const params = new URLSearchParams();
+        if (args?.book) params.set("book", String(args.book));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.marker) params.set("marker", String(args.marker));
+        if (args?.sort) params.set("sort", String(args.sort));
+        const qs = params.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/open_orders${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
+      case "lookup_order":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/orders/${args?.origin_ids}`), null, 2) }] };
+      case "cancel_all_orders":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("DELETE", "/orders/all"), null, 2) }] };
+      case "list_fundings": {
+        const params = new URLSearchParams();
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.method) params.set("method", String(args.method));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.marker) params.set("marker", String(args.marker));
+        if (args?.sort) params.set("sort", String(args.sort));
+        const suffix = args?.fids ? `/${args.fids}` : "";
+        const qs = params.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/fundings${suffix}${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
+      case "list_withdrawals": {
+        const params = new URLSearchParams();
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.method) params.set("method", String(args.method));
+        if (args?.limit) params.set("limit", String(args.limit));
+        if (args?.marker) params.set("marker", String(args.marker));
+        if (args?.sort) params.set("sort", String(args.sort));
+        const suffix = args?.wids ? `/${args.wids}` : "";
+        const qs = params.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/withdrawals${suffix}${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
+      case "get_withdrawal":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/withdrawals/${args?.wid}`), null, 2) }] };
+      case "list_fees":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", "/fees"), null, 2) }] };
+      case "get_account_status":
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", "/account_status"), null, 2) }] };
+      case "list_funding_destinations": {
+        const params = new URLSearchParams();
+        params.set("fund_currency", String(args?.fund_currency));
+        return { content: [{ type: "text", text: JSON.stringify(await bitsoRequest("GET", `/funding_destination?${params}`), null, 2) }] };
+      }
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -246,7 +415,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-bitso", version: "0.1.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
+        const s = new Server({ name: "mcp-bitso", version: "0.2.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
         await t.handleRequest(req, res, req.body); return;
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
