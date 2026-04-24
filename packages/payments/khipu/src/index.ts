@@ -8,13 +8,26 @@
  * Webpay (cards) + Khipu (bank transfer) for full coverage. Bank transfer is
  * preferred for larger transactions — no credit-card limit, no card fees.
  *
- * Tools (8):
+ * Tools (19):
  *   create_payment         — POST /payments, returns payment_url + transfer URLs
  *   get_payment            — GET  /payments/{id} or /payments/notify?notification_token=X
  *   delete_payment         — DELETE /payments/{id}
  *   confirm_payment        — POST /payments/{id}/confirm (manual confirmation)
  *   refund_payment         — POST /payments/{id}/refunds (full or partial)
+ *   list_payments          — GET  /payments (paginated search of merchant payments)
+ *   predict_payment        — POST /predict (recommend best bank / rails for a payer)
  *   get_merchants          — GET  /merchants (receiver info)
+ *   get_merchant           — GET  /merchants/{id}
+ *   list_merchant_accounts — GET  /merchants/{id}/accounts
+ *   create_receiver        — POST /receivers (onboard a new receiver under the integrator)
+ *   list_receivers         — GET  /receivers
+ *   list_conciliations     — GET  /conciliations (settlement / reconciliation by date range)
+ *   list_reviews           — GET  /reviews (payer opinions / NPS)
+ *   register_webhook       — POST /webhooks (register a notification endpoint)
+ *   list_webhooks          — GET  /webhooks
+ *   delete_webhook         — DELETE /webhooks/{id}
+ *   create_terminal_session — POST /terminal-sessions (in-person / POS payment session)
+ *   get_terminal_session   — GET  /terminal-sessions/{id}
  *   get_banks              — GET  /banks (supported Chilean banks)
  *   create_automatic_payment — POST /automatic-payments (subscription / recurring)
  *
@@ -88,7 +101,7 @@ async function khipuRequest(method: string, path: string, body?: unknown): Promi
 }
 
 const server = new Server(
-  { name: "mcp-khipu", version: "0.1.0" },
+  { name: "mcp-khipu", version: "0.2.0-alpha.1" },
   { capabilities: { tools: {} } }
 );
 
@@ -170,9 +183,170 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "list_payments",
+      description: "List Khipu payments for the current merchant, optionally filtered by date range and status. Useful for reconciliation jobs and agent-driven reporting.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          status: { type: "string", description: "Filter by status (e.g. 'done', 'pending', 'expired', 'reversed')" },
+          start: { type: "string", description: "ISO-8601 start timestamp (inclusive)" },
+          end: { type: "string", description: "ISO-8601 end timestamp (inclusive)" },
+          page: { type: "number", description: "Page number (1-based)" },
+          page_size: { type: "number", description: "Results per page" },
+        },
+      },
+    },
+    {
+      name: "predict_payment",
+      description: "Predict whether a payment is likely to succeed for a given payer+amount+bank, and recommend the best bank/rail. Call before create_payment to improve conversion for large or edge-case transfers.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          payer_email: { type: "string", description: "Payer email (optional — Khipu uses history if known)" },
+          bank_id: { type: "string", description: "Candidate bank id (from get_banks)" },
+          amount: { type: "number", description: "Intended charge amount in major units" },
+          currency: { type: "string", description: "ISO-4217 currency code, typically CLP" },
+        },
+        required: ["amount", "currency"],
+      },
+    },
+    {
       name: "get_merchants",
       description: "List the merchant receiver accounts accessible with the current API key. Useful to confirm auth + discover receiver_id values.",
       inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "get_merchant",
+      description: "Fetch a single merchant by id. Returns commercial info, configured collect accounts, and current integration status.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          merchant_id: { type: "string", description: "Khipu merchant id" },
+        },
+        required: ["merchant_id"],
+      },
+    },
+    {
+      name: "list_merchant_accounts",
+      description: "List the bank accounts registered for a merchant to collect into. Use with refund_payment / conciliation flows to know which account funds settle to.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          merchant_id: { type: "string", description: "Khipu merchant id" },
+        },
+        required: ["merchant_id"],
+      },
+    },
+    {
+      name: "create_receiver",
+      description: "Create (onboard) a new receiver under an integrator account. The receiver can then collect Khipu payments. Only available to integrator-level API keys.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          admin_first_name: { type: "string", description: "Admin user first name" },
+          admin_last_name: { type: "string", description: "Admin user last name" },
+          admin_email: { type: "string", description: "Admin user email" },
+          country: { type: "string", description: "ISO-3166 country code (e.g. 'CL')" },
+          business_identifier: { type: "string", description: "RUT / tax identifier of the receiving business" },
+          business_name: { type: "string", description: "Legal business name" },
+          contact_email: { type: "string", description: "Public contact email" },
+          contact_phone: { type: "string", description: "Public contact phone" },
+        },
+        required: ["admin_email", "business_identifier", "business_name"],
+      },
+    },
+    {
+      name: "list_receivers",
+      description: "List receivers onboarded under the current integrator account.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          page: { type: "number", description: "Page number (1-based)" },
+          page_size: { type: "number", description: "Results per page" },
+        },
+      },
+    },
+    {
+      name: "list_conciliations",
+      description: "List settlement / conciliation records for a date range. Each record groups settled payments into a single bank deposit. Use to match Khipu payouts to your accounting.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          start: { type: "string", description: "ISO-8601 start date (inclusive)" },
+          end: { type: "string", description: "ISO-8601 end date (inclusive)" },
+          merchant_id: { type: "string", description: "Optional merchant filter (integrator use)" },
+        },
+        required: ["start", "end"],
+      },
+    },
+    {
+      name: "list_reviews",
+      description: "List payer reviews / opinions left after a Khipu payment. Useful for NPS dashboards and detecting UX problems in the payment flow.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          start: { type: "string", description: "ISO-8601 start date (inclusive)" },
+          end: { type: "string", description: "ISO-8601 end date (inclusive)" },
+          page: { type: "number", description: "Page number (1-based)" },
+          page_size: { type: "number", description: "Results per page" },
+        },
+      },
+    },
+    {
+      name: "register_webhook",
+      description: "Register a webhook endpoint to receive Khipu notifications (payment.paid, payment.refunded, etc). Returns a webhook id and the shared secret used to verify incoming signatures.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          url: { type: "string", description: "HTTPS endpoint Khipu will POST notifications to" },
+          events: { type: "array", items: { type: "string" }, description: "Event names to subscribe to (e.g. ['payment.paid','payment.refunded'])" },
+          secret: { type: "string", description: "Optional shared secret; Khipu generates one if omitted" },
+        },
+        required: ["url"],
+      },
+    },
+    {
+      name: "list_webhooks",
+      description: "List registered webhook endpoints for the current merchant.",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "delete_webhook",
+      description: "Delete (unregister) a webhook endpoint by id. Khipu stops sending notifications immediately.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          webhook_id: { type: "string", description: "Webhook id to delete" },
+        },
+        required: ["webhook_id"],
+      },
+    },
+    {
+      name: "create_terminal_session",
+      description: "Create a Khipu terminal session for in-person / POS bank-transfer checkout. Returns a QR/URL the payer scans at the point of sale to pay from their bank app.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          subject: { type: "string", description: "Short description of the sale" },
+          amount: { type: "number", description: "Amount in major units (CLP)" },
+          currency: { type: "string", description: "ISO-4217 currency, typically CLP" },
+          transaction_id: { type: "string", description: "Merchant-side order reference" },
+          terminal_id: { type: "string", description: "Optional POS terminal identifier" },
+          expires_date: { type: "string", description: "ISO-8601 expiration timestamp" },
+        },
+        required: ["subject", "amount", "currency"],
+      },
+    },
+    {
+      name: "get_terminal_session",
+      description: "Retrieve the current status of a terminal (POS) session — whether the payer has scanned, paid, or the session has expired.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          session_id: { type: "string", description: "Terminal session id returned by create_terminal_session" },
+        },
+        required: ["session_id"],
+      },
     },
     {
       name: "get_banks",
@@ -225,8 +399,59 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (a.amount !== undefined) body.amount = a.amount;
         return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("POST", `/payments/${id}/refunds`, body), null, 2) }] };
       }
+      case "list_payments": {
+        const q = new URLSearchParams();
+        if (a.status) q.set("status", String(a.status));
+        if (a.start) q.set("start", String(a.start));
+        if (a.end) q.set("end", String(a.end));
+        if (a.page !== undefined) q.set("page", String(a.page));
+        if (a.page_size !== undefined) q.set("page_size", String(a.page_size));
+        const qs = q.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", `/payments${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
+      case "predict_payment":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("POST", "/predict", a), null, 2) }] };
       case "get_merchants":
         return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", "/merchants"), null, 2) }] };
+      case "get_merchant":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", `/merchants/${encodeURIComponent(String(a.merchant_id))}`), null, 2) }] };
+      case "list_merchant_accounts":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", `/merchants/${encodeURIComponent(String(a.merchant_id))}/accounts`), null, 2) }] };
+      case "create_receiver":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("POST", "/receivers", a), null, 2) }] };
+      case "list_receivers": {
+        const q = new URLSearchParams();
+        if (a.page !== undefined) q.set("page", String(a.page));
+        if (a.page_size !== undefined) q.set("page_size", String(a.page_size));
+        const qs = q.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", `/receivers${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
+      case "list_conciliations": {
+        const q = new URLSearchParams();
+        q.set("start", String(a.start));
+        q.set("end", String(a.end));
+        if (a.merchant_id) q.set("merchant_id", String(a.merchant_id));
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", `/conciliations?${q.toString()}`), null, 2) }] };
+      }
+      case "list_reviews": {
+        const q = new URLSearchParams();
+        if (a.start) q.set("start", String(a.start));
+        if (a.end) q.set("end", String(a.end));
+        if (a.page !== undefined) q.set("page", String(a.page));
+        if (a.page_size !== undefined) q.set("page_size", String(a.page_size));
+        const qs = q.toString();
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", `/reviews${qs ? `?${qs}` : ""}`), null, 2) }] };
+      }
+      case "register_webhook":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("POST", "/webhooks", a), null, 2) }] };
+      case "list_webhooks":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", "/webhooks"), null, 2) }] };
+      case "delete_webhook":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("DELETE", `/webhooks/${encodeURIComponent(String(a.webhook_id))}`), null, 2) }] };
+      case "create_terminal_session":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("POST", "/terminal-sessions", a), null, 2) }] };
+      case "get_terminal_session":
+        return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", `/terminal-sessions/${encodeURIComponent(String(a.session_id))}`), null, 2) }] };
       case "get_banks":
         return { content: [{ type: "text", text: JSON.stringify(await khipuRequest("GET", "/banks"), null, 2) }] };
       case "create_automatic_payment":
@@ -253,7 +478,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-khipu", version: "0.1.0" }, { capabilities: { tools: {} } });
+        const s = new Server({ name: "mcp-khipu", version: "0.2.0-alpha.1" }, { capabilities: { tools: {} } });
         (server as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.forEach((v, k) => (s as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.set(k, v));
         (server as unknown as { _notificationHandlers?: Map<unknown, unknown> })._notificationHandlers?.forEach((v, k) => (s as unknown as { _notificationHandlers: Map<unknown, unknown> })._notificationHandlers.set(k, v));
         await s.connect(t);
