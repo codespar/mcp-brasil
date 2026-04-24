@@ -7,24 +7,42 @@
  * owned by a consortium of Chilean banks). Shipping this server is a
  * prerequisite for any "CodeSpar covers LatAm" claim that includes Chile.
  *
- * Two products are covered:
- *   Webpay Plus         — one-shot redirect payments (buy_order + amount)
+ * Three products are covered:
+ *   Webpay Plus          — one-shot redirect payments (buy_order + amount)
+ *   Webpay Mall          — same redirect flow, but splits a single cart across
+ *                          multiple seller commerce codes (details[] body)
  *   Webpay OneClick Mall — tokenized recurring payments across multiple
  *                          merchant codes (stored-card / card-on-file)
  *
- * Tools (12):
- *   webpay_create_transaction      — start a Webpay Plus transaction (returns redirect URL)
- *   webpay_commit_transaction      — commit after user returns to merchant
- *   webpay_get_transaction_status  — look up status by token
- *   webpay_refund_transaction      — refund a committed Webpay Plus transaction
- *   webpay_increase_amount         — capture partial authorization
- *   oneclick_create_inscription    — start card-enrollment flow
- *   oneclick_finish_inscription    — confirm enrollment after user returns
- *   oneclick_delete_inscription    — delete a stored card
- *   oneclick_authorize             — charge a stored card across mall sellers
- *   oneclick_capture               — capture a previously authorized OneClick charge
- *   oneclick_refund                — refund a OneClick Mall charge
- *   oneclick_status                — look up OneClick transaction status
+ * Tools (19):
+ *   Webpay Plus (single payments)
+ *     webpay_create_transaction      — start a Webpay Plus transaction (returns redirect URL)
+ *     webpay_commit_transaction      — commit after user returns to merchant
+ *     webpay_get_transaction_status  — look up status by token
+ *     webpay_refund_transaction      — refund a committed Webpay Plus transaction
+ *     webpay_increase_amount         — capture partial authorization
+ *     webpay_capture_transaction     — PUT deferred-capture (official path)
+ *
+ *   Webpay Mall (split-cart / multi-seller single payment)
+ *     webpay_mall_create_transaction — start a Webpay Mall transaction with details[]
+ *     webpay_mall_commit_transaction — commit after user returns from Webpay
+ *     webpay_mall_get_transaction_status — look up mall transaction status by token
+ *     webpay_mall_refund_transaction — refund one child seller of a mall transaction
+ *     webpay_mall_capture_transaction — deferred capture for one child seller
+ *
+ *   OneClick Mall (recurring / stored cards)
+ *     oneclick_create_inscription    — start card-enrollment flow
+ *     oneclick_finish_inscription    — confirm enrollment after user returns
+ *     oneclick_delete_inscription    — delete a stored card
+ *     oneclick_authorize             — charge a stored card across mall sellers
+ *     oneclick_capture               — capture a previously authorized OneClick charge
+ *     oneclick_refund                — refund a OneClick Mall charge
+ *     oneclick_status                — look up OneClick transaction status (alias of _by_buy_order)
+ *     oneclick_get_transaction_by_buy_order — same lookup, explicit name for buy_order pattern
+ *
+ *   Patpass by Webpay (recurring direct debit)
+ *     NOTE: Patpass by Webpay is SOAP-only per official docs — there is no REST
+ *     surface to wrap as MCP tools. Skipped intentionally.
  *
  * Authentication
  *   Transbank REST uses two headers on every request:
@@ -79,7 +97,7 @@ async function transbankRequest(method: string, path: string, body?: unknown): P
 }
 
 const server = new Server(
-  { name: "mcp-transbank", version: "0.1.0" },
+  { name: "mcp-transbank", version: "0.2.0-alpha.1" },
   { capabilities: { tools: {} } }
 );
 
@@ -145,6 +163,97 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           capture_amount: { type: "number", description: "Amount to capture in CLP (integer)" },
         },
         required: ["token", "buy_order", "authorization_code", "capture_amount"],
+      },
+    },
+    {
+      name: "webpay_capture_transaction",
+      description: "Deferred-capture for a previously authorized Webpay Plus transaction. Uses the official PUT /capture endpoint — prefer this over webpay_increase_amount for standard deferred-capture flows.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          token: { type: "string", description: "Webpay token of the authorized transaction" },
+          buy_order: { type: "string", description: "Original buy_order" },
+          authorization_code: { type: "string", description: "Authorization code returned at authorization time" },
+          capture_amount: { type: "number", description: "Amount to capture in CLP (integer)" },
+        },
+        required: ["token", "buy_order", "authorization_code", "capture_amount"],
+      },
+    },
+    {
+      name: "webpay_mall_create_transaction",
+      description: "Create a Webpay Mall transaction — one parent buy_order split across several seller commerce codes. Returns { token, url } exactly like Webpay Plus. Each details entry is a child charge with its own commerce_code, buy_order, and amount.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          buy_order: { type: "string", description: "Parent (mall) buy_order (max 26 chars)" },
+          session_id: { type: "string", description: "Merchant-side session id (max 61 chars)" },
+          return_url: { type: "string", description: "URL Transbank redirects the user back to after payment" },
+          details: {
+            type: "array",
+            description: "Child charges, one per mall seller",
+            items: {
+              type: "object",
+              properties: {
+                amount: { type: "number", description: "Child amount in CLP (integer)" },
+                commerce_code: { type: "string", description: "Child-merchant commerce code" },
+                buy_order: { type: "string", description: "Child buy_order (unique per detail, max 26 chars)" },
+              },
+              required: ["amount", "commerce_code", "buy_order"],
+            },
+          },
+        },
+        required: ["buy_order", "session_id", "return_url", "details"],
+      },
+    },
+    {
+      name: "webpay_mall_commit_transaction",
+      description: "Commit a Webpay Mall transaction after the user has returned. Charges all child commerce codes at once.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          token: { type: "string", description: "Webpay token (token_ws query param on return)" },
+        },
+        required: ["token"],
+      },
+    },
+    {
+      name: "webpay_mall_get_transaction_status",
+      description: "Get the status of a Webpay Mall transaction by token (includes per-child details).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          token: { type: "string", description: "Webpay token" },
+        },
+        required: ["token"],
+      },
+    },
+    {
+      name: "webpay_mall_refund_transaction",
+      description: "Refund one child seller of a Webpay Mall transaction. Must specify which child (commerce_code + buy_order) to refund.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          token: { type: "string", description: "Webpay token of the original mall transaction" },
+          buy_order: { type: "string", description: "Child buy_order to refund" },
+          commerce_code: { type: "string", description: "Child commerce_code" },
+          amount: { type: "number", description: "Refund amount in CLP (integer)" },
+        },
+        required: ["token", "buy_order", "commerce_code", "amount"],
+      },
+    },
+    {
+      name: "webpay_mall_capture_transaction",
+      description: "Deferred-capture for one child seller inside a Webpay Mall transaction.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          token: { type: "string", description: "Webpay token of the authorized mall transaction" },
+          commerce_code: { type: "string", description: "Child commerce_code to capture" },
+          buy_order: { type: "string", description: "Child buy_order" },
+          authorization_code: { type: "string", description: "Authorization code returned at authorization time" },
+          capture_amount: { type: "number", description: "Amount to capture in CLP (integer)" },
+        },
+        required: ["token", "commerce_code", "buy_order", "authorization_code", "capture_amount"],
       },
     },
     {
@@ -249,6 +358,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["buy_order"],
       },
     },
+    {
+      name: "oneclick_get_transaction_by_buy_order",
+      description: "Look up a OneClick Mall transaction by parent buy_order. Functionally identical to oneclick_status — provided as an explicit name for agents that follow the 'get by identifier' naming convention.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          buy_order: { type: "string", description: "Parent (mall) buy_order" },
+        },
+        required: ["buy_order"],
+      },
+    },
   ],
 }));
 
@@ -281,6 +401,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
         return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("POST", `/rswebpaytransaction/api/webpay/v1.2/transactions/${token}/capture`, body), null, 2) }] };
       }
+      case "webpay_capture_transaction": {
+        const token = encodeURIComponent(String(a.token));
+        const body = {
+          buy_order: a.buy_order,
+          authorization_code: a.authorization_code,
+          capture_amount: a.capture_amount,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("PUT", `/rswebpaytransaction/api/webpay/v1.2/transactions/${token}/capture`, body), null, 2) }] };
+      }
+      case "webpay_mall_create_transaction":
+        return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("POST", "/rswebpaytransaction/api/webpay/v1.2/transactions", args), null, 2) }] };
+      case "webpay_mall_commit_transaction": {
+        const token = encodeURIComponent(String(a.token));
+        return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("PUT", `/rswebpaytransaction/api/webpay/v1.2/transactions/${token}`), null, 2) }] };
+      }
+      case "webpay_mall_get_transaction_status": {
+        const token = encodeURIComponent(String(a.token));
+        return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("GET", `/rswebpaytransaction/api/webpay/v1.2/transactions/${token}`), null, 2) }] };
+      }
+      case "webpay_mall_refund_transaction": {
+        const token = encodeURIComponent(String(a.token));
+        const body = {
+          buy_order: a.buy_order,
+          commerce_code: a.commerce_code,
+          amount: a.amount,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("POST", `/rswebpaytransaction/api/webpay/v1.2/transactions/${token}/refunds`, body), null, 2) }] };
+      }
+      case "webpay_mall_capture_transaction": {
+        const token = encodeURIComponent(String(a.token));
+        const body = {
+          commerce_code: a.commerce_code,
+          buy_order: a.buy_order,
+          authorization_code: a.authorization_code,
+          capture_amount: a.capture_amount,
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("PUT", `/rswebpaytransaction/api/webpay/v1.2/transactions/${token}/capture`, body), null, 2) }] };
+      }
       case "oneclick_create_inscription":
         return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("POST", "/rswebpaytransaction/api/oneclick/mall/v1.2/inscriptions", args), null, 2) }] };
       case "oneclick_finish_inscription": {
@@ -309,7 +467,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
         return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("POST", `/rswebpaytransaction/api/oneclick/mall/v1.2/transactions/${buyOrder}/refunds`, body), null, 2) }] };
       }
-      case "oneclick_status": {
+      case "oneclick_status":
+      case "oneclick_get_transaction_by_buy_order": {
         const buyOrder = encodeURIComponent(String(a.buy_order));
         return { content: [{ type: "text", text: JSON.stringify(await transbankRequest("GET", `/rswebpaytransaction/api/oneclick/mall/v1.2/transactions/${buyOrder}`), null, 2) }] };
       }
@@ -335,7 +494,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-transbank", version: "0.1.0" }, { capabilities: { tools: {} } });
+        const s = new Server({ name: "mcp-transbank", version: "0.2.0-alpha.1" }, { capabilities: { tools: {} } });
         (server as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.forEach((v, k) => (s as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.set(k, v));
         (server as unknown as { _notificationHandlers?: Map<unknown, unknown> })._notificationHandlers?.forEach((v, k) => (s as unknown as { _notificationHandlers: Map<unknown, unknown> })._notificationHandlers.set(k, v));
         await s.connect(t);
