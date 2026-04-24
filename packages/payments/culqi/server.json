@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-culqi",
-  "description": "MCP server for Culqi — Peru's default PSP. Charges, refunds, customers, cards, plans, subscriptions, events.",
+  "description": "MCP server for Culqi — Peru's default PSP. Charges, refunds, customers, cards, orders (Yape / PagoEfectivo), plans, subscriptions, events.",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-brasil",
     "source": "github",
     "subfolder": "packages/payments/culqi"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-culqi",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },

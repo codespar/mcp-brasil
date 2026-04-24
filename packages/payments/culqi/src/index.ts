@@ -7,17 +7,27 @@
  * alongside Mexico (Conekta), Brazil (Pagar.me, Getnet), Colombia (Wompi),
  * Argentina (Mercado Pago), and Chile.
  *
- * Tools (10):
+ * Tools (20):
  *   create_token          — tokenize a card (POST /tokens), test / server-side only
  *   create_charge         — charge a card or token (POST /charges) in PEN or USD
  *   get_charge            — retrieve a charge by id
+ *   list_charges          — list charges with filters (GET /charges)
+ *   capture_charge        — capture a previously-authorized charge (POST /charges/{id}/capture)
  *   refund_charge         — refund a captured charge (full or partial)
  *   create_customer       — create a customer record
+ *   get_customer          — retrieve a customer by id
+ *   list_customers        — list customers with filters (GET /customers)
  *   create_card           — attach a tokenized card to a customer for reuse
+ *   delete_card           — detach a saved card (DELETE /cards/{id})
+ *   create_order          — create a Yape / PagoEfectivo order (POST /orders)
+ *   confirm_order         — confirm an unpaid order (POST /orders/{id}/confirm)
+ *   list_orders           — list orders with filters (GET /orders)
  *   create_plan           — create a subscription plan
  *   create_subscription   — subscribe a customer's card to a plan (CulqiFull)
  *   cancel_subscription   — cancel an active subscription
  *   list_events           — list webhook events with filters
+ *   get_event             — retrieve a single webhook event by id
+ *   get_refund            — retrieve a refund by id (GET /refunds/{id})
  *
  * Authentication
  *   Bearer token with the secret key on every request. No separate sandbox
@@ -70,7 +80,7 @@ function buildQuery(filters: unknown): string {
 }
 
 const server = new Server(
-  { name: "mcp-culqi", version: "0.1.0" },
+  { name: "mcp-culqi", version: "0.2.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -134,6 +144,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "list_charges",
+      description: "List charges (GET /charges) with optional filters. Filters are passed as query params: amount, min_amount, max_amount, installments, currency_code, code (auth code), decline_code, fraud_score, first_name, last_name, email, country_code, creation_date_from (ms), creation_date_to (ms), limit, before, after.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          filters: {
+            type: "object",
+            description: "Query filters passed as-is to the Culqi /charges endpoint.",
+          },
+        },
+      },
+    },
+    {
+      name: "capture_charge",
+      description: "Capture a previously-authorized charge (POST /charges/{id}/capture). Use after creating a charge with capture=false. Must be called within 10 days of authorization.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Culqi charge id to capture (chr_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
       name: "refund_charge",
       description: "Refund a captured charge (POST /refunds). Partial refunds supported by setting amount below the charge total.",
       inputSchema: {
@@ -145,6 +179,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           metadata: { type: "object", description: "Optional metadata" },
         },
         required: ["amount", "charge_id", "reason"],
+      },
+    },
+    {
+      name: "get_refund",
+      description: "Retrieve a refund by id (GET /refunds/{id}).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Culqi refund id (ref_xxx)" },
+        },
+        required: ["id"],
       },
     },
     {
@@ -166,6 +211,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "get_customer",
+      description: "Retrieve a customer by Culqi id (GET /customers/{id}).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Culqi customer id (cus_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "list_customers",
+      description: "List customers (GET /customers) with optional filters passed as query params: first_name, last_name, email, country_code, creation_date_from (ms), creation_date_to (ms), limit, before, after.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          filters: {
+            type: "object",
+            description: "Query filters passed as-is to the Culqi /customers endpoint.",
+          },
+        },
+      },
+    },
+    {
       name: "create_card",
       description: "Attach a tokenized card to a customer for reuse (POST /cards). Returns a card id (crd_xxx) usable as source_id on future charges.",
       inputSchema: {
@@ -177,6 +246,69 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           metadata: { type: "object", description: "Merchant-side key-value metadata" },
         },
         required: ["customer_id", "token_id"],
+      },
+    },
+    {
+      name: "delete_card",
+      description: "Detach a saved card from its customer (DELETE /cards/{id}). The card id becomes unusable as source_id afterwards.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Culqi card id (crd_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "create_order",
+      description: "Create an order (POST /orders) for non-card payment methods — Yape, PagoEfectivo (Cash), bank transfer. Returns an order with CIP / QR data the payer uses to complete payment. Confirm reception via webhooks or confirm_order.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          amount: { type: "number", description: "Order amount in cents" },
+          currency_code: { type: "string", enum: ["PEN", "USD"], description: "ISO-4217 currency" },
+          description: { type: "string", description: "Human-readable order description" },
+          order_number: { type: "string", description: "Merchant-side unique order number (3-80 chars)" },
+          client_details: {
+            type: "object",
+            description: "Payer details required for Yape / Cash orders",
+            properties: {
+              first_name: { type: "string" },
+              last_name: { type: "string" },
+              email: { type: "string" },
+              phone_number: { type: "string" },
+            },
+            required: ["first_name", "last_name", "email", "phone_number"],
+          },
+          expiration_date: { type: "number", description: "Unix epoch seconds for when the order expires (must be ~>10 min ahead)" },
+          confirm: { type: "boolean", description: "If true, confirms the order immediately on creation (default false)" },
+          metadata: { type: "object", description: "Merchant-side key-value metadata" },
+        },
+        required: ["amount", "currency_code", "description", "order_number", "client_details", "expiration_date"],
+      },
+    },
+    {
+      name: "confirm_order",
+      description: "Confirm an unpaid order (POST /orders/{id}/confirm). Moves the order to a confirmed state ready to be paid by the customer via Yape / PagoEfectivo.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Culqi order id (ord_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "list_orders",
+      description: "List orders (GET /orders) with optional filters passed as query params: order_number, state (created, paid, expired, deleted, failed), creation_date_from (ms), creation_date_to (ms), limit, before, after.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          filters: {
+            type: "object",
+            description: "Query filters passed as-is to the Culqi /orders endpoint.",
+          },
+        },
       },
     },
     {
@@ -245,6 +377,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
+    {
+      name: "get_event",
+      description: "Retrieve a single webhook event by id (GET /events/{id}). Useful for auditing a webhook delivery against Culqi's canonical record.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Culqi event id (evt_xxx)" },
+        },
+        required: ["id"],
+      },
+    },
   ],
 }));
 
@@ -261,12 +404,46 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const id = (args as { id: string }).id;
         return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/charges/${id}`), null, 2) }] };
       }
+      case "list_charges": {
+        const filters = (args as { filters?: unknown })?.filters;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/charges${buildQuery(filters)}`), null, 2) }] };
+      }
+      case "capture_charge": {
+        const id = (args as { id: string }).id;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("POST", `/charges/${id}/capture`), null, 2) }] };
+      }
       case "refund_charge":
         return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("POST", "/refunds", args), null, 2) }] };
+      case "get_refund": {
+        const id = (args as { id: string }).id;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/refunds/${id}`), null, 2) }] };
+      }
       case "create_customer":
         return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("POST", "/customers", args), null, 2) }] };
+      case "get_customer": {
+        const id = (args as { id: string }).id;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/customers/${id}`), null, 2) }] };
+      }
+      case "list_customers": {
+        const filters = (args as { filters?: unknown })?.filters;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/customers${buildQuery(filters)}`), null, 2) }] };
+      }
       case "create_card":
         return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("POST", "/cards", args), null, 2) }] };
+      case "delete_card": {
+        const id = (args as { id: string }).id;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("DELETE", `/cards/${id}`), null, 2) }] };
+      }
+      case "create_order":
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("POST", "/orders", args), null, 2) }] };
+      case "confirm_order": {
+        const id = (args as { id: string }).id;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("POST", `/orders/${id}/confirm`), null, 2) }] };
+      }
+      case "list_orders": {
+        const filters = (args as { filters?: unknown })?.filters;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/orders${buildQuery(filters)}`), null, 2) }] };
+      }
       case "create_plan":
         return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("POST", "/plans", args), null, 2) }] };
       case "create_subscription":
@@ -278,6 +455,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "list_events": {
         const filters = (args as { filters?: unknown })?.filters;
         return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/events${buildQuery(filters)}`), null, 2) }] };
+      }
+      case "get_event": {
+        const id = (args as { id: string }).id;
+        return { content: [{ type: "text", text: JSON.stringify(await culqiRequest("GET", `/events/${id}`), null, 2) }] };
       }
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
@@ -301,7 +482,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-culqi", version: "0.1.0" }, { capabilities: { tools: {} } });
+        const s = new Server({ name: "mcp-culqi", version: "0.2.0" }, { capabilities: { tools: {} } });
         (server as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.forEach((v, k) => (s as unknown as { _requestHandlers: Map<unknown, unknown> })._requestHandlers.set(k, v));
         (server as unknown as { _notificationHandlers?: Map<unknown, unknown> })._notificationHandlers?.forEach((v, k) => (s as unknown as { _notificationHandlers: Map<unknown, unknown> })._notificationHandlers.set(k, v));
         await s.connect(t);
