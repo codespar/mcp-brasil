@@ -6,15 +6,19 @@
  * Wraps the standard Pix API spec (https://bacen.github.io/pix-api/).
  * Each PSP (bank) provides their own base URL and mTLS certificate.
  *
- * Tools:
- * - create_cob: Create an immediate Pix charge (cobranca imediata)
- * - get_cob: Get charge details by txid
- * - list_cobs: List immediate charges with filters
- * - create_cobv: Create a due-date Pix charge (cobranca com vencimento)
- * - get_pix: Get a received Pix payment by e2eid
- * - list_pix_received: List received Pix payments
- * - create_pix_key: Register a Pix key (DICT)
- * - get_pix_key: Look up a Pix key
+ * Tools (18):
+ * Cob (immediate charges):
+ * - create_cob, get_cob, list_cobs, update_cob
+ * Cobv (due-date charges):
+ * - create_cobv, list_cobv, update_cobv
+ * Pix received:
+ * - get_pix, list_pix_received
+ * Devolução (refunds):
+ * - create_devolucao, get_devolucao
+ * DICT (keys):
+ * - create_pix_key, get_pix_key, list_pix_keys, request_key_portability, resolve_key_claim
+ * Webhook:
+ * - set_webhook, delete_webhook
  *
  * Environment:
  *   PIX_BASE_URL — PSP API base URL (e.g., https://pix.example.com/api/v2)
@@ -100,11 +104,15 @@ async function pixRequest(method: string, path: string, body?: unknown): Promise
     const err = await res.text();
     throw new Error(`Pix API ${res.status}: ${err}`);
   }
-  return res.json();
+  // DELETE / 204 may have empty body
+  if (res.status === 204) return { ok: true };
+  const text = await res.text();
+  if (!text) return { ok: true };
+  try { return JSON.parse(text); } catch { return { raw: text }; }
 }
 
 const server = new Server(
-  { name: "mcp-pix-bcb", version: "0.1.0" },
+  { name: "mcp-pix-bcb", version: "0.2.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -189,6 +197,32 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "update_cob",
+      description: "Revise an existing immediate charge (PATCH /cob/{txid}). Common updates: status REMOVIDA_PELO_USUARIO_RECEBEDOR to cancel, or change valor/solicitacaoPagador.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          txid: { type: "string", description: "Transaction ID" },
+          status: { type: "string", enum: ["ATIVA", "REMOVIDA_PELO_USUARIO_RECEBEDOR"], description: "New status (use REMOVIDA_PELO_USUARIO_RECEBEDOR to cancel)" },
+          valor: {
+            type: "object",
+            description: "Updated amount",
+            properties: {
+              original: { type: "string", description: "Amount in BRL" },
+            },
+          },
+          solicitacaoPagador: { type: "string", description: "Updated message to payer (max 140 chars)" },
+          calendario: {
+            type: "object",
+            properties: {
+              expiracao: { type: "number", description: "Expiration in seconds" },
+            },
+          },
+        },
+        required: ["txid"],
+      },
+    },
+    {
       name: "create_cobv",
       description: "Create a due-date Pix charge (cobranca com vencimento)",
       inputSchema: {
@@ -229,6 +263,49 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "list_cobv",
+      description: "List due-date charges (cobv) within a date range",
+      inputSchema: {
+        type: "object",
+        properties: {
+          inicio: { type: "string", description: "Start date (ISO 8601)" },
+          fim: { type: "string", description: "End date (ISO 8601)" },
+          cpf: { type: "string", description: "Filter by payer CPF" },
+          cnpj: { type: "string", description: "Filter by payer CNPJ" },
+          status: { type: "string", enum: ["ATIVA", "CONCLUIDA", "REMOVIDA_PELO_USUARIO_RECEBEDOR", "REMOVIDA_PELO_PSP"], description: "Filter by status" },
+          paginacao_paginaAtual: { type: "number", description: "Page number (0-based)" },
+          paginacao_itensPorPagina: { type: "number", description: "Items per page" },
+        },
+        required: ["inicio", "fim"],
+      },
+    },
+    {
+      name: "update_cobv",
+      description: "Revise an existing due-date charge (PATCH /cobv/{txid})",
+      inputSchema: {
+        type: "object",
+        properties: {
+          txid: { type: "string", description: "Transaction ID" },
+          status: { type: "string", enum: ["ATIVA", "REMOVIDA_PELO_USUARIO_RECEBEDOR"], description: "New status" },
+          valor: {
+            type: "object",
+            properties: {
+              original: { type: "string", description: "Amount in BRL" },
+            },
+          },
+          calendario: {
+            type: "object",
+            properties: {
+              dataDeVencimento: { type: "string", description: "Due date (YYYY-MM-DD)" },
+              validadeAposVencimento: { type: "number", description: "Days valid after due date" },
+            },
+          },
+          solicitacaoPagador: { type: "string", description: "Message to payer (max 140 chars)" },
+        },
+        required: ["txid"],
+      },
+    },
+    {
       name: "get_pix",
       description: "Get a received Pix payment by e2eid (endToEndId)",
       inputSchema: {
@@ -257,6 +334,33 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "create_devolucao",
+      description: "Request a refund (devolução) for a received Pix (PUT /pix/{e2eid}/devolucao/{id})",
+      inputSchema: {
+        type: "object",
+        properties: {
+          e2eid: { type: "string", description: "End-to-end ID of the original Pix" },
+          id: { type: "string", description: "Refund ID (35 alphanumeric chars, client-generated)" },
+          valor: { type: "string", description: "Refund amount in BRL (e.g., '50.00')" },
+          natureza: { type: "string", enum: ["ORIGINAL", "RETIRADA"], description: "Refund nature (default: ORIGINAL)" },
+          descricao: { type: "string", description: "Refund description (max 140 chars)" },
+        },
+        required: ["e2eid", "id", "valor"],
+      },
+    },
+    {
+      name: "get_devolucao",
+      description: "Get refund details by e2eid + refund id (GET /pix/{e2eid}/devolucao/{id})",
+      inputSchema: {
+        type: "object",
+        properties: {
+          e2eid: { type: "string", description: "End-to-end ID of the original Pix" },
+          id: { type: "string", description: "Refund ID" },
+        },
+        required: ["e2eid", "id"],
+      },
+    },
+    {
       name: "create_pix_key",
       description: "Register a Pix key in DICT (requires PSP support)",
       inputSchema: {
@@ -275,6 +379,65 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         type: "object",
         properties: {
           chave: { type: "string", description: "Pix key to look up" },
+        },
+        required: ["chave"],
+      },
+    },
+    {
+      name: "list_pix_keys",
+      description: "List all Pix keys owned by the authenticated account at this PSP",
+      inputSchema: {
+        type: "object",
+        properties: {
+          paginacao_paginaAtual: { type: "number", description: "Page number (0-based)" },
+          paginacao_itensPorPagina: { type: "number", description: "Items per page" },
+        },
+      },
+    },
+    {
+      name: "request_key_portability",
+      description: "Request portability of a Pix key from another PSP into this PSP (DICT portability flow)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          chave: { type: "string", description: "Pix key to port" },
+          tipo: { type: "string", enum: ["CPF", "CNPJ", "PHONE", "EMAIL", "EVP"], description: "Key type" },
+          motivo: { type: "string", enum: ["PORTABILIDADE", "REIVINDICACAO"], description: "Request reason (default: PORTABILIDADE)" },
+        },
+        required: ["chave", "tipo"],
+      },
+    },
+    {
+      name: "resolve_key_claim",
+      description: "Resolve a pending DICT key claim (confirm or cancel) — POST /dict/keys/claims/{id}/resolve",
+      inputSchema: {
+        type: "object",
+        properties: {
+          claim_id: { type: "string", description: "Claim ID" },
+          decisao: { type: "string", enum: ["CONFIRMADA", "CANCELADA"], description: "Resolution decision" },
+        },
+        required: ["claim_id", "decisao"],
+      },
+    },
+    {
+      name: "set_webhook",
+      description: "Configure a webhook URL for a given Pix key (PUT /webhook/{chave}). PSP will POST notifications when Pix payments arrive.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          chave: { type: "string", description: "Pix key" },
+          webhookUrl: { type: "string", description: "HTTPS webhook endpoint URL" },
+        },
+        required: ["chave", "webhookUrl"],
+      },
+    },
+    {
+      name: "delete_webhook",
+      description: "Remove the webhook configured for a Pix key (DELETE /webhook/{chave})",
+      inputSchema: {
+        type: "object",
+        properties: {
+          chave: { type: "string", description: "Pix key" },
         },
         required: ["chave"],
       },
@@ -311,9 +474,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.paginacao_itensPorPagina != null) params.set("paginacao.itensPorPagina", String(args.paginacao_itensPorPagina));
         return { content: [{ type: "text", text: JSON.stringify(await pixRequest("GET", `/cob?${params}`), null, 2) }] };
       }
+      case "update_cob": {
+        const { txid, ...patchBody } = args as Record<string, unknown>;
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("PATCH", `/cob/${txid}`, patchBody), null, 2) }] };
+      }
       case "create_cobv": {
         const { txid, ...cobvBody } = args as Record<string, unknown>;
         return { content: [{ type: "text", text: JSON.stringify(await pixRequest("PUT", `/cobv/${txid}`, cobvBody), null, 2) }] };
+      }
+      case "list_cobv": {
+        const params = new URLSearchParams();
+        params.set("inicio", String(args?.inicio));
+        params.set("fim", String(args?.fim));
+        if (args?.cpf) params.set("cpf", String(args.cpf));
+        if (args?.cnpj) params.set("cnpj", String(args.cnpj));
+        if (args?.status) params.set("status", String(args.status));
+        if (args?.paginacao_paginaAtual != null) params.set("paginacao.paginaAtual", String(args.paginacao_paginaAtual));
+        if (args?.paginacao_itensPorPagina != null) params.set("paginacao.itensPorPagina", String(args.paginacao_itensPorPagina));
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("GET", `/cobv?${params}`), null, 2) }] };
+      }
+      case "update_cobv": {
+        const { txid, ...patchBody } = args as Record<string, unknown>;
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("PATCH", `/cobv/${txid}`, patchBody), null, 2) }] };
       }
       case "get_pix":
         return { content: [{ type: "text", text: JSON.stringify(await pixRequest("GET", `/pix/${args?.e2eid}`), null, 2) }] };
@@ -328,10 +510,35 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.paginacao_itensPorPagina != null) params.set("paginacao.itensPorPagina", String(args.paginacao_itensPorPagina));
         return { content: [{ type: "text", text: JSON.stringify(await pixRequest("GET", `/pix?${params}`), null, 2) }] };
       }
+      case "create_devolucao": {
+        const { e2eid, id, ...body } = args as Record<string, unknown>;
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("PUT", `/pix/${e2eid}/devolucao/${id}`, body), null, 2) }] };
+      }
+      case "get_devolucao":
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("GET", `/pix/${args?.e2eid}/devolucao/${args?.id}`), null, 2) }] };
       case "create_pix_key":
         return { content: [{ type: "text", text: JSON.stringify(await pixRequest("POST", "/dict/keys", args), null, 2) }] };
       case "get_pix_key":
         return { content: [{ type: "text", text: JSON.stringify(await pixRequest("GET", `/dict/keys/${encodeURIComponent(String(args?.chave))}`), null, 2) }] };
+      case "list_pix_keys": {
+        const params = new URLSearchParams();
+        if (args?.paginacao_paginaAtual != null) params.set("paginacao.paginaAtual", String(args.paginacao_paginaAtual));
+        if (args?.paginacao_itensPorPagina != null) params.set("paginacao.itensPorPagina", String(args.paginacao_itensPorPagina));
+        const qs = params.toString() ? `?${params}` : "";
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("GET", `/dict/keys${qs}`), null, 2) }] };
+      }
+      case "request_key_portability":
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("POST", "/dict/keys/portability", args), null, 2) }] };
+      case "resolve_key_claim": {
+        const { claim_id, decisao } = args as Record<string, unknown>;
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("POST", `/dict/keys/claims/${claim_id}/resolve`, { decisao }), null, 2) }] };
+      }
+      case "set_webhook": {
+        const { chave, webhookUrl } = args as Record<string, unknown>;
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("PUT", `/webhook/${encodeURIComponent(String(chave))}`, { webhookUrl }), null, 2) }] };
+      }
+      case "delete_webhook":
+        return { content: [{ type: "text", text: JSON.stringify(await pixRequest("DELETE", `/webhook/${encodeURIComponent(String(args?.chave))}`), null, 2) }] };
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -354,7 +561,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-pix-bcb", version: "0.1.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
+        const s = new Server({ name: "mcp-pix-bcb", version: "0.2.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
         await t.handleRequest(req, res, req.body); return;
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
