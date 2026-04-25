@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-tiny",
-  "version": "0.1.2",
-  "description": "MCP server for Tiny ERP — products, orders, invoices, stock, accounts payable",
+  "version": "0.2.0",
+  "description": "MCP server for Tiny ERP — products, stock, categories, warehouses, price lists, orders, invoices, accounts payable/receivable",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {

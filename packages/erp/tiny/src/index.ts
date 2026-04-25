@@ -6,14 +6,25 @@
  * Tools:
  * - list_products: List products
  * - get_product: Get product details
+ * - update_stock: Adjust product stock balance
+ * - list_categories: List product category tree
+ * - list_warehouses: List stock warehouses (depósitos)
+ * - list_price_lists: List price lists (listas de preços)
  * - list_orders: List sales orders
  * - get_order: Get order details
+ * - update_order_status: Change sales order status (e.g. cancel)
  * - list_contacts: List contacts
  * - get_contact: Get contact details
- * - create_invoice: Create a fiscal invoice (NF-e)
+ * - create_invoice: Create a fiscal invoice (NF-e) from an order
  * - get_invoice: Get invoice details
+ * - list_invoices: List fiscal invoices with filters
+ * - get_invoice_xml: Get the XML payload of an issued invoice
+ * - get_invoice_link: Get DANFE PDF link for an invoice
+ * - send_invoice_email: Email an issued invoice to recipient
  * - get_stock: Get stock for a product
  * - list_accounts_payable: List accounts payable
+ * - list_accounts_receivable: List accounts receivable
+ * - get_account_receivable: Get a single account receivable
  *
  * Environment:
  *   TINY_API_TOKEN — API token from Tiny ERP
@@ -69,7 +80,7 @@ async function tinyRequestWithBody(endpoint: string, body: Record<string, string
 }
 
 const server = new Server(
-  { name: "mcp-tiny", version: "0.1.0" },
+  { name: "mcp-tiny", version: "0.2.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -190,6 +201,131 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
+    {
+      name: "update_stock",
+      description: "Update (adjust) product stock balance — credit or debit a quantity for a deposit",
+      inputSchema: {
+        type: "object",
+        properties: {
+          idProduto: { type: "number", description: "Product ID" },
+          tipo: { type: "string", enum: ["E", "S", "B"], description: "E=entry, S=exit, B=balance" },
+          quantidade: { type: "number", description: "Quantity" },
+          precoUnitario: { type: "number", description: "Unit price (optional)" },
+          observacoes: { type: "string", description: "Notes (optional)" },
+          deposito: { type: "string", description: "Warehouse name (optional, default 'geral')" },
+        },
+        required: ["idProduto", "tipo", "quantidade"],
+      },
+    },
+    {
+      name: "list_categories",
+      description: "List product categories as a tree in Tiny ERP",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "list_warehouses",
+      description: "List stock warehouses (depósitos) configured in Tiny ERP",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "list_price_lists",
+      description: "List price lists (listas de preços) configured in Tiny ERP",
+      inputSchema: {
+        type: "object",
+        properties: {
+          pagina: { type: "number", description: "Page number" },
+        },
+      },
+    },
+    {
+      name: "update_order_status",
+      description: "Change a sales order's status — useful for cancelling or marking as approved/billed",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Order ID" },
+          situacao: {
+            type: "string",
+            description: "New status code (e.g. 'cancelado', 'aprovado', 'faturado', 'em separacao')",
+          },
+        },
+        required: ["id", "situacao"],
+      },
+    },
+    {
+      name: "list_invoices",
+      description: "List fiscal invoices (NF-e/NFC-e) in Tiny ERP",
+      inputSchema: {
+        type: "object",
+        properties: {
+          dataInicial: { type: "string", description: "Start date (DD/MM/YYYY)" },
+          dataFinal: { type: "string", description: "End date (DD/MM/YYYY)" },
+          situacao: { type: "string", description: "Status filter (e.g. emitida, autorizada, cancelada)" },
+          numero: { type: "string", description: "Invoice number" },
+          cliente: { type: "string", description: "Customer name (search)" },
+          pagina: { type: "number", description: "Page number" },
+        },
+      },
+    },
+    {
+      name: "get_invoice_xml",
+      description: "Get the XML payload of an issued invoice (NF-e)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Invoice ID" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "get_invoice_link",
+      description: "Get the DANFE PDF/link for an issued invoice",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Invoice ID" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "send_invoice_email",
+      description: "Email an issued invoice to a recipient",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Invoice ID" },
+          email: { type: "string", description: "Recipient email (optional, defaults to contact email)" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "list_accounts_receivable",
+      description: "List accounts receivable in Tiny ERP",
+      inputSchema: {
+        type: "object",
+        properties: {
+          situacao: { type: "string", enum: ["aberto", "pago", "cancelado", "parcial"], description: "Filter by status" },
+          dataInicial: { type: "string", description: "Start date (DD/MM/YYYY)" },
+          dataFinal: { type: "string", description: "End date (DD/MM/YYYY)" },
+          cliente: { type: "string", description: "Customer name (search)" },
+          pagina: { type: "number", description: "Page number" },
+        },
+      },
+    },
+    {
+      name: "get_account_receivable",
+      description: "Get a single accounts-receivable record by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Account receivable ID" },
+        },
+        required: ["id"],
+      },
+    },
   ],
 }));
 
@@ -243,6 +379,58 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.pagina) params.pagina = String(args.pagina);
         return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("contas.pagar.pesquisa.php", params), null, 2) }] };
       }
+      case "update_stock": {
+        const estoque: Record<string, unknown> = {
+          idProduto: args?.idProduto,
+          tipo: args?.tipo,
+          quantidade: args?.quantidade,
+        };
+        if (args?.precoUnitario !== undefined) estoque.precoUnitario = args.precoUnitario;
+        if (args?.observacoes) estoque.observacoes = args.observacoes;
+        if (args?.deposito) estoque.deposito = args.deposito;
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequestWithBody("produto.atualizar.estoque.php", { estoque: JSON.stringify({ estoque }) }), null, 2) }] };
+      }
+      case "list_categories":
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("produtos.categorias.arvore.php"), null, 2) }] };
+      case "list_warehouses":
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("lista.depositos.php"), null, 2) }] };
+      case "list_price_lists": {
+        const params: Record<string, string> = {};
+        if (args?.pagina) params.pagina = String(args.pagina);
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("lista.precos.pesquisa.php", params), null, 2) }] };
+      }
+      case "update_order_status":
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequestWithBody("alterar.situacao.pedido.php", { id: String(args?.id), situacao: String(args?.situacao) }), null, 2) }] };
+      case "list_invoices": {
+        const params: Record<string, string> = {};
+        if (args?.dataInicial) params.dataInicial = String(args.dataInicial);
+        if (args?.dataFinal) params.dataFinal = String(args.dataFinal);
+        if (args?.situacao) params.situacao = String(args.situacao);
+        if (args?.numero) params.numero = String(args.numero);
+        if (args?.cliente) params.cliente = String(args.cliente);
+        if (args?.pagina) params.pagina = String(args.pagina);
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("notas.fiscais.pesquisa.php", params), null, 2) }] };
+      }
+      case "get_invoice_xml":
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("nota.fiscal.obter.xml.php", { id: String(args?.id) }), null, 2) }] };
+      case "get_invoice_link":
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("nota.fiscal.obter.link.php", { id: String(args?.id) }), null, 2) }] };
+      case "send_invoice_email": {
+        const params: Record<string, string> = { id: String(args?.id) };
+        if (args?.email) params.email = String(args.email);
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequestWithBody("nota.fiscal.enviar.email.php", params), null, 2) }] };
+      }
+      case "list_accounts_receivable": {
+        const params: Record<string, string> = {};
+        if (args?.situacao) params.situacao = String(args.situacao);
+        if (args?.dataInicial) params.dataInicial = String(args.dataInicial);
+        if (args?.dataFinal) params.dataFinal = String(args.dataFinal);
+        if (args?.cliente) params.cliente = String(args.cliente);
+        if (args?.pagina) params.pagina = String(args.pagina);
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("contas.receber.pesquisa.php", params), null, 2) }] };
+      }
+      case "get_account_receivable":
+        return { content: [{ type: "text", text: JSON.stringify(await tinyRequest("conta.receber.obter.php", { id: String(args?.id) }), null, 2) }] };
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -265,7 +453,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-tiny", version: "0.1.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
+        const s = new Server({ name: "mcp-tiny", version: "0.2.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
         await t.handleRequest(req, res, req.body); return;
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
