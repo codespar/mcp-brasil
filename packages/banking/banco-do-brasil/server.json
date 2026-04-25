@@ -1,0 +1,65 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/banco-do-brasil",
+  "description": "MCP server for Banco do Brasil — Brazil's top public bank. Pix, Cobrança (boleto), Conta-Corrente, and Arrecadação via BB's Developer Portal APIs (OAuth2 + mTLS).",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-brasil",
+    "source": "github",
+    "subfolder": "packages/banking/banco-do-brasil"
+  },
+  "version": "0.1.0-alpha.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-banco-do-brasil",
+      "version": "0.1.0-alpha.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "BB_CLIENT_ID",
+          "description": "Banco do Brasil OAuth client_id issued via developers.bb.com.br after contract onboarding.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "BB_CLIENT_SECRET",
+          "description": "Banco do Brasil OAuth client_secret.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "BB_DEVELOPER_APP_KEY",
+          "description": "BB Developer App Key (gw-dev-app-key) — appended as a query param on most BB API calls.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "BB_CERT_PATH",
+          "description": "Absolute path to the mTLS client certificate (.crt or .pem). BACEN mandates mTLS for Pix v2 in production.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "BB_KEY_PATH",
+          "description": "Absolute path to the mTLS private key (.key or .pem).",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "BB_ENV",
+          "description": "Environment: 'sandbox' or 'production'. Defaults to 'sandbox'.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
