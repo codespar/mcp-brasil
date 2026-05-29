@@ -29,4 +29,4 @@ Public URL: https://mcp.codespar.dev
 
 ## More context
 
-Full staging topology lives in `~/projects/codespar/.local-dev/STAGING.md`. Note: the catalog is seeded **offline** in `codespar-enterprise` — `mcp-dev-brasil` itself is a translator/gateway, not a runtime catalog source.
+The catalog is seeded **offline** in `codespar-enterprise` — `mcp-dev-brasil` itself is a translator/gateway, not a runtime catalog source.
