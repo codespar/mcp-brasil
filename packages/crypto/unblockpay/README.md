@@ -76,24 +76,25 @@ Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
 
 ## Authentication
 
-UnblockPay uses a Bearer API key for authentication.
+UnblockPay uses an API key passed verbatim in the `Authorization` header (no `Bearer` prefix). The server sets that header for you — you just provide the key via `UNBLOCKPAY_API_KEY`.
 
 ## Sandbox / Testing
 
-UnblockPay provides a sandbox via the developer portal.
+UnblockPay provides a separate sandbox environment for testing. Point the server at it by setting `UNBLOCKPAY_BASE_URL=https://api.sandbox.unblockpay.com/v1` and using a sandbox-issued API key.
 
 ### Get your credentials
 
-1. Go to [UnblockPay Documentation](https://docs.unblockpay.com)
-2. Create a developer account
-3. Generate an API key
-4. Set the `UNBLOCKPAY_API_KEY` environment variable
+1. Sign in at [app.unblockpay.com](https://app.unblockpay.com) (or follow the [docs](https://docs.unblockpay.com))
+2. Generate an API key in the dashboard
+3. Set the `UNBLOCKPAY_API_KEY` environment variable
+4. (Sandbox only) Also set `UNBLOCKPAY_BASE_URL=https://api.sandbox.unblockpay.com/v1`
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `UNBLOCKPAY_API_KEY` | Yes | API key from UnblockPay |
+| `UNBLOCKPAY_API_KEY` | Yes | API key from the UnblockPay dashboard |
+| `UNBLOCKPAY_BASE_URL` | No | Defaults to `https://api.unblockpay.com/v1`. Set to `https://api.sandbox.unblockpay.com/v1` for sandbox. |
 
 ## Roadmap
 

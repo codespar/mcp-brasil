@@ -26,7 +26,10 @@
  * - register_webhook: Register a webhook endpoint for transaction events
  *
  * Environment:
- *   UNBLOCKPAY_API_KEY — API key from https://unblockpay.com/
+ *   UNBLOCKPAY_API_KEY  — API key from https://docs.unblockpay.com/.
+ *   UNBLOCKPAY_BASE_URL — Optional. Defaults to https://api.unblockpay.com/v1.
+ *                         Set to https://api.sandbox.unblockpay.com/v1 to hit
+ *                         the sandbox.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -39,14 +42,14 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 const API_KEY = process.env.UNBLOCKPAY_API_KEY || "";
-const BASE_URL = "https://api.unblockpay.com/v1";
+const BASE_URL = process.env.UNBLOCKPAY_BASE_URL || "https://api.unblockpay.com/v1";
 
 async function unblockpayRequest(method: string, path: string, body?: unknown): Promise<unknown> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${API_KEY}`,
+      "Authorization": API_KEY,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -58,7 +61,7 @@ async function unblockpayRequest(method: string, path: string, body?: unknown): 
 }
 
 const server = new Server(
-  { name: "mcp-unblockpay", version: "0.2.1" },
+  { name: "mcp-unblockpay", version: "0.2.2" },
   { capabilities: { tools: {} } }
 );
 

@@ -45,6 +45,6 @@ describe("mcp-unblockpay", () => {
     const [url, opts] = mockFetch.mock.calls[0];
     expect(url).toContain("api.unblockpay.com/v1/wallets");
     expect(opts.method).toBe("POST");
-    expect(opts.headers.Authorization).toBe("Bearer test-key");
+    expect(opts.headers.Authorization).toBe("test-key");
   });
 });
