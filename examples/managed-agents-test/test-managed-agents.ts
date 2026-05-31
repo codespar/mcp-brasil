@@ -13,11 +13,11 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { config } from "dotenv";
-import { resolve } from "path";
 
-// Load key from codespar-web .env.local
-config({ path: resolve("../../codespar-web/.env.local") });
-// Also try local .env
+// Load ANTHROPIC_API_KEY from a local .env (or set it in the environment
+// before running). The previous version reached into a sibling repo for
+// credentials; that's a workspace-only convenience and not valid here —
+// this example must run for someone who only has this repo on disk.
 config();
 
 const apiKey = process.env.ANTHROPIC_API_KEY;
