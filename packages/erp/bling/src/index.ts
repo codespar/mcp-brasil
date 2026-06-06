@@ -537,6 +537,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           page: { type: "number", description: "Page number" },
           limit: { type: "number", description: "Items per page" },
           situacao: { type: "string", description: "Filter by status (e.g., Rascunho, Aguardando, Aprovado, Concluído)" },
+          expandContact: { type: "boolean", description: "If true, resolve contact names inline (default: false)" },
         },
       },
     },
@@ -814,7 +815,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (a.page) p.set("pagina", String(a.page));
         if (a.limit) p.set("limite", String(a.limit));
         if (a.situacao) p.set("situacao", String(a.situacao));
-        return text(await blingRequest("GET", `/propostas-comerciais?${p}`));
+        const result: any = await blingRequest("GET", `/propostas-comerciais?${p}`);
+        // Expand contact names if requested
+        if (a.expandContact === true && result?.data?.length > 0) {
+          const rawIds = result.data.map((prop: any) => prop.contato?.id).filter((id: any) => id != null);
+          const contactIds = Array.from(new Set(rawIds)) as number[];
+          const contacts: Record<number, string> = {};
+          for (const id of contactIds) {
+            try {
+              const c: any = await blingRequest("GET", `/contatos/${id}`);
+              if (c?.data?.nome) contacts[id] = c.data.nome;
+            } catch { /* skip failed contact lookups */ }
+          }
+          for (const prop of result.data) {
+            const cid = prop.contato?.id;
+            if (cid && contacts[cid]) prop.contato.nome = contacts[cid];
+          }
+        }
+        return text(result);
       }
       case "get_proposal":
         return text(await blingRequest("GET", `/propostas-comerciais/${a.proposalId}`));
