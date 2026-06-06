@@ -9,6 +9,9 @@
  *   - list_categories, create_category
  *  Sales
  *   - list_orders, create_order
+ *  Proposals
+ *   - list_proposals, get_proposal, create_proposal
+ *   - update_proposal, delete_proposal, update_proposal_status
  *  Purchasing
  *   - list_purchase_orders, create_purchase_order
  *  Contacts
@@ -523,6 +526,128 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["webhookId"],
       },
     },
+
+    // ---------------- Proposals ----------------    
+    {
+      name: "list_proposals",
+      description: "List commercial proposals (propostas comerciais / orçamentos) in Bling",
+      inputSchema: {
+        type: "object",
+        properties: {
+          page: { type: "number", description: "Page number" },
+          limit: { type: "number", description: "Items per page" },
+          situacao: { type: "string", description: "Filter by status (e.g., Rascunho, Aguardando, Aprovado, Concluído)" },
+        },
+      },
+    },
+    {
+      name: "get_proposal",
+      description: "Get a single commercial proposal by ID",
+      inputSchema: {
+        type: "object",
+        properties: {
+          proposalId: { type: "number", description: "Proposal ID" },
+        },
+        required: ["proposalId"],
+      },
+    },
+    {
+      name: "create_proposal",
+      description: "Create a commercial proposal (proposta comercial / orçamento)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          contato: { type: "object", description: "Customer contact", properties: { id: { type: "number" } } },
+          itens: {
+            type: "array", description: "Proposal items",
+            items: {
+              type: "object",
+              properties: {
+                produto: { type: "object", properties: { id: { type: "number" } } },
+                quantidade: { type: "number" },
+                valor: { type: "number" },
+                desconto: { type: "number" },
+              },
+            },
+          },
+          parcelas: {
+            type: "array", description: "Payment installments",
+            items: {
+              type: "object",
+              properties: {
+                dataVencimento: { type: "string" },
+                valor: { type: "number" },
+                formaPagamento: { type: "object", properties: { id: { type: "number" } } },
+              },
+            },
+          },
+          observacoes: { type: "string", description: "Notes" },
+          desconto: { type: "number", description: "Discount" },
+          data: { type: "string", description: "Proposal date (YYYY-MM-DD)" },
+        },
+        required: ["itens", "parcelas"],
+      },
+    },
+    {
+      name: "update_proposal",
+      description: "Update an existing commercial proposal",
+      inputSchema: {
+        type: "object",
+        properties: {
+          proposalId: { type: "number", description: "Proposal ID" },
+          contato: { type: "object", description: "Customer contact", properties: { id: { type: "number" } } },
+          itens: {
+            type: "array", description: "Proposal items",
+            items: {
+              type: "object",
+              properties: {
+                produto: { type: "object", properties: { id: { type: "number" } } },
+                quantidade: { type: "number" },
+                valor: { type: "number" },
+                desconto: { type: "number" },
+              },
+            },
+          },
+          parcelas: {
+            type: "array", description: "Payment installments",
+            items: {
+              type: "object",
+              properties: {
+                dataVencimento: { type: "string" },
+                valor: { type: "number" },
+                formaPagamento: { type: "object", properties: { id: { type: "number" } } },
+              },
+            },
+          },
+          observacoes: { type: "string", description: "Notes" },
+          desconto: { type: "number", description: "Discount" },
+        },
+        required: ["proposalId"],
+      },
+    },
+    {
+      name: "delete_proposal",
+      description: "Delete a commercial proposal",
+      inputSchema: {
+        type: "object",
+        properties: {
+          proposalId: { type: "number", description: "Proposal ID" },
+        },
+        required: ["proposalId"],
+      },
+    },
+    {
+      name: "update_proposal_status",
+      description: "Update proposal status (e.g., Rascunho, Aguardando, Aprovado, Concluído, Cancelado)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          proposalId: { type: "number", description: "Proposal ID" },
+          situacao: { type: "string", description: "New status (e.g., Rascunho, Aguardando, Aprovado, Concluído, Cancelado)" },
+        },
+        required: ["proposalId", "situacao"],
+      },
+    },
   ],
 }));
 
@@ -682,6 +807,29 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return text(await blingRequest("POST", "/notificacoes", a));
       case "unsubscribe_webhook":
         return text(await blingRequest("DELETE", `/notificacoes/${a.webhookId}`));
+
+      // ---- Proposals ----
+      case "list_proposals": {
+        const p = new URLSearchParams();
+        if (a.page) p.set("pagina", String(a.page));
+        if (a.limit) p.set("limite", String(a.limit));
+        if (a.situacao) p.set("situacao", String(a.situacao));
+        return text(await blingRequest("GET", `/propostas-comerciais?${p}`));
+      }
+      case "get_proposal":
+        return text(await blingRequest("GET", `/propostas-comerciais/${a.proposalId}`));
+      case "create_proposal":
+        return text(await blingRequest("POST", "/propostas-comerciais", a));
+      case "update_proposal": {
+        const { proposalId, ...rest } = a;
+        return text(await blingRequest("PUT", `/propostas-comerciais/${proposalId}`, rest));
+      }
+      case "delete_proposal":
+        return text(await blingRequest("DELETE", `/propostas-comerciais/${a.proposalId}`));
+      case "update_proposal_status": {
+        const { proposalId, situacao, ...rest } = a;
+        return text(await blingRequest("PATCH", `/propostas-comerciais/${proposalId}/situacoes`, { situacao }));
+      }
 
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
