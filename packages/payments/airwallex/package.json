@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-airwallex",
   "version": "0.2.1",
-  "description": "MCP server for Airwallex \u2014 embedded finance for cross-border collection and payouts. LatAm sellers collect USD/EUR abroad and settle locally.",
+  "description": "MCP server for Airwallex — embedded finance for cross-border collection and payouts. LatAm sellers collect USD/EUR abroad and settle locally.",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -30,5 +30,14 @@
     "global-accounts",
     "latam"
   ],
-  "mcpName": "io.github.codespar/mcp-airwallex"
+  "mcpName": "io.github.codespar/mcp-airwallex",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/payments/airwallex",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/payments/airwallex"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
