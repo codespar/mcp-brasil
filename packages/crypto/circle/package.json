@@ -27,5 +27,14 @@
     "stablecoin",
     "payments"
   ],
-  "mcpName": "io.github.codespar/mcp-circle"
+  "mcpName": "io.github.codespar/mcp-circle",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/crypto/circle#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/crypto/circle"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
