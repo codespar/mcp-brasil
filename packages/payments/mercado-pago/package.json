@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-mercado-pago",
   "version": "0.2.1",
-  "description": "MCP server for Mercado Pago \u2014 payments, checkout, PIX, refunds for LATAM",
+  "description": "MCP server for Mercado Pago — payments, checkout, PIX, refunds for LATAM",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -32,5 +32,14 @@
     "brazil",
     "mcp"
   ],
-  "mcpName": "io.github.codespar/mcp-mercado-pago"
+  "mcpName": "io.github.codespar/mcp-mercado-pago",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/payments/mercado-pago",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/payments/mercado-pago"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
