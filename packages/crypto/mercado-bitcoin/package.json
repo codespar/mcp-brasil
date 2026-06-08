@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-mercado-bitcoin",
   "version": "0.2.1",
-  "description": "MCP server for Mercado Bitcoin \u2014 Brazilian crypto exchange, trading, orderbook, withdrawals",
+  "description": "MCP server for Mercado Bitcoin — Brazilian crypto exchange, trading, orderbook, withdrawals",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -27,5 +27,14 @@
     "trading",
     "brazil"
   ],
-  "mcpName": "io.github.codespar/mcp-mercado-bitcoin"
+  "mcpName": "io.github.codespar/mcp-mercado-bitcoin",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/crypto/mercado-bitcoin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/crypto/mercado-bitcoin"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
