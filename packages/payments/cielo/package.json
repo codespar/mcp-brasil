@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-cielo",
   "version": "0.2.1",
-  "description": "MCP server for Cielo \u2014 credit card, debit, boleto, recurrent payments",
+  "description": "MCP server for Cielo — credit card, debit, boleto, recurrent payments",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -27,5 +27,14 @@
     "boleto",
     "brazil"
   ],
-  "mcpName": "io.github.codespar/mcp-cielo"
+  "mcpName": "io.github.codespar/mcp-cielo",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/payments/cielo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/payments/cielo"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
