@@ -34,5 +34,14 @@
     "base",
     "solana"
   ],
-  "mcpName": "io.github.codespar/mcp-x402"
+  "mcpName": "io.github.codespar/mcp-x402",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/crypto/x402#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/crypto/x402"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
