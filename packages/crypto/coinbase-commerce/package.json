@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-coinbase-commerce",
   "version": "0.2.1",
-  "description": "MCP server for Coinbase Commerce \u2014 global crypto merchant payments. Accept BTC, ETH, USDC and more at checkout with hosted charges, checkouts, and invoices.",
+  "description": "MCP server for Coinbase Commerce — global crypto merchant payments. Accept BTC, ETH, USDC and more at checkout with hosted charges, checkouts, and invoices.",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -32,5 +32,14 @@
     "usdc",
     "stablecoin"
   ],
-  "mcpName": "io.github.codespar/mcp-coinbase-commerce"
+  "mcpName": "io.github.codespar/mcp-coinbase-commerce",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/crypto/coinbase-commerce",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/crypto/coinbase-commerce"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
