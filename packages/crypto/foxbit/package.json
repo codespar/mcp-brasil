@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-foxbit",
   "version": "0.2.1",
-  "description": "MCP server for Foxbit \u2014 Brazilian crypto exchange, trading, orderbook, institutional",
+  "description": "MCP server for Foxbit — Brazilian crypto exchange, trading, orderbook, institutional",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -27,5 +27,14 @@
     "trading",
     "brazil"
   ],
-  "mcpName": "io.github.codespar/mcp-foxbit"
+  "mcpName": "io.github.codespar/mcp-foxbit",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/crypto/foxbit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/crypto/foxbit"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
