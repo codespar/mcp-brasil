@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-ap2",
   "version": "0.2.0-alpha.2",
-  "description": "MCP server for AP2 \u2014 Google's Agent-to-Agent Payment Protocol (authorization, audit, trust)",
+  "description": "MCP server for AP2 — Google's Agent-to-Agent Payment Protocol (authorization, audit, trust)",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -33,5 +33,14 @@
     "agent-to-agent",
     "payment-protocol"
   ],
-  "mcpName": "io.github.codespar/mcp-ap2"
+  "mcpName": "io.github.codespar/mcp-ap2",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/payments/ap2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/payments/ap2"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
