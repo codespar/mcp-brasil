@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-pix-bcb",
   "version": "0.2.1",
-  "description": "MCP server for Pix BCB API \u2014 official Banco Central do Brasil Pix standard",
+  "description": "MCP server for Pix BCB API — official Banco Central do Brasil Pix standard",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -27,5 +27,14 @@
     "payments",
     "brazil"
   ],
-  "mcpName": "io.github.codespar/mcp-pix-bcb"
+  "mcpName": "io.github.codespar/mcp-pix-bcb",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/payments/pix-bcb",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/payments/pix-bcb"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
