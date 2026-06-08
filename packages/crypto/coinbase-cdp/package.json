@@ -36,5 +36,14 @@
     "eth",
     "base"
   ],
-  "mcpName": "io.github.codespar/mcp-coinbase-cdp"
+  "mcpName": "io.github.codespar/mcp-coinbase-cdp",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/crypto/coinbase-cdp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/crypto/coinbase-cdp"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
