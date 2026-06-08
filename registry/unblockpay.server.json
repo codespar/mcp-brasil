@@ -1,35 +1,39 @@
 {
   "name": "io.github.codespar/mcp-unblockpay",
-  "description": "Wallets, onramp, offramp, stablecoin transfers — UnblockPay API",
+  "description": "Fiat <> stablecoin cross-border via Customer (KYC mother) → Wallet → Quote → Payin/Payout. Supports BRL Pix, USD wire, EUR SEPA, MXN SPEI on the fiat side and USDC/USDT on Solana/Ethereum/Polygon/Tron on the crypto side.",
   "repository": {
-    "url": "https://github.com/codespar/mcp-dev-brasil/tree/main/packages/crypto/unblockpay"
+    "url": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/crypto/unblockpay"
   },
   "version_detail": {
-    "version": "0.1.0",
-    "release_date": "2026-03-31",
+    "version": "0.3.0",
+    "release_date": "2026-06-08",
     "is_latest": true
   },
   "packages": [
     {
       "registry_name": "npm",
       "name": "@codespar/mcp-unblockpay",
-      "version": "0.1.0",
+      "version": "0.3.0",
       "runtime": "node",
       "environment_variables": [
-        { "name": "UNBLOCKPAY_API_KEY", "description": "API key from UnblockPay", "required": true }
+        { "name": "UNBLOCKPAY_API_KEY", "description": "API key from UnblockPay", "required": true },
+        { "name": "UNBLOCKPAY_BASE_URL", "description": "Override base URL. Defaults to https://api.unblockpay.com/v1; use https://api.sandbox.unblockpay.com/v1 for sandbox.", "required": false }
       ]
     }
   ],
   "tools": [
-    { "name": "create_wallet", "description": "Create a new wallet" },
-    { "name": "get_wallet", "description": "Get wallet details by ID" },
-    { "name": "list_wallets", "description": "List all wallets" },
-    { "name": "create_onramp", "description": "Create a fiat-to-stablecoin onramp transaction" },
-    { "name": "create_offramp", "description": "Create a stablecoin-to-fiat offramp transaction" },
-    { "name": "get_transaction", "description": "Get transaction details by ID" },
-    { "name": "list_transactions", "description": "List transactions with filters" },
-    { "name": "get_exchange_rate", "description": "Get current exchange rate" },
-    { "name": "create_transfer", "description": "Create a stablecoin transfer between wallets" },
-    { "name": "get_balance", "description": "Get wallet balance" }
+    { "name": "create_customer", "description": "Create an individual or business customer (KYC mother). Business customers require date_of_incorporation. Returns { id, status: 'pending', verification: { verification_link } }." },
+    { "name": "list_customers", "description": "List customers under the operator's API key. `limit` is mandatory per UnblockPay's pagination contract." },
+    { "name": "verify_customer", "description": "Trigger the KYC verification check for a customer. Idempotent — returns 422 'customer_cannot_be_verified' when already approved." },
+    { "name": "get_verification_details", "description": "Poll the KYC verification state for a customer. Returns { customer_status, verification_steps[] }." },
+    { "name": "create_wallet", "description": "Create a stablecoin wallet under an APPROVED customer. blockchain selects the network." },
+    { "name": "list_wallets", "description": "List wallets under the operator's API key." },
+    { "name": "create_external_account", "description": "Register a fiat receiver account (BRL Pix, USD wire, EUR SEPA, MXN SPEI). Skippable for BRL Pix payouts." },
+    { "name": "list_external_accounts", "description": "List external accounts under the operator's API key." },
+    { "name": "create_quote", "description": "Lock an FX + fee quote for a 5-minute TTL. Same endpoint for on_ramp (fiat → stablecoin) and off_ramp (stablecoin → fiat)." },
+    { "name": "create_payin", "description": "Create a fiat → stablecoin pay-in referencing a quote_id. Sandbox min: 150 BRL." },
+    { "name": "create_payout", "description": "Create a stablecoin → fiat payout referencing a quote_id. Pix-BR shortcut: pass receiver.pix_key + document directly." },
+    { "name": "get_transaction", "description": "Poll transaction status. Lifecycle: awaiting_deposit → processing → completed (or failed / refunded / cancelled)." },
+    { "name": "cancel_transaction", "description": "Cancel a transaction. Only valid while status is 'awaiting_deposit'." }
   ]
 }
