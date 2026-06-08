@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-asaas",
   "version": "0.2.0",
-  "description": "MCP server for Asaas \u2014 billing automation, Pix, boleto, credit card, subscriptions",
+  "description": "MCP server for Asaas — billing automation, Pix, boleto, credit card, subscriptions",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -28,5 +28,14 @@
     "boleto",
     "brazil"
   ],
-  "mcpName": "io.github.codespar/mcp-asaas"
+  "mcpName": "io.github.codespar/mcp-asaas",
+  "homepage": "https://github.com/codespar/mcp-dev-latam/tree/main/packages/payments/asaas",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codespar/mcp-dev-latam.git",
+    "directory": "packages/payments/asaas"
+  },
+  "bugs": {
+    "url": "https://github.com/codespar/mcp-dev-latam/issues"
+  }
 }
