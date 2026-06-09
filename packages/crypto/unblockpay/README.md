@@ -49,15 +49,6 @@ Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
 }
 ```
 
-## Flow
-
-UnblockPay v1 organizes cross-border around four resources, in order:
-
-1. **Customer** — KYC mother record (individual or business). Must reach `approved` before wallets or transactions are allowed.
-2. **Wallet** — stablecoin wallet under an approved customer. Network selected via `blockchain` (`solana` → USDC; `ethereum`/`polygon` → USDC/USDT; `tron` → USDT).
-3. **Quote** — FX + fee lock with a 5-minute TTL. Same endpoint for on-ramp (fiat → stablecoin) and off-ramp (stablecoin → fiat).
-4. **Payin / Payout** — reference the `quote_id` to execute. Poll with `get_transaction`; lifecycle is `awaiting_deposit → processing → completed`.
-
 ## Tools (13)
 
 | Tool | Purpose |
