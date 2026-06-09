@@ -84,11 +84,6 @@ UnblockPay uses an API key passed verbatim in the `Authorization` header (no `Be
 
 UnblockPay provides a separate sandbox environment for testing. Point the server at it by setting `UNBLOCKPAY_BASE_URL=https://api.sandbox.unblockpay.com/v1` and using a sandbox-issued API key.
 
-Sandbox-specific notes:
-- Minimum amounts: 150 BRL on pay-in / 25 USDC on payout.
-- Transactions do NOT auto-progress without a webhook simulation — see UnblockPay's `/concepts/transactions` docs for mocked transaction IDs available for status testing.
-- Business customer KYC auto-progresses through the hosted flow once documents are uploaded.
-
 ### Get your credentials
 
 1. Sign in at [app.unblockpay.com](https://app.unblockpay.com) (or follow the [docs](https://docs.unblockpay.com))
