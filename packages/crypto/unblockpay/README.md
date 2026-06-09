@@ -1,6 +1,6 @@
 # @codespar/mcp-unblockpay
 
-> MCP server for **UnblockPay** — fiat-to-stablecoin onramp/offramp and wallet management
+> MCP server for **UnblockPay** — fiat ↔ stablecoin cross-border via Customer → Wallet → Quote → Payin/Payout
 
 [![npm](https://img.shields.io/npm/v/@codespar/mcp-unblockpay)](https://www.npmjs.com/package/@codespar/mcp-unblockpay)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -49,30 +49,32 @@ Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
 }
 ```
 
-## Tools (20)
+## Flow
+
+UnblockPay v1 organizes cross-border around four resources, in order:
+
+1. **Customer** — KYC mother record (individual or business). Must reach `approved` before wallets or transactions are allowed.
+2. **Wallet** — stablecoin wallet under an approved customer. Network selected via `blockchain` (`solana` → USDC; `ethereum`/`polygon` → USDC/USDT; `tron` → USDT).
+3. **Quote** — FX + fee lock with a 5-minute TTL. Same endpoint for on-ramp (fiat → stablecoin) and off-ramp (stablecoin → fiat).
+4. **Payin / Payout** — reference the `quote_id` to execute. Poll with `get_transaction`; lifecycle is `awaiting_deposit → processing → completed`.
+
+## Tools (13)
 
 | Tool | Purpose |
 |---|---|
-| `create_wallet` | Create a new wallet in UnblockPay |
-| `get_wallet` | Get wallet details by ID |
-| `list_wallets` | List all wallets |
-| `create_onramp` | Create a fiat-to-stablecoin onramp transaction |
-| `create_offramp` | Create a stablecoin-to-fiat offramp transaction |
-| `get_transaction` | Get transaction details by ID |
-| `list_transactions` | List transactions with optional filters |
-| `get_exchange_rate` | Get current exchange rate for a currency pair |
-| `create_transfer` | Create a stablecoin transfer between wallets |
-| `get_balance` | Get wallet balance |
-| `submit_corporate_kyc` | Submit a corporate KYC application (business onboarding) |
-| `get_corporate_kyc_status` | Get the status of a corporate KYC application |
-| `submit_individual_kyc` | Submit an individual KYC application (personal onboarding) |
-| `get_individual_kyc_status` | Get the status of an individual KYC application |
-| `add_bank_account` | Register a fiat bank account for offramp payouts |
-| `list_bank_accounts` | List registered fiat bank accounts |
-| `delete_bank_account` | Delete a registered bank account by ID |
-| `simulate_swap_quote` | Simulate a fiat<->crypto swap quote without executing it |
-| `list_supported_assets` | List supported crypto assets / stablecoins on UnblockPay |
-| `register_webhook` | Register a webhook endpoint for transaction lifecycle events |
+| `create_customer` | Create an individual or business customer (KYC mother). Business customers require `date_of_incorporation`. |
+| `list_customers` | List customers under the operator's API key (`limit` mandatory by the v1 pagination contract). |
+| `verify_customer` | Trigger the KYC verification check. Idempotent (returns 422 `customer_cannot_be_verified` when already approved). |
+| `get_verification_details` | Poll KYC state — returns `customer_status: pending \| approved \| rejected \| partially_rejected`. |
+| `create_wallet` | Create a stablecoin wallet under an APPROVED customer. |
+| `list_wallets` | List wallets under the operator's API key. |
+| `create_external_account` | Register a fiat receiver account (BRL Pix, USD wire, EUR SEPA, MXN SPEI). Skippable for BRL Pix payouts via the `pix_key + document` shortcut on `create_payout`. |
+| `list_external_accounts` | List external accounts under the operator's API key. |
+| `create_quote` | Lock an FX + fee quote for 5 minutes. Pass `amount` on EITHER `sender` or `receiver`, not both. |
+| `create_payin` | Fiat → stablecoin pay-in referencing a `quote_id`. Returns deposit instructions (`<Pix Copy & Paste EMV>` for BR). |
+| `create_payout` | Stablecoin → fiat payout referencing a `quote_id`. `customer_id` is REQUIRED at the top level. |
+| `get_transaction` | Poll transaction status. Lifecycle: `awaiting_deposit → processing → completed` (or `failed / refunded / cancelled / error`). |
+| `cancel_transaction` | Cancel a transaction. Only valid while status is `awaiting_deposit`. |
 
 ## Authentication
 
@@ -81,6 +83,11 @@ UnblockPay uses an API key passed verbatim in the `Authorization` header (no `Be
 ## Sandbox / Testing
 
 UnblockPay provides a separate sandbox environment for testing. Point the server at it by setting `UNBLOCKPAY_BASE_URL=https://api.sandbox.unblockpay.com/v1` and using a sandbox-issued API key.
+
+Sandbox-specific notes:
+- Minimum amounts: 150 BRL on pay-in / 25 USDC on payout.
+- Transactions do NOT auto-progress without a webhook simulation — see UnblockPay's `/concepts/transactions` docs for mocked transaction IDs available for status testing.
+- Business customer KYC auto-progresses through the hosted flow once documents are uploaded.
 
 ### Get your credentials
 
@@ -96,31 +103,11 @@ UnblockPay provides a separate sandbox environment for testing. Point the server
 | `UNBLOCKPAY_API_KEY` | Yes | API key from the UnblockPay dashboard |
 | `UNBLOCKPAY_BASE_URL` | No | Defaults to `https://api.unblockpay.com/v1`. Set to `https://api.sandbox.unblockpay.com/v1` for sandbox. |
 
-## Roadmap
-
-### v0.2 (planned)
-- `create_payment_link` — Create a payment link
-- `get_payment_link` — Get payment link details
-- `list_payment_links` — List all payment links
-- `create_batch_transfer` — Create a batch crypto transfer
-- `get_supported_currencies` — List supported cryptocurrencies
-
-### v0.3 (planned)
-- `multi_currency_wallet` — Multi-currency wallet management
-- `compliance_reports` — Generate compliance/AML reports
-
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
-
 ## Links
 
 - [UnblockPay Website](https://unblockpay.com)
 - [UnblockPay API Documentation](https://docs.unblockpay.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
-- [Landing Page](https://codespar.dev/mcp)
-
-## Enterprise
-
-Need governance, budget limits, and audit trails for agent payments? [CodeSpar Enterprise](https://codespar.dev/enterprise) adds policy engine, payment routing, and compliance templates on top of these MCP servers.
+- [MCP Dev LatAm](https://github.com/codespar/mcp-dev-latam)
 
 ## License
 

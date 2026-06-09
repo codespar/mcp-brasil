@@ -328,7 +328,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Bitso](packages/crypto/bitso)** | 20 | `@codespar/mcp-bitso` | API Key |
 | **[Mercado Bitcoin](packages/crypto/mercado-bitcoin)** | 20 | `@codespar/mcp-mercado-bitcoin` | API Key |
 | **[Moonpay](packages/crypto/moonpay)** | 20 | `@codespar/mcp-moonpay` | API Key |
-| **[Unblockpay](packages/crypto/unblockpay)** | 20 | `@codespar/mcp-unblockpay` | API Key |
+| **[Unblockpay](packages/crypto/unblockpay)** | 13 | `@codespar/mcp-unblockpay` | API Key |
 | **[Coinbase Commerce](packages/crypto/coinbase-commerce)** | 18 | `@codespar/mcp-coinbase-commerce` | API Key |
 | **[Transak](packages/crypto/transak)** <sub>alpha</sub> | 18 | `@codespar/mcp-transak` | API Key |
 | **[x402](packages/crypto/x402)** | 10 | `@codespar/mcp-x402` | API Key |
