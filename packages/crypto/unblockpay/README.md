@@ -89,6 +89,12 @@ UnblockPay provides a separate sandbox environment for testing. Point the server
 | `UNBLOCKPAY_API_KEY` | Yes | API key from the UnblockPay dashboard |
 | `UNBLOCKPAY_BASE_URL` | No | Defaults to `https://api.unblockpay.com/v1`. Set to `https://api.sandbox.unblockpay.com/v1` for sandbox. |
 
+## Roadmap
+
+The 13 tools above mirror UnblockPay's current v1 API. New tools are added as UnblockPay expands the surface.
+
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
+
 ## Links
 
 - [UnblockPay Website](https://unblockpay.com)
