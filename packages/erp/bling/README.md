@@ -111,13 +111,13 @@ Bling provides a sandbox via the OAuth flow. Use test credentials for developmen
 - `list_nfce` / `create_nfce` — Consumer invoice (NFC-e) helpers
 - Richer filters on `list_accounts_*` (by payment status, contact)
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Bling Website](https://bling.com.br)
 - [Bling API Documentation](https://developer.bling.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

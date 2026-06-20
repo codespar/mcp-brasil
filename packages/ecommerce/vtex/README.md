@@ -122,13 +122,13 @@ VTEX provides sandbox access via partner accounts. Contact VTEX for developer ac
 - Marketplace seller and offer management
 - Carrier (shipping policy) registration
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [VTEX Website](https://vtex.com)
 - [VTEX Developer Documentation](https://developers.vtex.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

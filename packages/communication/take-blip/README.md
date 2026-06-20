@@ -109,13 +109,13 @@ Take Blip offers a free account for testing. Create a bot to get started.
 - `flow_management` — Create and manage conversational flows
 - `ai_model_integration` — Integrate custom AI models into flows
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Take Blip Website](https://blip.ai)
 - [Take Blip API Documentation](https://docs.blip.ai)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

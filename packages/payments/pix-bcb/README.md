@@ -115,13 +115,13 @@ Sandbox availability varies by PSP (payment service provider). Contact your bank
 - `create_cobv_batch` — Create a batch of due-date Pix charges (cobv)
 - `webhook_management` — Register, get, and delete Pix webhooks
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Pix API Specification (BCB)](https://bacen.github.io/pix-api/)
 - [Banco Central do Brasil](https://www.bcb.gov.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

@@ -108,13 +108,13 @@ Conta Azul provides a sandbox via the OAuth flow. Use sandbox credentials for te
 - `reconciliation` — Bank reconciliation tools
 - `financial_reports` — Generate financial summary reports
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Conta Azul Website](https://contaazul.com)
 - [Conta Azul API Documentation](https://developers.contaazul.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

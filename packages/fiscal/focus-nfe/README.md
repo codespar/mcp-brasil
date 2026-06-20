@@ -110,13 +110,13 @@ Focus NFe provides a homologation environment at `homologacao.focusnfe.com.br`. 
 - `batch_nfe` — Create multiple NF-e in a single request
 - `batch_nfse` — Create multiple NFS-e in a single request
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Focus NFe Website](https://focusnfe.com.br)
 - [Focus NFe API Documentation](https://focusnfe.com.br/doc)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

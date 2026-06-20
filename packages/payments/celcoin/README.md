@@ -112,13 +112,13 @@ Celcoin provides a sandbox at `sandbox-api.celcoin.com.br`. Set `CELCOIN_SANDBOX
 - `batch_topups` — Process multiple mobile top-ups
 - `detailed_reports` — Generate detailed transaction reports
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Celcoin Website](https://celcoin.com.br)
 - [Celcoin API Documentation](https://docs.celcoin.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

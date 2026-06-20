@@ -110,13 +110,13 @@ Stone provides a sandbox via the developer portal.
 - `create_scheduled_payment` — Schedule future-dated payments
 - `list_payouts` — List anticipation / settlement payouts
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Stone Website](https://stone.com.br)
 - [Stone Open Bank Documentation](https://docs.openbank.stone.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

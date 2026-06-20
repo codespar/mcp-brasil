@@ -111,13 +111,13 @@ Bitso provides a developer sandbox via the developer account.
 - `recurring_orders` — Create and manage recurring buy/sell orders
 - `advanced_orders` — Advanced order types (OCO, trailing stop)
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Bitso Website](https://bitso.com)
 - [Bitso API Documentation](https://bitso.com/developers)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

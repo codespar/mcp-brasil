@@ -101,13 +101,13 @@ No environment variables required.
 - `get_cvm_funds` — Get investment fund data from CVM
 - `get_election_results` — Get election results by region
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [BrasilAPI Website](https://brasilapi.com.br)
 - [BrasilAPI Documentation](https://brasilapi.com.br/docs)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

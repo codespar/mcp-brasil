@@ -119,13 +119,13 @@ Stark Bank provides a sandbox at `sandbox.api.starkbank.com`. Set `STARK_BANK_SA
 - `tax_payment` — Create a tax payment (DAS, DARF, etc.)
 - `utility_payment` — Create a utility payment (boleto, bills)
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Stark Bank Website](https://starkbank.com)
 - [Stark Bank API Documentation](https://starkbank.com/docs)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

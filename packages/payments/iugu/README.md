@@ -108,13 +108,13 @@ iugu provides test mode via the dashboard. Use a test-mode API token to avoid re
 - `batch_invoices` — Create multiple invoices in a single request
 - `list_payment_methods` — List saved payment methods for a customer
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [iugu Website](https://iugu.com)
 - [iugu API Documentation](https://dev.iugu.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

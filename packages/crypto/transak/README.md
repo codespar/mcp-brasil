@@ -71,7 +71,7 @@ TRANSAK_API_KEY=... TRANSAK_API_SECRET=... mcp-transak --http
 ## Docs
 
 - Transak: <https://docs.transak.com>
-- CodeSpar catalog: <https://github.com/codespar/mcp-dev-brasil>
+- CodeSpar catalog: <https://github.com/codespar/mcp-dev-latam>
 
 ## Enterprise
 

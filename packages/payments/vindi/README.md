@@ -108,13 +108,13 @@ Vindi provides a sandbox via the dashboard. Use a sandbox API key for testing.
 - `batch_bills` — Create multiple bills in a single request
 - `financial_reports` — Generate financial summary reports
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Vindi Website](https://vindi.com.br)
 - [Vindi Documentation](https://atendimento.vindi.com.br/hc/pt-br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

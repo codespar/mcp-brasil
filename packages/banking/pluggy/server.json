@@ -7,12 +7,12 @@
     "source": "github",
     "subfolder": "packages/banking/pluggy"
   },
-  "version": "0.0.1-alpha",
+  "version": "0.1.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-pluggy",
-      "version": "0.0.1-alpha",
+      "version": "0.1.0",
       "transport": {
         "type": "stdio"
       },

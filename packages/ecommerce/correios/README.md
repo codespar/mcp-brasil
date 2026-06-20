@@ -115,13 +115,13 @@ Correios provides a homologation environment for testing. Contact Correios for h
 - `batch_tracking` — Track multiple packages in a single request
 - `international_shipping` — Calculate international shipping rates
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Correios Website](https://correios.com.br)
 - [Correios API Portal](https://cws.correios.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise
