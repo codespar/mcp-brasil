@@ -1,6 +1,6 @@
 {
   "name": "@codespar/mcp-bigdatacorp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server for BigDataCorp — Brazilian data enrichment + KYC (CPF/CNPJ/vehicle/property/antifraud datasets)",
   "type": "module",
   "main": "dist/index.js",
