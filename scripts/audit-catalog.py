@@ -125,6 +125,29 @@ def check_naming(audit: Audit, slug: str, sj: dict) -> None:
             )
 
 
+def check_package_mcp_name(audit: Audit, slug: str, dir_path: Path, sj: dict) -> None:
+    """The npm package.json must carry an `mcpName` equal to the server.json
+    `name`. mcp-publisher reads it from the *published* package for GitHub-OIDC
+    ownership verification, so a missing or mismatched value fails the registry
+    publish with "missing required 'mcpName'" / "ownership validation failed"."""
+    pjson = dir_path / "package.json"
+    if not pjson.exists():
+        return
+    pkg = load_json(pjson) or {}
+    mcp_name = pkg.get("mcpName")
+    sj_name = sj.get("name", "")
+    if not mcp_name:
+        audit.add(
+            slug, "HIGH", "2-naming",
+            "package.json missing `mcpName` (registry ownership verification needs it)",
+        )
+    elif sj_name and mcp_name != sj_name:
+        audit.add(
+            slug, "HIGH", "2-naming",
+            f"package.json mcpName `{mcp_name}` != server.json name `{sj_name}`",
+        )
+
+
 def check_repo_url(audit: Audit, slug: str, sj: dict) -> None:
     repo = sj.get("repository") or {}
     url = repo.get("url", "") if isinstance(repo, dict) else ""
@@ -255,6 +278,7 @@ def run() -> int:
             continue
         check_required_fields(audit, slug, sj)
         check_naming(audit, slug, sj)
+        check_package_mcp_name(audit, slug, d, sj)
         check_repo_url(audit, slug, sj)
         check_provider_block(audit, slug, sj)
         check_readme(audit, slug, d)

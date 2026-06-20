@@ -31,5 +31,6 @@
     "aggregator",
     "ofb",
     "tpp"
-  ]
+  ],
+  "mcpName": "io.github.codespar/mcp-pluggy"
 }

@@ -31,5 +31,6 @@
     "trust-platform",
     "brazil",
     "onboarding"
-  ]
+  ],
+  "mcpName": "io.github.codespar/mcp-caf"
 }
