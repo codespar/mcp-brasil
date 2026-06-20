@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-rede",
-  "description": "MCP server for Rede — Itaú-owned Brazilian card acquirer. Authorize/capture/refund, zero-auth, card tokens, and native recurrences.",
+  "description": "MCP server for Rede — Itaú-owned BR acquirer: authorize/capture/refund, zero-auth, card tokens",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

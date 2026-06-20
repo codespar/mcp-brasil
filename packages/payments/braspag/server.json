@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-braspag",
-  "description": "MCP server for Braspag — Cielo's enterprise orchestration, token vault (Cartão Protegido), recurrence, and marketplace split",
+  "description": "MCP server for Braspag — Cielo orchestration, token vault (Cartão Protegido), recurrence, split",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

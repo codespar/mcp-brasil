@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-pagar-me",
-  "description": "MCP server for Pagar.me — orders, charges, recipients, transfers, anticipations, plans, subscriptions, tokens, withdrawals, webhooks",
+  "description": "MCP server for Pagar.me — orders, charges, recipients, transfers, plans, subscriptions, webhooks",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

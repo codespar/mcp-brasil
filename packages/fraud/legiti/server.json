@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-legiti",
-  "description": "MCP server for Legiti — Brazilian fraud prevention (ticketing + ecommerce), real-time order evaluation, chargeback feedback, and account/event/sale collection",
+  "description": "MCP server for Legiti — Brazilian fraud prevention: real-time order evaluation, chargeback feedback",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

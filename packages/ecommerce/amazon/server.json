@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-amazon",
-  "description": "MCP server for Amazon Selling Partner API (SP-API) — the global marketplace, including Amazon BR/MX/US. Orders, listings, catalog, inventory, reports, finances, fulfillment, notifications.",
+  "description": "MCP server for Amazon Selling Partner API (SP-API) — orders, listings, catalog, inventory, finances",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
