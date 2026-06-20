@@ -32,5 +32,6 @@
     "cpf",
     "cnpj",
     "data-enrichment"
-  ]
+  ],
+  "mcpName": "io.github.codespar/mcp-bigdatacorp"
 }

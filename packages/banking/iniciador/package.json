@@ -31,5 +31,6 @@
     "pisp",
     "ofb",
     "aggregator"
-  ]
+  ],
+  "mcpName": "io.github.codespar/mcp-iniciador"
 }
