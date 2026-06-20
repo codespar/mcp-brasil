@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-bigdatacorp",
-  "description": "MCP server for BigDataCorp — Brazilian data enrichment + KYC. CPF / CNPJ / vehicle / property / antifraud datasets. Paired-header auth (AccessToken + TokenId).",
+  "description": "MCP server for BigDataCorp — Brazilian data enrichment + KYC (CPF/CNPJ/vehicle/property/antifraud)",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

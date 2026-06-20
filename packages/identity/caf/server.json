@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-caf",
-  "description": "MCP server for Caf — Brazilian identity + Trust Platform (KYC/KYB, face authentication + liveness, document validation + OCR, orchestrated onboarding).",
+  "description": "MCP server for Caf — Brazilian KYC/KYB: face auth + liveness, document OCR, orchestrated onboarding",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

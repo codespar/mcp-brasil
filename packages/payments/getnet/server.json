@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-getnet",
-  "description": "MCP server for Getnet — Santander-owned Brazilian acquirer. Credit, debit, Pix, boleto + marketplace seller onboarding and split.",
+  "description": "MCP server for Getnet — Santander-owned BR acquirer: credit, debit, Pix, boleto, marketplace split",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-moonpay",
-  "description": "MCP server for MoonPay — fiat-to-crypto on/off-ramp across 100+ crypto assets and multiple geographies. Pix supported for Brazil onramp.",
+  "description": "MCP server for MoonPay — fiat-to-crypto on/off-ramp, 100+ assets; Pix for Brazil onramp",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",

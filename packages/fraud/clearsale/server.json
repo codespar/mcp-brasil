@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-clearsale",
-  "description": "MCP server for ClearSale — Brazilian fraud prevention, order risk scoring, device fingerprinting, and chargeback feedback",
+  "description": "MCP server for ClearSale — Brazilian fraud prevention, order risk scoring, device fingerprinting",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
