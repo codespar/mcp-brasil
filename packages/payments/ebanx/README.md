@@ -108,13 +108,13 @@ EBANX provides a sandbox at `sandbox.ebanx.com`. Set `EBANX_SANDBOX=true` to use
 - `batch_payouts` — Process multiple payouts in a single request
 - `detailed_reports` — Generate detailed financial reports
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [EBANX Website](https://ebanx.com)
 - [EBANX API Documentation](https://docs.ebanx.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

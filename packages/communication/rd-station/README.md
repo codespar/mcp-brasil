@@ -106,13 +106,13 @@ RD Station provides an OAuth sandbox for testing. Use sandbox credentials during
 - `custom_fields` — Manage custom fields for contacts and deals
 - `automation_triggers` — Trigger marketing automation flows
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [RD Station Website](https://rdstation.com)
 - [RD Station API Documentation](https://developers.rdstation.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

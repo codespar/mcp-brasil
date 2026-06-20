@@ -130,7 +130,7 @@ Stripe uses a secret API key (or restricted key for production). Use test mode k
 - Webhook support for checkout status updates
 - Multi-seller checkout orchestration
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
@@ -138,7 +138,7 @@ Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [
 - [ACP GitHub](https://github.com/agentic-commerce-protocol/agentic-commerce-protocol)
 - [Stripe Agent Toolkit](https://github.com/stripe/agent-toolkit)
 - [Stripe API Documentation](https://docs.stripe.com/api)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

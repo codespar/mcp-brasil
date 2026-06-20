@@ -107,13 +107,13 @@ Pagar.me provides test mode via the dashboard. Use a test-mode API key to avoid 
 - `batch_charges` — Create multiple charges in a single request
 - `list_webhooks` / `delete_webhook` — Full webhook management
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Pagar.me Website](https://pagar.me)
 - [Pagar.me API Documentation](https://docs.pagar.me)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise
