@@ -7,12 +7,12 @@
     "source": "github",
     "subfolder": "packages/identity/bigdatacorp"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-bigdatacorp",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "transport": {
         "type": "stdio"
       },
