@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-unblockpay",
-  "version": "0.3.0",
-  "description": "MCP server for UnblockPay \u2014 fiat <> stablecoin cross-border via Customer \u2192 Wallet \u2192 Quote \u2192 Payin/Payout",
+  "version": "0.3.1",
+  "description": "MCP server for UnblockPay — fiat <> stablecoin cross-border via Customer → Wallet → Quote → Payin/Payout",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {

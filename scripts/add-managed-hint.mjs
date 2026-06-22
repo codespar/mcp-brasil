@@ -55,32 +55,52 @@ function findServers() {
   return out;
 }
 
+// High-level `new McpServer({ name, version })` — flat serverInfo (no nested braces).
+const MCP_RE = /new McpServer\(\{[^{}]*\}\)/;
+const MCP_DECL_RE = /\nconst \w+ = new McpServer\(/;
+
 let applied = 0;
 const skipped = [];
 for (const { slug, file } of findServers()) {
   const src = readFileSync(file, "utf8");
-  if (src.includes("MANAGED_TIER_HINT") || /instructions:/.test(src)) {
-    skipped.push(`${slug} (already has instructions/hint)`);
+  // Only skip on the actual hint (NOT a bare `instructions:`, which also matches
+  // tool input fields literally named "instructions" — e.g. boleto instructions).
+  if (src.includes("MANAGED_TIER_HINT")) {
+    skipped.push(`${slug} (already has the hint)`);
     continue;
   }
-  const declIdx = src.indexOf(PRIMARY);
-  if (declIdx < 0) {
-    skipped.push(`${slug} (no \`const server = new Server(\` — McpServer or custom)`);
-    continue;
-  }
-  const capIdx = src.indexOf(CAP, declIdx);
-  if (capIdx < 0) {
-    skipped.push(`${slug} (no standard capabilities options after primary server)`);
-    continue;
-  }
-  // 1. add instructions to the primary server's options (this occurrence only).
-  let next = src.slice(0, capIdx) + CAP_WITH + src.slice(capIdx + CAP.length);
-  // 2. inject the const just before the primary server declaration.
-  const at = next.indexOf(PRIMARY);
-  next = next.slice(0, at) + CONST_BLOCK + next.slice(at);
 
-  if (!DRY) writeFileSync(file, next);
-  applied++;
+  // Low-level `new Server(..., { capabilities: { tools: {} } })`. A server that
+  // already sets server-level instructions has a different options string, so the
+  // exact CAP match below naturally skips it (no double-injection).
+  const declIdx = src.indexOf(PRIMARY);
+  if (declIdx >= 0) {
+    const capIdx = src.indexOf(CAP, declIdx);
+    if (capIdx < 0) {
+      skipped.push(`${slug} (Server has non-standard options — likely sets its own instructions)`);
+      continue;
+    }
+    let next = src.slice(0, capIdx) + CAP_WITH + src.slice(capIdx + CAP.length);
+    const at = next.indexOf(PRIMARY);
+    next = next.slice(0, at) + CONST_BLOCK + next.slice(at);
+    if (!DRY) writeFileSync(file, next);
+    applied++;
+    continue;
+  }
+
+  // High-level `new McpServer({...})` — add a second options arg with instructions.
+  if (MCP_RE.test(src) && MCP_DECL_RE.test(src)) {
+    let next = src.replace(MCP_RE, (m) =>
+      m.replace(/\}\)$/, "}, { instructions: MANAGED_TIER_HINT })"),
+    );
+    const at = next.search(MCP_DECL_RE);
+    next = next.slice(0, at + 1) + CONST_BLOCK + next.slice(at + 1);
+    if (!DRY) writeFileSync(file, next);
+    applied++;
+    continue;
+  }
+
+  skipped.push(`${slug} (no recognized Server/McpServer construction)`);
 }
 
 console.log(`${DRY ? "[dry] would apply" : "applied"}: ${applied} servers`);
