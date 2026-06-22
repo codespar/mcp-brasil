@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-bcra",
-  "version": "0.2.1",
-  "description": "MCP server for BCRA \u2014 Argentine Central Bank public data (exchange rates, financial data)",
+  "version": "0.2.2",
+  "description": "MCP server for BCRA — Argentine Central Bank public data (exchange rates, financial data)",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
