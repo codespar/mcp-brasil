@@ -88,7 +88,7 @@ app.get("/api/premium-analysis", (_req, res) => {
   });
 });
 
-const PORT = 4021;
+const PORT = Number(process.env.PORT) || 4021;
 app.listen(PORT, () => {
   console.log(`\n  x402 Demo Server running on http://localhost:${PORT}`);
   console.log(`  Network: Base Sepolia (eip155:84532)`);
