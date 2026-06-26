@@ -5,7 +5,7 @@
     <em>Brazil 🇧🇷 · Mexico 🇲🇽 · Argentina 🇦🇷 · Colombia 🇨🇴 · Chile 🇨🇱 · Peru 🇵🇪 · plus 4 agentic payment protocols.</em>
   </p>
   <p align="center">
-    109 MCP servers · 2,289 tools · 6 countries · MIT License
+    110 MCP servers · 2,300 tools · 6 countries · MIT License
   </p>
   <p align="center">
     <a href="https://codespar.dev/servers">Catalog</a> ·
@@ -16,8 +16,8 @@
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-    <img src="https://img.shields.io/badge/servers-109-green" alt="109 servers">
-    <img src="https://img.shields.io/badge/tools-2,289-orange" alt="2289 tools">
+    <img src="https://img.shields.io/badge/servers-110-green" alt="110 servers">
+    <img src="https://img.shields.io/badge/tools-2,300-orange" alt="2300 tools">
     <img src="https://img.shields.io/badge/countries-6-blue" alt="6 countries">
     <img src="https://img.shields.io/badge/MCP-compatible-purple" alt="MCP compatible">
   </p>
@@ -279,7 +279,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Take Blip](packages/communication/take-blip)** | 18 | `@codespar/mcp-take-blip` | API Key |
 | **[Zenvia](packages/communication/zenvia)** | 18 | `@codespar/mcp-zenvia` | API Key |
 
-### 📦 E-commerce / Logistics (6 servers)
+### 📦 E-commerce / Logistics (7 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -289,6 +289,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Shopee](packages/ecommerce/shopee)** <sub>alpha</sub> | 22 | `@codespar/mcp-shopee` | API Key |
 | **[Correios](packages/ecommerce/correios)** <sub>alpha</sub> | 21 | `@codespar/mcp-correios` | API Key |
 | **[Melhor Envio](packages/ecommerce/melhor-envio)** | 18 | `@codespar/mcp-melhor-envio` | API Key |
+| **[SuperFrete](packages/ecommerce/superfrete)** | 11 | `@codespar/mcp-superfrete` | API Key |
 
 ### 📊 ERP / Accounting (5 servers)
 

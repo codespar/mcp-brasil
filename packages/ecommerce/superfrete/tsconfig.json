@@ -6,10 +6,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
-    "skipLibCheck": true,
     "esModuleInterop": true,
     "declaration": true
   },
-  "include": ["src"],
-  "exclude": ["src/__tests__"]
+  "include": ["src"]
 }
