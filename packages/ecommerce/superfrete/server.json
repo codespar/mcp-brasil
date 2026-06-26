@@ -1,0 +1,46 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-superfrete",
+  "description": "MCP server for SuperFrete — Brazilian shipping platform with discounted rates across PAC, SEDEX, JadLog, Loggi, and Mini Envios",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-latam",
+    "source": "github",
+    "subfolder": "packages/ecommerce/superfrete"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-superfrete",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "SUPERFRETE_TOKEN",
+          "description": "SuperFrete API Bearer token from https://web.superfrete.com/#/integrations",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "SUPERFRETE_SANDBOX",
+          "description": "Set to 'true' to use the sandbox API (https://sandbox.superfrete.com/). Defaults to production.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ],
+  "provider": {
+    "homepage": "https://superfrete.com",
+    "logoUrl": "https://logo.clearbit.com/superfrete.com",
+    "logoFallback": "https://www.google.com/s2/favicons?domain=superfrete.com&sz=128",
+    "docsUrl": "https://superfrete.com/desenvolvedores",
+    "sandbox": {
+      "available": true
+    }
+  }
+}

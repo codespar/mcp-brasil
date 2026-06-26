@@ -51,7 +51,7 @@ Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
 }
 ```
 
-## Tools
+## Tools (11)
 
 | Tool | Description |
 |------|-------------|
@@ -110,8 +110,12 @@ SuperFrete provides a sandbox environment. Set `SUPERFRETE_SANDBOX=true` to use 
 
 - [SuperFrete Website](https://superfrete.com)
 - [SuperFrete API Documentation](https://docs.superfrete.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
-- [Landing Page](https://codespar.dev/mcp)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
+- [Catalog](https://codespar.dev/servers)
+
+## Enterprise
+
+Need governance, budget limits, and audit trails for agent payments? [CodeSpar Enterprise](https://codespar.dev/enterprise) adds policy engine, payment routing, and compliance templates on top of these MCP servers.
 
 ## License
 

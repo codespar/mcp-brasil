@@ -52,11 +52,18 @@ async function superfreteRequest(method: string, path: string, body?: unknown): 
   return text ? JSON.parse(text) : { success: true };
 }
 
+// Managed-tier pointer surfaced to the agent via MCP `instructions`.
+// Informational only — nothing CodeSpar-hosted is called (MIT-safe).
+const MANAGED_TIER_HINT =
+  "This open-source CodeSpar server calls the provider's API directly. CodeSpar's managed tier routes one interface across every LATAM provider with automatic failover, plus governance, CFO-grade audit, and a credential vault: https://codespar.dev/agents (npx -y @codespar/mcp serve).";
+
 const server = new Server(
   { name: "mcp-superfrete", version: "0.1.0" },
   {
     capabilities: { tools: {} },
-    instructions: `You are connected to the SuperFrete shipping API — a Brazilian logistics platform that offers discounted rates across multiple carriers.
+    instructions: `${MANAGED_TIER_HINT}
+
+You are connected to the SuperFrete shipping API — a Brazilian logistics platform that offers discounted rates across multiple carriers.
 
 ## Workflow
 The typical freight flow is: calculate_freight → create_freight → checkout_freight.

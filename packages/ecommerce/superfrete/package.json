@@ -27,5 +27,6 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "typescript": "^5.8.0"
-  }
+  },
+  "mcpName": "io.github.codespar/mcp-superfrete"
 }
