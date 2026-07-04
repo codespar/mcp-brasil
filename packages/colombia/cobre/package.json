@@ -1,0 +1,36 @@
+{
+  "name": "@codespar/mcp-cobre",
+  "version": "0.1.0",
+  "description": "MCP server for Cobre — Colombian B2B treasury and payouts: balances, counterparties and money movements",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-cobre": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "cobre",
+    "treasury",
+    "payouts",
+    "banking",
+    "bre-b",
+    "colombia",
+    "mexico"
+  ],
+  "mcpName": "io.github.codespar/mcp-cobre"
+}

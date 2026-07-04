@@ -1,0 +1,39 @@
+{
+  "name": "@codespar/mcp-pomelo",
+  "version": "0.1.0",
+  "description": "MCP server for Pomelo — pan-LATAM card issuing as a service: users, virtual/physical cards, lifecycle, transactions",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-pomelo": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "pomelo",
+    "card-issuing",
+    "cards",
+    "visa",
+    "mastercard",
+    "latam",
+    "argentina",
+    "brazil",
+    "mexico",
+    "colombia"
+  ],
+  "mcpName": "io.github.codespar/mcp-pomelo"
+}
