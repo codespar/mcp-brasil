@@ -1,6 +1,9 @@
-# MCP Wompi
+# @codespar/mcp-wompi
 
-MCP server for **Wompi** — Colombian payment gateway by Bancolombia, supporting cards, PSE bank transfers, Nequi, and Bancolombia transfers.
+> MCP server for **Wompi**, the Colombian payment gateway by Bancolombia, supporting cards, PSE bank transfers, Nequi, and Bancolombia transfers
+
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-wompi)](https://www.npmjs.com/package/@codespar/mcp-wompi)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Quick Start
 
@@ -11,10 +14,10 @@ export WOMPI_PRIVATE_KEY="prv_test_..."
 export WOMPI_SANDBOX="true"
 
 # Run via stdio
-npx tsx packages/colombia/wompi/src/index.ts
+npx -y @codespar/mcp-wompi
 
 # Run via HTTP
-npx tsx packages/colombia/wompi/src/index.ts --http
+MCP_HTTP=true MCP_PORT=3000 npx -y @codespar/mcp-wompi
 ```
 
 ## Environment Variables

@@ -5,7 +5,10 @@
     <em>Brazil 🇧🇷 · Mexico 🇲🇽 · Argentina 🇦🇷 · Colombia 🇨🇴 · Chile 🇨🇱 · Peru 🇵🇪 · plus 4 agentic payment protocols.</em>
   </p>
   <p align="center">
-    110 MCP servers · 2,300 tools · 6 countries · MIT License
+    127 MCP servers for LATAM commerce · live in the official MCP Registry · MIT License
+  </p>
+  <p align="center">
+    <em>Live machine-readable count: <a href="https://codespar.dev/api/servers">codespar.dev/api/servers</a></em>
   </p>
   <p align="center">
     <a href="https://codespar.dev/servers">Catalog</a> ·
@@ -16,8 +19,7 @@
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-    <img src="https://img.shields.io/badge/servers-110-green" alt="110 servers">
-    <img src="https://img.shields.io/badge/tools-2,300-orange" alt="2300 tools">
+    <img src="https://img.shields.io/badge/MCP_Registry-live-green" alt="Live in the official MCP Registry">
     <img src="https://img.shields.io/badge/countries-6-blue" alt="6 countries">
     <img src="https://img.shields.io/badge/MCP-compatible-purple" alt="MCP compatible">
   </p>

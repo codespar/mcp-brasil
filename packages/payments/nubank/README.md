@@ -1,9 +1,11 @@
-# MCP Nubank
+# @codespar/mcp-nubank
 
+> MCP server for **Nubank**, Brazil's largest digital bank, using the Open Finance Brasil standard
 
-> **Alpha release** — published under the `alpha` npm dist-tag. Endpoint paths follow public docs and BACEN/provider conventions but have not been fully live-validated. Pin exact versions during `0.x.x-alpha`. Install with `npm install <pkg>@alpha`.
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-nubank)](https://www.npmjs.com/package/@codespar/mcp-nubank)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-MCP server for **Nubank** — Brazil's largest digital bank, using the Open Finance Brasil standard.
+> **Alpha release** — published under the `alpha` npm dist-tag. Endpoint paths follow public docs and BACEN/provider conventions but have not been fully live-validated. Pin exact versions during `0.x.x-alpha`. Install with `npm install @codespar/mcp-nubank@alpha`.
 
 ## Quick Start
 
@@ -14,10 +16,10 @@ export NUBANK_CLIENT_SECRET="your-client-secret"
 export NUBANK_CERT_PATH="/path/to/certificate.pem"
 
 # Run via stdio
-npx tsx packages/payments/nubank/src/index.ts
+npx -y @codespar/mcp-nubank@alpha
 
 # Run via HTTP
-npx tsx packages/payments/nubank/src/index.ts --http
+MCP_HTTP=true MCP_PORT=3000 npx -y @codespar/mcp-nubank@alpha
 ```
 
 ## Environment Variables

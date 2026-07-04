@@ -1,9 +1,11 @@
-# MCP AFIP
+# @codespar/mcp-afip
 
+> MCP server for **AFIP**, the Argentine tax authority (Administracion Federal de Ingresos Publicos), for electronic invoicing (Factura Electronica) with CAE authorization
 
-> **Alpha release** — published under the `alpha` npm dist-tag. Endpoint paths follow public docs and BACEN/provider conventions but have not been fully live-validated. Pin exact versions during `0.x.x-alpha`. Install with `npm install <pkg>@alpha`.
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-afip)](https://www.npmjs.com/package/@codespar/mcp-afip)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-MCP server for **AFIP** — Argentine tax authority (Administracion Federal de Ingresos Publicos) for electronic invoicing (Factura Electronica) with CAE authorization.
+> **Alpha release** — published under the `alpha` npm dist-tag. Endpoint paths follow public docs and BACEN/provider conventions but have not been fully live-validated. Pin exact versions during `0.x.x-alpha`. Install with `npm install @codespar/mcp-afip@alpha`.
 
 ## Quick Start
 
@@ -14,10 +16,10 @@ export AFIP_KEY_PATH="/path/to/key.key"
 export AFIP_CUIT="20123456789"
 
 # Run via stdio
-npx tsx packages/argentina/afip/src/index.ts
+npx -y @codespar/mcp-afip@alpha
 
 # Run via HTTP
-npx tsx packages/argentina/afip/src/index.ts --http
+MCP_HTTP=true MCP_PORT=3000 npx -y @codespar/mcp-afip@alpha
 ```
 
 ## Environment Variables
