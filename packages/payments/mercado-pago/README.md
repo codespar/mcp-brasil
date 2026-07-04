@@ -1,27 +1,48 @@
-# MCP Mercado Pago
+# @codespar/mcp-mercado-pago
 
-MCP server for the **Mercado Pago** payment gateway — the leading payment platform in Latin America.
+> MCP server for **Mercado Pago**, the leading payment platform in Latin America
+
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-mercado-pago)](https://www.npmjs.com/package/@codespar/mcp-mercado-pago)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Quick Start
+
+### Claude Desktop
+
+Add to `~/.config/claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "mercado-pago": {
+      "command": "npx",
+      "args": ["-y", "@codespar/mcp-mercado-pago"],
+      "env": {
+        "MERCADO_PAGO_ACCESS_TOKEN": "APP_USR-..."
+      }
+    }
+  }
+}
+```
+
+### Claude Code
+
+```bash
+claude mcp add mercado-pago -- npx @codespar/mcp-mercado-pago
+```
+
+### CLI
 
 ```bash
 # Set your access token
 export MERCADO_PAGO_ACCESS_TOKEN="APP_USR-..."
 
 # Run via stdio
-npx tsx packages/payments/mercado-pago/src/index.ts
+npx -y @codespar/mcp-mercado-pago
 
 # Run via HTTP
-npx tsx packages/payments/mercado-pago/src/index.ts --http
+MCP_HTTP=true MCP_PORT=3000 npx -y @codespar/mcp-mercado-pago
 ```
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `MERCADO_PAGO_ACCESS_TOKEN` | Yes | Access token from Mercado Pago dashboard |
-| `MCP_HTTP` | No | Set to `"true"` to enable HTTP transport |
-| `MCP_PORT` | No | HTTP port (default: 3000) |
 
 ## Tools (30)
 
@@ -47,7 +68,7 @@ npx tsx packages/payments/mercado-pago/src/index.ts --http
 | `create_store` | Create a store (physical location or POS group) |
 | `list_stores` | List stores |
 | `create_pos` | Create a point of sale (POS) linked to a store |
-| `update_subscription` | Update a subscription (preapproval) — amount, status, reason, card token, etc. |
+| `update_subscription` | Update a subscription (preapproval): amount, status, reason, card token, etc. |
 | `oauth_token_exchange` | Exchange an authorization code for a seller access token (marketplace onboarding). |
 | `create_advanced_payment` | Create a marketplace split payment with per-recipient disbursements (application_fee, money_release_days, c... |
 | `get_advanced_payment` | Get an advanced (split) payment by ID |
@@ -58,9 +79,21 @@ npx tsx packages/payments/mercado-pago/src/index.ts --http
 | `create_settlement_report` | Manually generate a settlement (account money) report for a date range. |
 | `search_merchant_orders` | Search merchant orders with filters (last 90 days). |
 
-## Auth
+## Environment Variables
 
-Uses **Bearer token** authentication. Obtain your access token from the [Mercado Pago Developers](https://www.mercadopago.com.br/developers) dashboard.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MERCADO_PAGO_ACCESS_TOKEN` | Yes | Access token from Mercado Pago dashboard |
+| `MCP_HTTP` | No | Set to `"true"` to enable HTTP transport |
+| `MCP_PORT` | No | HTTP port (default: 3000) |
+
+## Authentication
+
+Uses **Bearer token** authentication. Set this environment variable before launching the server:
+
+- `MERCADO_PAGO_ACCESS_TOKEN` *(required, secret)*: access token for Mercado Pago
+
+Issue credentials at the [Mercado Pago Developers](https://www.mercadopago.com.br/developers) dashboard.
 
 ## API Reference
 
@@ -69,14 +102,6 @@ Uses **Bearer token** authentication. Obtain your access token from the [Mercado
 ## Enterprise
 
 Need governance, budget limits, and audit trails for agent payments? [CodeSpar Enterprise](https://codespar.dev/enterprise) adds policy engine, payment routing, and compliance templates on top of these MCP servers.
-
-## Authentication
-
-Set these environment variables before launching the server:
-
-- `MERCADO_PAGO_ACCESS_TOKEN` *(required, secret)* — API key/token for mercado-pago
-
-Issue credentials at the provider's developer portal: <https://www.mercadopago.com.br/developers>.
 
 ## License
 

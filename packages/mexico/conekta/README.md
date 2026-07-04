@@ -1,6 +1,9 @@
-# MCP Conekta
+# @codespar/mcp-conekta
 
-MCP server for **Conekta** — the leading Mexican payment gateway supporting cards, OXXO cash payments, and SPEI bank transfers.
+> MCP server for **Conekta**, the leading Mexican payment gateway supporting cards, OXXO cash payments, and SPEI bank transfers
+
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-conekta)](https://www.npmjs.com/package/@codespar/mcp-conekta)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Quick Start
 
@@ -9,10 +12,10 @@ MCP server for **Conekta** — the leading Mexican payment gateway supporting ca
 export CONEKTA_API_KEY="key_..."
 
 # Run via stdio
-npx tsx packages/mexico/conekta/src/index.ts
+npx -y @codespar/mcp-conekta
 
 # Run via HTTP
-npx tsx packages/mexico/conekta/src/index.ts --http
+MCP_HTTP=true MCP_PORT=3000 npx -y @codespar/mcp-conekta
 ```
 
 ## Environment Variables
