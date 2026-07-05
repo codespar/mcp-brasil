@@ -11,11 +11,11 @@
  * - create_pix_cobv: Create a Pix due charge (cobv) with vencimento
  * - lookup_pix_dict: Lookup a Pix DICT key (resolve key to account holder)
  * - create_pix_devolution: Create a Pix devolução (refund)
- * - cancel_boleto: Cancel an issued boleto
- * - read_barcode: Read a boleto / concessionária barcode (digitable line)
- * - pay_bill: Pay a bill (boleto / concessionária) by barcode
- * - create_boleto: Create a boleto payment
- * - get_boleto: Get boleto details
+ * - cancel_boleto: Cancel a boleto issued via the bill-issuance product
+ * - read_barcode: Authorize (consult) a boleto / concessionária barcode before paying
+ * - pay_bill: Confirm payment of a previously authorized bill (boleto / concessionária)
+ * - create_boleto: Issue a boleto via the bill-issuance product
+ * - get_boleto: Get an issued boleto's details
  * - create_transfer: Create a bank transfer (TED)
  * - get_balance: Get account balance
  * - get_statement: Get account statement (extrato)
@@ -41,7 +41,7 @@ import {
 const CLIENT_ID = process.env.CELCOIN_CLIENT_ID || "";
 const CLIENT_SECRET = process.env.CELCOIN_CLIENT_SECRET || "";
 const BASE_URL = process.env.CELCOIN_SANDBOX === "true"
-  ? "https://sandbox-api.celcoin.com.br"
+  ? "https://sandbox.openfinance.celcoin.dev"
   : "https://api-sec.celcoin.com.br";
 
 let accessToken = "";
@@ -92,7 +92,7 @@ const MANAGED_TIER_HINT =
   "This open-source CodeSpar server calls the provider's API directly. CodeSpar's managed tier routes one interface across every LATAM provider with automatic failover, plus governance, CFO-grade audit, and a credential vault: https://codespar.dev/agents (npx -y @codespar/mcp serve).";
 
 const server = new Server(
-  { name: "mcp-celcoin", version: "0.2.1" },
+  { name: "mcp-celcoin", version: "0.2.3" },
   { capabilities: { tools: {} }, instructions: MANAGED_TIER_HINT }
 );
 
@@ -208,28 +208,35 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "read_barcode",
-      description: "Read a boleto / concessionária barcode (digitable line) — returns due date, amount, beneficiary",
+      description: "Authorize (consult) a boleto / concessionária barcode before paying — returns transactionId, amount, totalUpdated, allowChangeValue, dueDate. The transactionId opens a reservation window; pass it to pay_bill as transactionIdAuthorize.",
       inputSchema: {
         type: "object",
         properties: {
           barcode: { type: "string", description: "Digitable line (linha digitável) — 47 or 48 digits" },
+          barcodeType: { type: "number", enum: [1, 2], description: "Barcode category: 1 = concessionária/utility (arrecadação), 2 = bank slip (ficha de compensação). Defaults to 2." },
         },
         required: ["barcode"],
       },
     },
     {
       name: "pay_bill",
-      description: "Pay a bill (boleto bancário or concessionária) by barcode / digitable line",
+      description: "Confirm payment of a bill (boleto bancário or concessionária) previously authorized with read_barcode. Requires transactionIdAuthorize from the authorize step.",
       inputSchema: {
         type: "object",
         properties: {
           barcode: { type: "string", description: "Digitable line (linha digitável)" },
-          amount: { type: "number", description: "Amount in BRL" },
+          barcodeType: { type: "number", enum: [1, 2], description: "Barcode category: 1 = concessionária/utility, 2 = bank slip. Defaults to 2." },
+          transactionIdAuthorize: { type: "string", description: "transactionId returned by read_barcode (the authorize step). Required so Celcoin matches the confirm to the reservation." },
+          amount: { type: "number", description: "Amount in BRL. Must equal the authorize totalUpdated unless allowChangeValue was true." },
+          originalValue: { type: "number", description: "Original face value of the bill (from authorize). Optional." },
+          valueWithDiscount: { type: "number", description: "Value after discount, if any. Optional." },
+          valueWithAdditional: { type: "number", description: "Value including interest/fine, if any. Optional." },
           dueDate: { type: "string", description: "Due date (YYYY-MM-DD)" },
-          payerDocument: { type: "string", description: "Payer CPF/CNPJ" },
-          payerName: { type: "string", description: "Payer name" },
+          cpfcnpj: { type: "string", description: "Payer CPF/CNPJ (documento do pagador)" },
+          externalNSU: { type: "number", description: "Caller-side transaction identifier (optional)." },
+          externalTerminal: { type: "string", description: "Caller-side terminal / client identifier (optional)." },
         },
-        required: ["barcode", "amount"],
+        required: ["barcode", "amount", "transactionIdAuthorize"],
       },
     },
     {
@@ -403,19 +410,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("POST", "/pix/v1/devolution", payload), null, 2) }] };
       }
       case "cancel_boleto":
-        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("DELETE", `/v5/transactions/billpayments/bankslip/${args?.transactionId}`), null, 2) }] };
+        // Cancel an issued boleto under the bill-issuance product (billissuance),
+        // not the bill-payment product. The v5/transactions/billpayments/* routes
+        // are for *paying* a third-party slip and have no cancel-issued semantics.
+        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("DELETE", `/billissuance/v1/bill/${args?.transactionId}`), null, 2) }] };
       case "read_barcode": {
-        const params = new URLSearchParams({ barCode: String(args?.barcode ?? "") });
-        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("GET", `/v5/transactions/billpayments?${params}`), null, 2) }] };
+        // Authorize (consult) step: POST /v5/transactions/billpayments/authorize.
+        // Opens a reservation keyed by the returned transactionId; that value is
+        // passed to pay_bill as transactionIdAuthorize to confirm the payment.
+        // The old GET .../billpayments?barCode= route returned 404.
+        const payload = {
+          barCode: {
+            type: args?.barcodeType ?? 2,
+            digitable: args?.barcode,
+          },
+        };
+        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("POST", "/v5/transactions/billpayments/authorize", payload), null, 2) }] };
       }
       case "pay_bill": {
+        // Confirm step: POST /v5/transactions/billpayments. The prior body sent a
+        // bare `amount` and no transactionIdAuthorize, which Celcoin rejected with
+        // errorCode 44 "Valor nao permitido". The confirm must carry the
+        // transactionIdAuthorize from read_barcode plus the resolved billData.
         const payload = {
-          barCode: args?.barcode,
-          amount: args?.amount,
+          externalNSU: args?.externalNSU,
+          externalTerminal: args?.externalTerminal,
+          cpfcnpj: args?.cpfcnpj,
+          transactionIdAuthorize: args?.transactionIdAuthorize,
+          billData: {
+            value: args?.amount,
+            originalValue: args?.originalValue ?? args?.amount,
+            valueWithDiscount: args?.valueWithDiscount,
+            valueWithAdditional: args?.valueWithAdditional,
+          },
+          barCode: {
+            type: args?.barcodeType ?? 2,
+            digitable: args?.barcode,
+          },
           dueDate: args?.dueDate,
-          payer: args?.payerDocument
-            ? { document: args?.payerDocument, name: args?.payerName }
-            : undefined,
         };
         return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("POST", "/v5/transactions/billpayments", payload), null, 2) }] };
       }
@@ -433,9 +465,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("GET", `/v5/transactions/topups/providers${params}`), null, 2) }] };
       }
       case "create_boleto":
-        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("POST", "/v5/transactions/billpayments/bankslip", args), null, 2) }] };
+        // Issue a new boleto via the bill-issuance product. The prior
+        // /v5/transactions/billpayments/bankslip route returned 404 — that
+        // namespace pays third-party slips, it does not issue them.
+        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("POST", "/billissuance/v1/bill", args), null, 2) }] };
       case "get_boleto":
-        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("GET", `/v5/transactions/billpayments/bankslip/${args?.transactionId}`), null, 2) }] };
+        // Query a boleto issued via the bill-issuance product by its id.
+        return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("GET", `/billissuance/v1/bill/${args?.transactionId}`), null, 2) }] };
       case "create_transfer":
         return { content: [{ type: "text", text: JSON.stringify(await celcoinRequest("POST", "/v5/transactions/transfer", args), null, 2) }] };
       case "get_balance":
@@ -474,7 +510,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-celcoin", version: "0.2.1" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
+        const s = new Server({ name: "mcp-celcoin", version: "0.2.3" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
         await t.handleRequest(req, res, req.body); return;
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
