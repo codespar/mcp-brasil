@@ -1,0 +1,25 @@
+{
+  "name": "@codespar/mcp-malga",
+  "version": "0.1.0",
+  "description": "MCP server for Malga — Brazilian payments API",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-malga": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "typescript": "^5.8.0"
+  },
+  "keywords": ["mcp", "malga", "payments", "pix", "boleto", "brazil"],
+  "license": "MIT",
+  "mcpName": "io.github.codespar/mcp-malga"
+}
