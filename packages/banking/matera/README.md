@@ -135,13 +135,13 @@ Track the verification work in the repo issues; PR welcome from anyone with a Ma
 - Boleto issuance
 - Pix MED (Mecanismo Especial de Devolução) flow
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Matera](https://matera.com)
 - [Matera API Documentation](https://doc-api.matera.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

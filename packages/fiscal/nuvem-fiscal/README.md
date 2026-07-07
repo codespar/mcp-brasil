@@ -120,13 +120,13 @@ Set `MCP_DEMO=true` (or pass `--demo`) to run the server without contacting the 
 - `get_nfe_danfe` — Get DANFE PDF for an NF-e
 - `manifest_recipient` — Manifest recipient awareness of an NF-e
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Nuvem Fiscal Website](https://nuvemfiscal.com.br)
 - [Nuvem Fiscal API Documentation](https://dev.nuvemfiscal.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

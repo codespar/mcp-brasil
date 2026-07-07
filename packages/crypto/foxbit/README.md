@@ -123,13 +123,13 @@ Merchants and traders use both for best execution and redundancy.
 - Institutional / OTC desk integrations
 - WebSocket market data streams (where MCP transport allows)
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Foxbit Website](https://foxbit.com.br)
 - [Foxbit API Documentation](https://docs.foxbit.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

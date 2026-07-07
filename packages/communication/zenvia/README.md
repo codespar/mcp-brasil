@@ -106,13 +106,13 @@ Zenvia provides a sandbox via the dashboard for testing messages.
 - `chatbot_integration` — Integrate with Zenvia chatbot builder
 - `analytics_dashboard` — Get channel analytics and metrics
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Zenvia Website](https://zenvia.com)
 - [Zenvia API Documentation](https://zenvia.github.io/zenvia-openapi-spec)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-bling",
-  "description": "MCP server for Bling — ERP, products, orders, purchase orders, invoices (NF-e/NFS-e), stock, AR/AP, warehouses, webhooks",
+  "description": "MCP server for Bling — ERP: products, orders, invoices (NF-e/NFS-e), stock, AR/AP, webhooks",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
     "subfolder": "packages/erp/bling"
   },
-  "version": "0.2.1",
+  "version": "0.2.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-bling",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "transport": {
         "type": "stdio"
       },

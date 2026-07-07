@@ -1,6 +1,9 @@
-# MCP Banco Inter
+# @codespar/mcp-inter-bank
 
-MCP server for **Banco Inter** — Brazilian digital bank with a full developer API for boletos, PIX, transfers, and banking.
+> MCP server for **Banco Inter**, a Brazilian digital bank with a full developer API for boletos, PIX, transfers, and banking
+
+[![npm](https://img.shields.io/npm/v/@codespar/mcp-inter-bank)](https://www.npmjs.com/package/@codespar/mcp-inter-bank)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
 ## Quick Start
 
@@ -10,10 +13,10 @@ export INTER_CLIENT_ID="your-client-id"
 export INTER_CLIENT_SECRET="your-client-secret"
 
 # Run via stdio
-npx tsx packages/payments/inter-bank/src/index.ts
+npx -y @codespar/mcp-inter-bank
 
 # Run via HTTP
-npx tsx packages/payments/inter-bank/src/index.ts --http
+MCP_HTTP=true MCP_PORT=3000 npx -y @codespar/mcp-inter-bank
 ```
 
 ## Environment Variables

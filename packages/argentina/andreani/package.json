@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-andreani",
-  "version": "0.2.0-alpha.2",
-  "description": "MCP server for Andreani \u2014 Argentine courier and logistics",
+  "version": "0.2.0-alpha.3",
+  "description": "MCP server for Andreani — Argentine courier and logistics",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

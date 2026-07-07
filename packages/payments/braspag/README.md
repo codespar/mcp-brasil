@@ -132,13 +132,13 @@ Set via `BRASPAG_ENV=production` to switch.
 - Bank slip (boleto) registered-only helpers
 - Webhook verification helper
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Braspag Manual (Pagador)](https://braspag.github.io/manual/braspag-pagador)
 - [Cielo / Braspag Developer Portal](https://developercielo.github.io)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

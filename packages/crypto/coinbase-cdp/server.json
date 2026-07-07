@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-coinbase-cdp",
-  "description": "MCP server for Coinbase Developer Platform (CDP) — single package covering three product surfaces (Trading, Wallets, Payments) under one CDP key. ES256 JWT auth signed with an ECDSA P-256 private key minted at portal.cdp.coinbase.com; each request carries a fresh JWT bound to METHOD + path with a 2-minute exp.",
+  "description": "MCP server for Coinbase Developer Platform (CDP) — Trading, Wallets, Payments under one CDP key",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
     "subfolder": "packages/crypto/coinbase-cdp"
   },
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-coinbase-cdp",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "transport": {
         "type": "stdio"
       },

@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-tienda-nube",
-  "version": "0.2.1",
-  "description": "MCP server for Tienda Nube \u2014 LATAM e-commerce platform",
+  "version": "0.2.2",
+  "description": "MCP server for Tienda Nube — LATAM e-commerce platform",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

@@ -117,13 +117,13 @@ Omie provides a sandbox via app registration. Create an app to get test credenti
 - `create_service_contract` — Service contracts CRUD
 - `create_custom_field` — Merchant custom fields
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Omie Website](https://omie.com.br)
 - [Omie API Documentation](https://developer.omie.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

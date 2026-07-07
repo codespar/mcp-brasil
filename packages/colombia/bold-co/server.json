@@ -1,0 +1,46 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-bold-co",
+  "description": "MCP server for Bold — Colombian acquirer: payment links for cards, PSE and Nequi",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-latam",
+    "source": "github",
+    "subfolder": "packages/colombia/bold-co"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-bold-co",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "BOLD_API_KEY",
+          "description": "Bold identity API key (llave de identidad), sent as x-api-key",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "BOLD_SECRET_KEY",
+          "description": "Bold secret key. Only needed for the local checkout-signature and webhook-validation tools.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ],
+  "provider": {
+    "homepage": "https://bold.co",
+    "logoUrl": "https://logo.clearbit.com/bold.co",
+    "logoFallback": "https://www.google.com/s2/favicons?domain=bold.co&sz=128",
+    "docsUrl": "https://developers.bold.co",
+    "sandbox": {
+      "available": true
+    }
+  }
+}

@@ -1,32 +1,29 @@
 #!/usr/bin/env node
 
 /**
- * MCP Server for UnblockPay — fiat-to-stablecoin onramp/offramp platform.
+ * MCP Server for UnblockPay — fiat <> stablecoin cross-border platform.
+ *
+ * Pattern:
+ *   Customer (KYC mother) → Wallet → Quote → Payin/Payout
+ *
+ * The 13 tools cover the full lifecycle: customer onboarding + KYC,
+ * wallet creation under approved customers, external bank accounts for
+ * non-Pix payouts, FX quoting, pay-in (fiat → stablecoin), pay-out
+ * (stablecoin → fiat), and transaction polling/cancel.
  *
  * Tools:
- * - create_wallet: Create a new wallet
- * - get_wallet: Get wallet details by ID
- * - list_wallets: List all wallets
- * - create_onramp: Create a fiat-to-stablecoin onramp transaction
- * - create_offramp: Create a stablecoin-to-fiat offramp transaction
- * - get_transaction: Get transaction details by ID
- * - list_transactions: List transactions with filters
- * - get_exchange_rate: Get current exchange rate for a currency pair
- * - create_transfer: Create a stablecoin transfer between wallets
- * - get_balance: Get wallet balance
- * - submit_corporate_kyc: Submit corporate KYC application
- * - get_corporate_kyc_status: Get corporate KYC status by application ID
- * - submit_individual_kyc: Submit individual KYC application
- * - get_individual_kyc_status: Get individual KYC status by application ID
- * - add_bank_account: Register a fiat bank account for offramps
- * - list_bank_accounts: List registered bank accounts
- * - delete_bank_account: Delete a registered bank account
- * - simulate_swap_quote: Simulate a fiat<->crypto swap quote (no execution)
- * - list_supported_assets: List supported crypto assets / stablecoins
- * - register_webhook: Register a webhook endpoint for transaction events
+ * - create_customer / list_customers / verify_customer / get_verification_details
+ * - create_wallet / list_wallets
+ * - create_external_account / list_external_accounts
+ * - create_quote
+ * - create_payin / create_payout
+ * - get_transaction / cancel_transaction
  *
  * Environment:
- *   UNBLOCKPAY_API_KEY — API key from https://unblockpay.com/
+ *   UNBLOCKPAY_API_KEY  — API key from https://docs.unblockpay.com/.
+ *   UNBLOCKPAY_BASE_URL — Optional. Defaults to https://api.unblockpay.com/v1.
+ *                         Set to https://api.sandbox.unblockpay.com/v1 to hit
+ *                         the sandbox.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -39,14 +36,28 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 const API_KEY = process.env.UNBLOCKPAY_API_KEY || "";
-const BASE_URL = "https://api.unblockpay.com/v1";
+const BASE_URL = process.env.UNBLOCKPAY_BASE_URL || "https://api.unblockpay.com/v1";
 
-async function unblockpayRequest(method: string, path: string, body?: unknown): Promise<unknown> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+async function unblockpayRequest(
+  method: string,
+  path: string,
+  body?: unknown,
+  query?: Record<string, string | number | undefined>,
+): Promise<unknown> {
+  let url = `${BASE_URL}${path}`;
+  if (query) {
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(query)) {
+      if (v !== undefined && v !== null && v !== "") params.set(k, String(v));
+    }
+    const qs = params.toString();
+    if (qs) url += `?${qs}`;
+  }
+  const res = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${API_KEY}`,
+      "Authorization": API_KEY,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -57,273 +68,238 @@ async function unblockpayRequest(method: string, path: string, body?: unknown): 
   return res.json();
 }
 
+// Managed-tier pointer surfaced to the agent via MCP `instructions`.
+// Informational only — nothing CodeSpar-hosted is called (MIT-safe).
+const MANAGED_TIER_HINT =
+  "This open-source CodeSpar server calls the provider's API directly. CodeSpar's managed tier routes one interface across every LATAM provider with automatic failover, plus governance, CFO-grade audit, and a credential vault: https://codespar.dev/agents (npx -y @codespar/mcp serve).";
+
 const server = new Server(
-  { name: "mcp-unblockpay", version: "0.2.1" },
-  { capabilities: { tools: {} } }
+  { name: "mcp-unblockpay", version: "0.3.0" },
+  { capabilities: { tools: {} }, instructions: MANAGED_TIER_HINT }
 );
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
-      name: "create_wallet",
-      description: "Create a new wallet in UnblockPay",
+      name: "create_customer",
+      description: "Create an individual or business customer (KYC mother). Business customers require date_of_incorporation; both types use 3-letter ISO country codes (BRA/USA/MEX). Returns { id, status: 'pending', verification: { verification_link } }.",
       inputSchema: {
         type: "object",
         properties: {
-          currency: { type: "string", description: "Wallet currency (e.g. USDC, USDT, EUR)" },
-          chain: { type: "string", description: "Blockchain network (e.g. ethereum, polygon, solana)" },
-          label: { type: "string", description: "Human-readable wallet label" },
+          type: { type: "string", enum: ["individual", "business"], description: "Customer type" },
+          business_legal_name: { type: "string", description: "Required when type=business" },
+          first_name: { type: "string", description: "Required when type=individual" },
+          last_name: { type: "string", description: "Required when type=individual" },
+          date_of_incorporation: { type: "string", description: "ISO date (YYYY-MM-DD). REQUIRED when type=business" },
+          date_of_birth: { type: "string", description: "ISO date (YYYY-MM-DD). Required when type=individual" },
+          email: { type: "string" },
+          phone_number: { type: "string", description: "E.164 format, e.g. +5511999999999" },
+          country: { type: "string", description: "3-letter ISO 3166-1 alpha-3 country code (BRA, USA, MEX)" },
+          tax_id: { type: "string", description: "CNPJ for BRA business, EIN for USA, RFC for MEX, etc." },
+          address: {
+            type: "object",
+            properties: {
+              street_line_1: { type: "string" },
+              street_line_2: { type: "string" },
+              city: { type: "string" },
+              state: { type: "string" },
+              postal_code: { type: "string" },
+              country: { type: "string", description: "3-letter ISO code" },
+            },
+          },
         },
-        required: ["currency", "chain"],
+        required: ["type", "country"],
       },
     },
     {
-      name: "get_wallet",
-      description: "Get wallet details by ID",
+      name: "list_customers",
+      description: "List customers under the operator's API key. `limit` is mandatory per UnblockPay's pagination contract.",
       inputSchema: {
         type: "object",
         properties: {
-          id: { type: "string", description: "Wallet ID" },
+          limit: { type: "number", description: "Required by the API (1-100)" },
+          offset: { type: "number" },
+        },
+        required: ["limit"],
+      },
+    },
+    {
+      name: "verify_customer",
+      description: "Trigger the KYC verification check for a customer. Sandbox auto-progresses business customers through the hosted KYC flow once documents are uploaded. Idempotent — returns 422 'customer_cannot_be_verified' when already approved (safe to ignore).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Customer ID" },
         },
         required: ["id"],
+      },
+    },
+    {
+      name: "get_verification_details",
+      description: "Poll the KYC verification state for a customer. Returns { customer_status: 'pending' | 'approved' | 'rejected' | 'partially_rejected', verification_steps: [...] }.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Customer ID" },
+        },
+        required: ["id"],
+      },
+    },
+    {
+      name: "create_wallet",
+      description: "Create a stablecoin wallet under an APPROVED customer. blockchain selects the network (solana → USDC; ethereum/polygon → USDC/USDT; tron → USDT). Customer must be 'approved' before this succeeds (422 customer_not_allowed otherwise).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          customer_id: { type: "string" },
+          name: { type: "string", description: "Human-readable wallet name" },
+          blockchain: { type: "string", enum: ["solana", "ethereum", "polygon", "tron"] },
+          is_external_wallet: { type: "boolean", description: "False for UnblockPay-managed wallets" },
+        },
+        required: ["customer_id", "name", "blockchain"],
       },
     },
     {
       name: "list_wallets",
-      description: "List all wallets",
+      description: "List wallets under the operator's API key.",
       inputSchema: {
         type: "object",
         properties: {
-          currency: { type: "string", description: "Filter by currency" },
-          limit: { type: "number", description: "Number of results (default 10)" },
-          offset: { type: "number", description: "Pagination offset" },
+          limit: { type: "number" },
+          offset: { type: "number" },
         },
       },
     },
     {
-      name: "create_onramp",
-      description: "Create a fiat-to-stablecoin onramp transaction",
+      name: "create_external_account",
+      description: "Register a fiat receiver account (BRL Pix, USD wire, EUR SEPA, MXN SPEI). Skippable for BRL Pix payouts — pass pix_key + document directly on /payout instead.",
       inputSchema: {
         type: "object",
         properties: {
-          sourceCurrency: { type: "string", description: "Fiat currency (e.g. BRL, USD, EUR)" },
-          targetCurrency: { type: "string", description: "Stablecoin (e.g. USDC, USDT)" },
-          amount: { type: "number", description: "Amount in source currency" },
-          walletId: { type: "string", description: "Destination wallet ID" },
-          chain: { type: "string", description: "Target blockchain network" },
+          customer_id: { type: "string" },
+          currency: { type: "string", description: "BRL / USD / MXN / EUR" },
+          payment_rail: { type: "string", description: "pix / us_wire / spei / sepa" },
         },
-        required: ["sourceCurrency", "targetCurrency", "amount", "walletId"],
+        required: ["customer_id", "currency", "payment_rail"],
       },
     },
     {
-      name: "create_offramp",
-      description: "Create a stablecoin-to-fiat offramp transaction",
+      name: "list_external_accounts",
+      description: "List external accounts under the operator's API key.",
       inputSchema: {
         type: "object",
         properties: {
-          sourceCurrency: { type: "string", description: "Stablecoin (e.g. USDC, USDT)" },
-          targetCurrency: { type: "string", description: "Fiat currency (e.g. BRL, USD, EUR)" },
-          amount: { type: "number", description: "Amount in source stablecoin" },
-          walletId: { type: "string", description: "Source wallet ID" },
-          bankAccountId: { type: "string", description: "Destination bank account ID" },
+          limit: { type: "number" },
+          offset: { type: "number" },
         },
-        required: ["sourceCurrency", "targetCurrency", "amount", "walletId"],
+      },
+    },
+    {
+      name: "create_quote",
+      description: "Lock an FX + fee quote for a 5-minute TTL. Same endpoint for both on_ramp (fiat → stablecoin) and off_ramp (stablecoin → fiat). Pass amount on EITHER sender or receiver, not both. Response carries { id, expires_at, commercial_quotation, fees }.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          type: { type: "string", enum: ["on_ramp", "off_ramp"] },
+          sender: {
+            type: "object",
+            properties: {
+              currency: { type: "string" },
+              payment_rail: { type: "string" },
+              amount: { type: "number" },
+            },
+            required: ["currency", "payment_rail"],
+          },
+          receiver: {
+            type: "object",
+            properties: {
+              currency: { type: "string" },
+              payment_rail: { type: "string" },
+              amount: { type: "number" },
+            },
+            required: ["currency", "payment_rail"],
+          },
+        },
+        required: ["type", "sender", "receiver"],
+      },
+    },
+    {
+      name: "create_payin",
+      description: "Create a fiat → stablecoin pay-in referencing a quote_id. Sandbox min: 150 BRL / payout-side equivalents. Response carries { id, status: 'awaiting_deposit', sender_deposit_instructions: { deposit_address: '<Pix Copy & Paste EMV>' }, transaction_link }.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          quote_id: { type: "string" },
+          customer_id: { type: "string" },
+          sender: {
+            type: "object",
+            properties: {
+              payment_rail: { type: "string" },
+              name: { type: "string", description: "Payer's legal name (BCB compliance for BR pay-in)" },
+              document: { type: "string", description: "Payer's tax id (CPF for BR)" },
+            },
+            required: ["payment_rail", "name", "document"],
+          },
+          receiver: {
+            type: "object",
+            properties: {
+              wallet_id: { type: "string", description: "Internal UnblockPay wallet id" },
+              address: { type: "string", description: "External blockchain address (alternative to wallet_id)" },
+            },
+          },
+        },
+        required: ["quote_id", "customer_id", "sender", "receiver"],
+      },
+    },
+    {
+      name: "create_payout",
+      description: "Create a stablecoin → fiat payout referencing a quote_id. customer_id is REQUIRED at the top level (404 'Customer not found' otherwise). Pix-BR shortcut: pass receiver.pix_key + receiver.document directly to skip external_account registration. Sandbox min: 25 USDC. Response carries { id, status: 'awaiting_deposit', transaction_link, sender_deposit_instructions: { deposit_address: '<blockchain address>' } }.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          quote_id: { type: "string" },
+          customer_id: { type: "string" },
+          sender: {
+            type: "object",
+            properties: {
+              wallet_id: { type: "string" },
+              address: { type: "string", description: "External wallet address (alternative to wallet_id)" },
+            },
+          },
+          receiver: {
+            type: "object",
+            description: "EITHER { pix_key, document } for BRL Pix shortcut OR { external_account_id } for other currencies",
+            properties: {
+              pix_key: { type: "string" },
+              document: { type: "string" },
+              external_account_id: { type: "string" },
+            },
+          },
+        },
+        required: ["quote_id", "customer_id", "sender", "receiver"],
       },
     },
     {
       name: "get_transaction",
-      description: "Get transaction details by ID",
+      description: "Poll transaction status. Lifecycle: awaiting_deposit → processing → completed (or failed / refunded / cancelled / error). Sandbox does NOT auto-progress without a webhook simulation — see UnblockPay's /concepts/transactions docs for the mocked transaction IDs available for status testing.",
       inputSchema: {
         type: "object",
         properties: {
-          id: { type: "string", description: "Transaction ID" },
+          id: { type: "string" },
         },
         required: ["id"],
       },
     },
     {
-      name: "list_transactions",
-      description: "List transactions with optional filters",
+      name: "cancel_transaction",
+      description: "Cancel a transaction. Only valid while status is 'awaiting_deposit' — UnblockPay's API returns 422 once the deposit has been received.",
       inputSchema: {
         type: "object",
         properties: {
-          walletId: { type: "string", description: "Filter by wallet ID" },
-          type: { type: "string", enum: ["onramp", "offramp", "transfer"], description: "Filter by transaction type" },
-          status: { type: "string", enum: ["pending", "processing", "completed", "failed"], description: "Filter by status" },
-          limit: { type: "number", description: "Number of results (default 10)" },
-          offset: { type: "number", description: "Pagination offset" },
+          id: { type: "string" },
+          status: { type: "string", enum: ["cancelled"], description: "Set to 'cancelled' to abort" },
         },
-      },
-    },
-    {
-      name: "get_exchange_rate",
-      description: "Get current exchange rate for a currency pair",
-      inputSchema: {
-        type: "object",
-        properties: {
-          sourceCurrency: { type: "string", description: "Source currency (e.g. BRL, USD)" },
-          targetCurrency: { type: "string", description: "Target currency (e.g. USDC, USDT)" },
-        },
-        required: ["sourceCurrency", "targetCurrency"],
-      },
-    },
-    {
-      name: "create_transfer",
-      description: "Create a stablecoin transfer between wallets",
-      inputSchema: {
-        type: "object",
-        properties: {
-          sourceWalletId: { type: "string", description: "Source wallet ID" },
-          destinationAddress: { type: "string", description: "Destination wallet address" },
-          amount: { type: "number", description: "Amount to transfer" },
-          currency: { type: "string", description: "Currency (e.g. USDC)" },
-        },
-        required: ["sourceWalletId", "destinationAddress", "amount", "currency"],
-      },
-    },
-    {
-      name: "get_balance",
-      description: "Get wallet balance",
-      inputSchema: {
-        type: "object",
-        properties: {
-          walletId: { type: "string", description: "Wallet ID" },
-        },
-        required: ["walletId"],
-      },
-    },
-    {
-      name: "submit_corporate_kyc",
-      description: "Submit a corporate KYC application (business onboarding)",
-      inputSchema: {
-        type: "object",
-        properties: {
-          companyName: { type: "string", description: "Legal company name" },
-          registrationNumber: { type: "string", description: "Tax / registration number (e.g. CNPJ)" },
-          country: { type: "string", description: "ISO 3166-1 alpha-2 country code (e.g. BR, US)" },
-          address: { type: "string", description: "Registered company address" },
-          contactEmail: { type: "string", description: "Primary contact email" },
-          documents: { type: "array", items: { type: "string" }, description: "Array of uploaded document IDs or URLs" },
-        },
-        required: ["companyName", "registrationNumber", "country"],
-      },
-    },
-    {
-      name: "get_corporate_kyc_status",
-      description: "Get the status of a corporate KYC application",
-      inputSchema: {
-        type: "object",
-        properties: {
-          applicationId: { type: "string", description: "Corporate KYC application ID" },
-        },
-        required: ["applicationId"],
-      },
-    },
-    {
-      name: "submit_individual_kyc",
-      description: "Submit an individual KYC application (personal onboarding)",
-      inputSchema: {
-        type: "object",
-        properties: {
-          firstName: { type: "string", description: "Legal first name" },
-          lastName: { type: "string", description: "Legal last name" },
-          dateOfBirth: { type: "string", description: "Date of birth (YYYY-MM-DD)" },
-          country: { type: "string", description: "ISO 3166-1 alpha-2 country code" },
-          taxId: { type: "string", description: "National tax ID (e.g. CPF)" },
-          address: { type: "string", description: "Residential address" },
-          email: { type: "string", description: "Contact email" },
-          documents: { type: "array", items: { type: "string" }, description: "Array of uploaded document IDs or URLs" },
-        },
-        required: ["firstName", "lastName", "dateOfBirth", "country"],
-      },
-    },
-    {
-      name: "get_individual_kyc_status",
-      description: "Get the status of an individual KYC application",
-      inputSchema: {
-        type: "object",
-        properties: {
-          applicationId: { type: "string", description: "Individual KYC application ID" },
-        },
-        required: ["applicationId"],
-      },
-    },
-    {
-      name: "add_bank_account",
-      description: "Register a fiat bank account for offramp payouts",
-      inputSchema: {
-        type: "object",
-        properties: {
-          currency: { type: "string", description: "Bank account currency (e.g. BRL, USD, EUR)" },
-          country: { type: "string", description: "ISO 3166-1 alpha-2 country code" },
-          accountHolderName: { type: "string", description: "Name on the bank account" },
-          accountNumber: { type: "string", description: "Account number (or IBAN)" },
-          routingNumber: { type: "string", description: "Routing/sort code/agency (if applicable)" },
-          bankName: { type: "string", description: "Bank name" },
-          pixKey: { type: "string", description: "Pix key (for BRL accounts)" },
-          label: { type: "string", description: "Human-readable label" },
-        },
-        required: ["currency", "country", "accountHolderName"],
-      },
-    },
-    {
-      name: "list_bank_accounts",
-      description: "List registered fiat bank accounts",
-      inputSchema: {
-        type: "object",
-        properties: {
-          currency: { type: "string", description: "Filter by currency" },
-          limit: { type: "number", description: "Number of results (default 10)" },
-          offset: { type: "number", description: "Pagination offset" },
-        },
-      },
-    },
-    {
-      name: "delete_bank_account",
-      description: "Delete a registered bank account by ID",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id: { type: "string", description: "Bank account ID" },
-        },
-        required: ["id"],
-      },
-    },
-    {
-      name: "simulate_swap_quote",
-      description: "Simulate a fiat<->crypto swap quote without executing it",
-      inputSchema: {
-        type: "object",
-        properties: {
-          sourceCurrency: { type: "string", description: "Source currency (fiat or crypto)" },
-          targetCurrency: { type: "string", description: "Target currency (fiat or crypto)" },
-          amount: { type: "number", description: "Amount in source currency" },
-          chain: { type: "string", description: "Blockchain network (for crypto leg)" },
-        },
-        required: ["sourceCurrency", "targetCurrency", "amount"],
-      },
-    },
-    {
-      name: "list_supported_assets",
-      description: "List supported crypto assets / stablecoins on UnblockPay",
-      inputSchema: {
-        type: "object",
-        properties: {
-          chain: { type: "string", description: "Filter by blockchain network" },
-        },
-      },
-    },
-    {
-      name: "register_webhook",
-      description: "Register a webhook endpoint for transaction lifecycle events",
-      inputSchema: {
-        type: "object",
-        properties: {
-          url: { type: "string", description: "HTTPS URL that will receive webhook callbacks" },
-          events: { type: "array", items: { type: "string" }, description: "Event types to subscribe to (e.g. transaction.completed, transaction.failed)" },
-          secret: { type: "string", description: "Optional shared secret for signature verification" },
-        },
-        required: ["url", "events"],
+        required: ["id", "status"],
       },
     },
   ],
@@ -331,73 +307,51 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
+  const a = (args ?? {}) as Record<string, unknown>;
 
   try {
     switch (name) {
+      case "create_customer":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/customers", a), null, 2) }] };
+
+      case "list_customers":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", "/customers", undefined, { limit: a.limit as number, offset: a.offset as number }), null, 2) }] };
+
+      case "verify_customer":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", `/customers/${encodeURIComponent(String(a.id))}/check`), null, 2) }] };
+
+      case "get_verification_details":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/customers/${encodeURIComponent(String(a.id))}/verification-details`), null, 2) }] };
+
       case "create_wallet":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/wallets", args), null, 2) }] };
-      case "get_wallet":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/wallets/${args?.id}`), null, 2) }] };
-      case "list_wallets": {
-        const params = new URLSearchParams();
-        if (args?.currency) params.set("currency", String(args.currency));
-        if (args?.limit) params.set("limit", String(args.limit));
-        if (args?.offset) params.set("offset", String(args.offset));
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/wallets?${params}`), null, 2) }] };
-      }
-      case "create_onramp":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/onramp", args), null, 2) }] };
-      case "create_offramp":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/offramp", args), null, 2) }] };
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/wallets", a), null, 2) }] };
+
+      case "list_wallets":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", "/wallets", undefined, { limit: a.limit as number, offset: a.offset as number }), null, 2) }] };
+
+      case "create_external_account":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/external-accounts", a), null, 2) }] };
+
+      case "list_external_accounts":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", "/external-accounts", undefined, { limit: a.limit as number, offset: a.offset as number }), null, 2) }] };
+
+      case "create_quote":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/quote", a), null, 2) }] };
+
+      case "create_payin":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/payin", a), null, 2) }] };
+
+      case "create_payout":
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/payout", a), null, 2) }] };
+
       case "get_transaction":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/transactions/${args?.id}`), null, 2) }] };
-      case "list_transactions": {
-        const params = new URLSearchParams();
-        if (args?.walletId) params.set("walletId", String(args.walletId));
-        if (args?.type) params.set("type", String(args.type));
-        if (args?.status) params.set("status", String(args.status));
-        if (args?.limit) params.set("limit", String(args.limit));
-        if (args?.offset) params.set("offset", String(args.offset));
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/transactions?${params}`), null, 2) }] };
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/transactions/${encodeURIComponent(String(a.id))}`), null, 2) }] };
+
+      case "cancel_transaction": {
+        const { id, ...body } = a;
+        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("PUT", `/transactions/${encodeURIComponent(String(id))}`, body), null, 2) }] };
       }
-      case "get_exchange_rate": {
-        const params = new URLSearchParams();
-        if (args?.sourceCurrency) params.set("sourceCurrency", String(args.sourceCurrency));
-        if (args?.targetCurrency) params.set("targetCurrency", String(args.targetCurrency));
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/exchange-rates?${params}`), null, 2) }] };
-      }
-      case "create_transfer":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/transfers", args), null, 2) }] };
-      case "get_balance":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/wallets/${args?.walletId}/balance`), null, 2) }] };
-      case "submit_corporate_kyc":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/kyc/corporate", args), null, 2) }] };
-      case "get_corporate_kyc_status":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/kyc/corporate/${args?.applicationId}`), null, 2) }] };
-      case "submit_individual_kyc":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/kyc/individual", args), null, 2) }] };
-      case "get_individual_kyc_status":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/kyc/individual/${args?.applicationId}`), null, 2) }] };
-      case "add_bank_account":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/bank-accounts", args), null, 2) }] };
-      case "list_bank_accounts": {
-        const params = new URLSearchParams();
-        if (args?.currency) params.set("currency", String(args.currency));
-        if (args?.limit) params.set("limit", String(args.limit));
-        if (args?.offset) params.set("offset", String(args.offset));
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/bank-accounts?${params}`), null, 2) }] };
-      }
-      case "delete_bank_account":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("DELETE", `/bank-accounts/${args?.id}`), null, 2) }] };
-      case "simulate_swap_quote":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/swaps/quote", args), null, 2) }] };
-      case "list_supported_assets": {
-        const params = new URLSearchParams();
-        if (args?.chain) params.set("chain", String(args.chain));
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("GET", `/assets?${params}`), null, 2) }] };
-      }
-      case "register_webhook":
-        return { content: [{ type: "text", text: JSON.stringify(await unblockpayRequest("POST", "/webhooks", args), null, 2) }] };
+
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }], isError: true };
     }
@@ -420,7 +374,7 @@ async function main() {
       if (!sid && isInitializeRequest(req.body)) {
         const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
         t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-unblockpay", version: "0.2.1" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
+        const s = new Server({ name: "mcp-unblockpay", version: "0.3.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
         await t.handleRequest(req, res, req.body); return;
       }
       res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });

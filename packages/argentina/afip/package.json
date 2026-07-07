@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-afip",
-  "version": "0.2.0-alpha.2",
-  "description": "MCP server for AFIP \u2014 Argentine tax authority, electronic invoicing (Factura Electr\u00f3nica)",
+  "version": "0.2.0-alpha.3",
+  "description": "MCP server for AFIP — Argentine tax authority, electronic invoicing (Factura Electrónica)",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

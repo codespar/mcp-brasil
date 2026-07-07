@@ -1,0 +1,35 @@
+{
+  "name": "@codespar/mcp-payway",
+  "version": "0.1.0",
+  "description": "MCP server for Payway (ex-Prisma/Decidir) — Argentina's dominant card-acquiring gateway: tokenize, charge, capture, refund",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-payway": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "payway",
+    "decidir",
+    "prisma-medios-de-pago",
+    "payments",
+    "card-acquiring",
+    "argentina"
+  ],
+  "mcpName": "io.github.codespar/mcp-payway"
+}

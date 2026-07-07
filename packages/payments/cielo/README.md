@@ -116,13 +116,13 @@ Cielo provides a sandbox at `apisandbox.cieloecommerce.cielo.com.br`. Set `CIELO
 - `batch_captures` — Capture multiple pre-authorized transactions
 - `velocity_rules` — Configure velocity/anti-fraud rules
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Cielo Website](https://cielo.com.br)
 - [Cielo API Documentation](https://developercielo.github.io)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

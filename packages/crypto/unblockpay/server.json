@@ -7,22 +7,29 @@
     "source": "github",
     "subfolder": "packages/crypto/unblockpay"
   },
-  "version": "0.2.1",
+  "version": "0.3.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-unblockpay",
-      "version": "0.2.1",
+      "version": "0.3.1",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
           "name": "UNBLOCKPAY_API_KEY",
-          "description": "API key for unblockpay",
+          "description": "API key from the UnblockPay dashboard",
           "isRequired": true,
           "format": "string",
           "isSecret": true
+        },
+        {
+          "name": "UNBLOCKPAY_BASE_URL",
+          "description": "Optional API base URL. Defaults to https://api.unblockpay.com/v1. Set to https://api.sandbox.unblockpay.com/v1 to hit the sandbox.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
         }
       ]
     }
@@ -32,8 +39,8 @@
     "logoUrl": "https://logo.clearbit.com/unblockpay.com",
     "logoFallback": "https://www.google.com/s2/favicons?domain=unblockpay.com&sz=128",
     "sandbox": {
-      "available": false
+      "available": true
     },
-    "docsUrl": "https://docs.unblock.com"
+    "docsUrl": "https://docs.unblockpay.com"
   }
 }
