@@ -66,6 +66,7 @@ const BASE_URL = process.env.MALGA_SANDBOX === "false"
   : "https://sandbox-api.malga.io";
 const CLIENT_ID = process.env.MALGA_CLIENT_ID ?? "";
 const API_KEY = process.env.MALGA_API_KEY ?? "";
+const USER_AGENT = "codespar-mcp-dev-latam/mcp-malga/0.1.0";
 
 if (!CLIENT_ID || !API_KEY) {
   console.error("Error: MALGA_CLIENT_ID and MALGA_API_KEY environment variables are required.");
@@ -78,6 +79,7 @@ async function malgaRequest(method: string, path: string, body?: unknown, overri
     "X-Client-Id": CLIENT_ID,
     "X-Api-Key": overrideApiKey ?? API_KEY,
     "Content-Type": "application/json",
+    "User-Agent": USER_AGENT,
   };
   if (merchantId) headers["X-Merchant-Id"] = merchantId;
 
@@ -87,27 +89,48 @@ async function malgaRequest(method: string, path: string, body?: unknown, overri
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  const data = await response.json();
+  const text = await response.text();
+  const data = text.trim() ? parseMalgaResponseBody(text) : null;
 
   if (!response.ok) {
-    throw new Error(JSON.stringify(data));
+    throw new Error(typeof data === "string" ? data : JSON.stringify(data ?? { status: response.status }));
   }
 
   return data;
+}
+
+function parseMalgaResponseBody(text: string): unknown {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    const splitAt = trimmed.indexOf("}{");
+    if (splitAt !== -1) {
+      try {
+        return JSON.parse(trimmed.slice(0, splitAt + 1));
+      } catch {
+        /* fall through */
+      }
+    }
+    throw new Error(trimmed);
+  }
 }
 
 async function malgaMultipartRequest(method: string, path: string, form: FormData, merchantId?: string) {
   const headers: Record<string, string> = {
     "X-Client-Id": CLIENT_ID,
     "X-Api-Key": API_KEY,
+    "User-Agent": USER_AGENT,
   };
   if (merchantId) headers["X-Merchant-Id"] = merchantId;
 
   const response = await fetch(`${BASE_URL}${path}`, { method, headers, body: form });
-  const data = await response.json();
+  const text = await response.text();
+  const data = parseMalgaResponseBody(text);
 
   if (!response.ok) {
-    throw new Error(JSON.stringify(data));
+    throw new Error(typeof data === "string" ? data : JSON.stringify(data));
   }
 
   return data;
@@ -218,6 +241,79 @@ const DOCUMENT_SCHEMA = {
     country: { type: "string", description: "ISO country code (e.g. BR)", default: "BR" },
   },
   required: ["type", "number"],
+};
+
+const FRAUD_ANALYSIS_ADDRESS_SCHEMA = {
+  type: "object",
+  properties: {
+    street: { type: "string" },
+    number: { type: "string" },
+    complement: { type: "string" },
+    zipCode: { type: "string" },
+    country: { type: "string", description: "ISO country code (e.g. BR)" },
+    state: { type: "string" },
+    district: { type: "string" },
+    city: { type: "string" },
+  },
+};
+
+const FRAUD_ANALYSIS_SCHEMA = {
+  type: "object",
+  description:
+    "Antifraud payload (optional). SANDBOX — last digit of customer.identity: 0=Pending | 1=Approved | 2=Failed | other=Rejected. See get_sandbox_guide.",
+  properties: {
+    sla: { type: "number", description: "Max analysis SLA in minutes (optional)" },
+    customer: {
+      type: "object",
+      description: "Buyer data for antifraud. identity last digit drives sandbox status.",
+      properties: {
+        name: { type: "string" },
+        email: { type: "string" },
+        phone: { type: "string" },
+        identity: {
+          type: "string",
+          description: "Document number. SANDBOX — last digit controls antifraud status (0/1/2/other).",
+        },
+        identityType: { type: "string", description: "Document type (e.g. CPF, CNPJ)" },
+        registrationDate: { type: "string", description: "ISO 8601 registration date" },
+        billingAddress: { ...FRAUD_ANALYSIS_ADDRESS_SCHEMA, description: "Billing address" },
+        deliveryAddress: { ...FRAUD_ANALYSIS_ADDRESS_SCHEMA, description: "Delivery address" },
+        browser: {
+          type: "object",
+          properties: {
+            browserFingerprint: { type: "string" },
+            cookiesAccepted: { type: "boolean" },
+            email: { type: "string" },
+            hostName: { type: "string" },
+            ipAddress: { type: "string" },
+            type: { type: "string", description: "Browser name (e.g. Chrome)" },
+          },
+        },
+      },
+    },
+    cart: {
+      type: "object",
+      description: "Cart details for antifraud",
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              quantity: { type: "integer" },
+              sku: { type: "string" },
+              unitPrice: { type: "integer", description: "Unit price in cents" },
+              risk: { type: "string", enum: ["High", "Low"] },
+              description: { type: "string" },
+              categoryId: { type: "string" },
+            },
+            required: ["name", "quantity", "unitPrice", "risk"],
+          },
+        },
+      },
+    },
+  },
 };
 
 const PAYMENT_METHOD_ONEOF = [
@@ -425,6 +521,7 @@ const TOOLS = [
           description: "Payment source (card data, token, customer, etc.). Choose ONE of the variants below.",
           oneOf: PAYMENT_SOURCE_ONEOF,
         },
+        fraudAnalysis: FRAUD_ANALYSIS_SCHEMA,
       },
       required: ["merchantId", "amount", "currency", "paymentMethod", "paymentSource"],
     },
@@ -736,13 +833,13 @@ const TOOLS = [
   },
   {
     name: "create_settings",
-    description: "Create payment link branding settings. Uses multipart/form-data (required by the API). Pass logo via logoPath or logoBase64+logoFilename (.png/.jpg, max 1000px). Without merchantId, creates the client default.",
+    description: "Create payment link branding settings. Uses multipart/form-data. REQUIRED: pass a logo via logoPath or logoBase64+logoFilename (.png/.jpg, max 1000px) — the API rejects POST /v1/settings without a file. Without merchantId, creates the client default.",
     inputSchema: {
       type: "object",
       properties: {
         ...SETTINGS_PROPERTIES_SCHEMA,
-        logoPath: { type: "string", description: "Local path to logo image (.png or .jpg, max 1000px). Alternative to logoBase64." },
-        logoBase64: { type: "string", description: "Base64-encoded logo image. Use with logoFilename." },
+        logoPath: { type: "string", description: "Local path to logo image (.png or .jpg, max 1000px). Alternative to logoBase64. Required unless logoBase64 is set." },
+        logoBase64: { type: "string", description: "Base64-encoded logo image. Use with logoFilename. Required unless logoPath is set." },
         logoFilename: { type: "string", description: "Filename for logoBase64 upload (e.g. logo.png). Defaults to logo.png." },
       },
       required: [],
@@ -790,6 +887,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (a.description) body.description = a.description;
         if (a.orderId) body.orderId = a.orderId;
         if (a.customerId) body.customerId = a.customerId;
+        if (a.fraudAnalysis) body.fraudAnalysis = a.fraudAnalysis;
         return { content: [{ type: "text", text: JSON.stringify(await malgaRequest("POST", "/v1/charges", body), null, 2) }] };
       }
 
@@ -850,10 +948,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           })) as { tokenId: string };
           tokenId = token.tokenId;
         }
-        return { content: [{ type: "text", text: JSON.stringify(await malgaRequest("POST", "/v1/cards", {
-          customerId: a.customerId,
-          tokenId,
-        }), null, 2) }] };
+        const card = (await malgaRequest("POST", "/v1/cards", { tokenId })) as { id?: string };
+        const customerId = a.customerId as string | undefined;
+        if (customerId && card.id) {
+          await malgaRequest("POST", `/v1/customers/${customerId}/cards`, { cardId: card.id });
+          const linked = await malgaRequest("GET", `/v1/cards/${card.id}`);
+          return { content: [{ type: "text", text: JSON.stringify(linked, null, 2) }] };
+        }
+        return { content: [{ type: "text", text: JSON.stringify(card, null, 2) }] };
       }
 
       case "get_card":
@@ -933,10 +1035,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await malgaRequest("GET", "/v1/settings", undefined, undefined, a.merchantId as string | undefined), null, 2) }] };
 
       case "create_settings": {
+        if (!a.logoPath && !a.logoBase64) {
+          throw new Error(
+            "create_settings requires a logo (logoPath or logoBase64). The Malga API rejects POST /v1/settings without a file upload (returns concatenated JSON errors)."
+          );
+        }
         const form = new FormData();
         const fields = buildSettingsTextFields(a);
         for (const [key, value] of Object.entries(fields)) form.append(key, value);
         appendSettingsLogo(form, a);
+        if (!form.has("logo")) {
+          throw new Error("Failed to attach logo — check logoPath exists or logoBase64 is valid base64");
+        }
         return { content: [{ type: "text", text: JSON.stringify(await malgaMultipartRequest("POST", "/v1/settings", form, a.merchantId as string | undefined), null, 2) }] };
       }
 
