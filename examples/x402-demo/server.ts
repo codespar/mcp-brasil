@@ -1,10 +1,17 @@
 /**
- * x402 Demo Server — Express with 402 paywall on Base Sepolia
+ * x402 Demo Server — Express with 402 paywall on Base (mainnet or Sepolia)
  *
  * This server protects endpoints with micropayment paywalls.
  * When an agent (or any HTTP client) hits a protected endpoint,
  * it receives HTTP 402 with payment instructions. The x402 client
- * automatically pays USDC on Base Sepolia and retries.
+ * automatically pays USDC on Base and retries.
+ *
+ * Network is env-driven:
+ *   X402_NETWORK=eip155:8453   -> Base MAINNET (real USDC). Requires
+ *     CDP_API_KEY_ID + CDP_API_KEY_SECRET: mainnet verify/settle goes through
+ *     the Coinbase CDP facilitator (the public x402.org facilitator is
+ *     Sepolia-only).
+ *   unset / eip155:84532       -> Base Sepolia (faucet USDC), public facilitator.
  *
  * Run: npx tsx server.ts
  */
@@ -14,13 +21,26 @@ import express from "express";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
+import { facilitator as cdpFacilitator } from "@coinbase/x402";
 
 config();
 
 const serverAddress = process.env.SERVER_ADDRESS as `0x${string}`;
-const facilitatorUrl = process.env.FACILITATOR_URL || "https://x402.org/facilitator";
+const network = (process.env.X402_NETWORK || "eip155:84532") as `eip155:${string}`;
+const isMainnet = network === "eip155:8453";
 
-const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
+// Mainnet verify/settle requires the CDP facilitator (authenticated).
+// Testnet keeps the public facilitator (overridable via FACILITATOR_URL).
+const facilitatorClient = isMainnet
+  ? new HTTPFacilitatorClient(cdpFacilitator)
+  : new HTTPFacilitatorClient({
+      url: process.env.FACILITATOR_URL || "https://x402.org/facilitator",
+    });
+
+if (isMainnet && (!process.env.CDP_API_KEY_ID || !process.env.CDP_API_KEY_SECRET)) {
+  console.error("X402_NETWORK is mainnet but CDP_API_KEY_ID/CDP_API_KEY_SECRET are missing.");
+  process.exit(1);
+}
 
 const app = express();
 
@@ -32,7 +52,7 @@ app.use(
         accepts: {
           scheme: "exact",
           price: "$0.001",
-          network: "eip155:84532", // Base Sepolia
+          network,
           payTo: serverAddress,
         },
         description: "Real-time market data feed",
@@ -42,23 +62,25 @@ app.use(
         accepts: {
           scheme: "exact",
           price: "$0.01",
-          network: "eip155:84532",
+          network,
           payTo: serverAddress,
         },
         description: "Premium AI-powered market analysis",
         mimeType: "application/json",
       },
     },
-    new x402ResourceServer(facilitatorClient).register(
-      "eip155:84532",
-      new ExactEvmScheme()
-    ),
+    new x402ResourceServer(facilitatorClient).register(network, new ExactEvmScheme()),
   ),
 );
 
 // Free endpoint (no paywall)
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", protocol: "x402", network: "base-sepolia" });
+  res.json({
+    status: "ok",
+    protocol: "x402",
+    network: isMainnet ? "base" : "base-sepolia",
+    chain: network,
+  });
 });
 
 // Paywalled endpoints
@@ -91,7 +113,8 @@ app.get("/api/premium-analysis", (_req, res) => {
 const PORT = Number(process.env.PORT) || 4021;
 app.listen(PORT, () => {
   console.log(`\n  x402 Demo Server running on http://localhost:${PORT}`);
-  console.log(`  Network: Base Sepolia (eip155:84532)`);
+  console.log(`  Network: ${isMainnet ? "Base MAINNET (real USDC)" : "Base Sepolia"} (${network})`);
+  console.log(`  Facilitator: ${isMainnet ? "Coinbase CDP (authenticated)" : "public x402.org"}`);
   console.log(`  Payee: ${serverAddress}\n`);
   console.log(`  Endpoints:`);
   console.log(`    GET /api/health           — free`);

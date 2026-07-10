@@ -8,6 +8,7 @@
     "client": "tsx client.ts"
   },
   "dependencies": {
+    "@coinbase/x402": "^2.1.0",
     "@x402/core": "^2.9.0",
     "@x402/evm": "^2.9.0",
     "@x402/express": "^2.9.0",
