@@ -50,12 +50,8 @@
  * Docs: https://docs.malga.io
  */
 
-import { readFileSync } from "node:fs";
-import { basename } from "node:path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -156,17 +152,10 @@ function buildSettingsTextFields(a: Record<string, unknown>): Record<string, str
 }
 
 function appendSettingsLogo(form: FormData, a: Record<string, unknown>) {
-  if (a.logoPath) {
-    const path = String(a.logoPath);
-    const buf = readFileSync(path);
-    form.append("logo", new Blob([buf]), basename(path));
-    return;
-  }
-  if (a.logoBase64) {
-    const filename = String(a.logoFilename ?? "logo.png");
-    const buf = Buffer.from(String(a.logoBase64), "base64");
-    form.append("logo", new Blob([buf]), filename);
-  }
+  if (!a.logoBase64) return;
+  const filename = String(a.logoFilename ?? "logo.png");
+  const buf = Buffer.from(String(a.logoBase64), "base64");
+  form.append("logo", new Blob([buf]), filename);
 }
 
 const SETTINGS_PROPERTIES_SCHEMA = {
@@ -833,13 +822,12 @@ const TOOLS = [
   },
   {
     name: "create_settings",
-    description: "Create payment link branding settings. Uses multipart/form-data. REQUIRED: pass a logo via logoPath or logoBase64+logoFilename (.png/.jpg, max 1000px) — the API rejects POST /v1/settings without a file. Without merchantId, creates the client default.",
+    description: "Create payment link branding settings. Uses multipart/form-data. REQUIRED: pass logoBase64+logoFilename (.png/.jpg, max 1000px) — the API rejects POST /v1/settings without a file. Without merchantId, creates the client default.",
     inputSchema: {
       type: "object",
       properties: {
         ...SETTINGS_PROPERTIES_SCHEMA,
-        logoPath: { type: "string", description: "Local path to logo image (.png or .jpg, max 1000px). Alternative to logoBase64. Required unless logoBase64 is set." },
-        logoBase64: { type: "string", description: "Base64-encoded logo image. Use with logoFilename. Required unless logoPath is set." },
+        logoBase64: { type: "string", description: "Base64-encoded logo image (.png or .jpg, max 1000px). Required for create_settings." },
         logoFilename: { type: "string", description: "Filename for logoBase64 upload (e.g. logo.png). Defaults to logo.png." },
       },
       required: [],
@@ -852,8 +840,7 @@ const TOOLS = [
       type: "object",
       properties: {
         ...SETTINGS_PROPERTIES_SCHEMA,
-        logoPath: { type: "string", description: "Local path to logo image. When set, request uses multipart/form-data." },
-        logoBase64: { type: "string", description: "Base64-encoded logo. When set (with or without text fields), request uses multipart/form-data." },
+        logoBase64: { type: "string", description: "Base64-encoded logo (.png or .jpg). When set (with or without text fields), request uses multipart/form-data." },
         logoFilename: { type: "string", description: "Filename for logoBase64 upload (e.g. logo.png). Defaults to logo.png." },
       },
       required: [],
@@ -1035,9 +1022,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(await malgaRequest("GET", "/v1/settings", undefined, undefined, a.merchantId as string | undefined), null, 2) }] };
 
       case "create_settings": {
-        if (!a.logoPath && !a.logoBase64) {
+        if (!a.logoBase64) {
           throw new Error(
-            "create_settings requires a logo (logoPath or logoBase64). The Malga API rejects POST /v1/settings without a file upload (returns concatenated JSON errors)."
+            "create_settings requires logoBase64. The Malga API rejects POST /v1/settings without a file upload (returns concatenated JSON errors)."
           );
         }
         const form = new FormData();
@@ -1045,14 +1032,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         for (const [key, value] of Object.entries(fields)) form.append(key, value);
         appendSettingsLogo(form, a);
         if (!form.has("logo")) {
-          throw new Error("Failed to attach logo — check logoPath exists or logoBase64 is valid base64");
+          throw new Error("Failed to attach logo — check logoBase64 is valid base64");
         }
         return { content: [{ type: "text", text: JSON.stringify(await malgaMultipartRequest("POST", "/v1/settings", form, a.merchantId as string | undefined), null, 2) }] };
       }
 
       case "update_settings": {
         const merchantId = a.merchantId as string | undefined;
-        const hasLogo = Boolean(a.logoPath || a.logoBase64);
+        const hasLogo = Boolean(a.logoBase64);
         if (hasLogo) {
           const form = new FormData();
           const fields = buildSettingsTextFields(a);
@@ -1079,32 +1066,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
-  if (process.argv.includes("--http") || process.env.MCP_HTTP === "true") {
-    const { default: express } = await import("express");
-    const { randomUUID } = await import("node:crypto");
-    const app = express();
-    app.use(express.json());
-    const transports = new Map<string, StreamableHTTPServerTransport>();
-    app.get("/health", (_req: any, res: any) => res.json({ status: "ok", sessions: transports.size }));
-    app.post("/mcp", async (req: any, res: any) => {
-      const sid = req.headers["mcp-session-id"] as string | undefined;
-      if (sid && transports.has(sid)) { await transports.get(sid)!.handleRequest(req, res, req.body); return; }
-      if (!sid && isInitializeRequest(req.body)) {
-        const t = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID(), onsessioninitialized: (id) => { transports.set(id, t); } });
-        t.onclose = () => { if (t.sessionId) transports.delete(t.sessionId); };
-        const s = new Server({ name: "mcp-malga", version: "0.1.0" }, { capabilities: { tools: {} } }); (server as any)._requestHandlers.forEach((v: any, k: any) => (s as any)._requestHandlers.set(k, v)); (server as any)._notificationHandlers?.forEach((v: any, k: any) => (s as any)._notificationHandlers.set(k, v)); await s.connect(t);
-        await t.handleRequest(req, res, req.body); return;
-      }
-      res.status(400).json({ jsonrpc: "2.0", error: { code: -32000, message: "Bad Request" }, id: null });
-    });
-    app.get("/mcp", async (req: any, res: any) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
-    app.delete("/mcp", async (req: any, res: any) => { const sid = req.headers["mcp-session-id"] as string; if (sid && transports.has(sid)) await transports.get(sid)!.handleRequest(req, res); else res.status(400).send("Invalid session"); });
-    const port = Number(process.env.MCP_PORT) || 3000;
-    app.listen(port, () => { console.error(`MCP HTTP server on http://localhost:${port}/mcp`); });
-  } else {
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-  }
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
 }
 
 main().catch(console.error);

@@ -133,7 +133,7 @@ Customize checkout/payment link appearance via `GET/POST/PATCH /v1/settings`:
 - **GET:** with `merchantId`, returns merchant config or falls back to client default.
 - **POST/PATCH:** exact scope only (no fallback).
 - **Branding fields:** `mainColor`, `secondaryColor`, `attentionColor`, `errorColor`, `successColor`, `backgroundColor`, `companyUrl`, `mastercardClickToPayDpaid`, and optional logo.
-- **Logo upload:** pass `logoPath` (local file) or `logoBase64` + `logoFilename` (.png/.jpg, max 1000px).
+- **Logo upload:** pass `logoBase64` + `logoFilename` (.png/.jpg, max 1000px).
 - **PATCH:** empty strings are ignored; API returns `422` if no effective fields are sent.
 
 Reference: [Malga Settings API](https://docs.malga.io/api-reference/settings/recuperar-configuracao-de-link-de-pagamento)
