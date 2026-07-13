@@ -15,7 +15,7 @@
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
+    "@types/node": "^22.0.0",
     "typescript": "^5.8.0"
   },
   "keywords": ["mcp", "malga", "payments", "pix", "boleto", "brazil"],
