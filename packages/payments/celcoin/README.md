@@ -64,13 +64,13 @@ Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
 | `create_pix_cobv` | Create a Pix due charge (cobv) — boleto-like Pix with due date |
 | `lookup_pix_dict` | Lookup a Pix DICT key — resolves a Pix key to account holder + bank info |
 | `create_pix_devolution` | Create a Pix devolução (refund) — refund a received Pix transaction |
-| `cancel_boleto` | Cancel an issued boleto by transactionId |
-| `read_barcode` | Read a boleto / concessionária barcode (digitable line) — returns due date, amount, beneficiary |
-| `pay_bill` | Pay a bill (boleto bancário or concessionária) by barcode / digitable line |
+| `cancel_boleto` | Cancel a boleto issued via the bill-issuance product by id |
+| `read_barcode` | Authorize (consult) a boleto / concessionária barcode before paying — returns transactionId, amount, totalUpdated, dueDate |
+| `pay_bill` | Confirm payment of a previously authorized bill — pass the read_barcode transactionId as transactionIdAuthorize |
 | `get_statement` | Get account statement (extrato) for a date range |
 | `list_topup_providers` | List telecom top-up providers (operadoras) available for recargas |
-| `create_boleto` | Create a boleto payment via Celcoin |
-| `get_boleto` | Get boleto details by transaction ID |
+| `create_boleto` | Issue a boleto via the bill-issuance product |
+| `get_boleto` | Get an issued boleto's details by id |
 | `create_transfer` | Create a bank transfer (TED/DOC) via Celcoin |
 | `get_balance` | Get account balance at Celcoin |
 | `list_banks` | List available banks in Brazil (ISPB codes) |
@@ -82,7 +82,7 @@ Celcoin uses OAuth2 client credentials. The server automatically manages token r
 
 ## Sandbox / Testing
 
-Celcoin provides a sandbox at `sandbox-api.celcoin.com.br`. Set `CELCOIN_SANDBOX=true` to use it.
+Celcoin provides a sandbox at `sandbox.openfinance.celcoin.dev`. Set `CELCOIN_SANDBOX=true` to use it.
 
 ### Get your credentials
 
@@ -112,13 +112,13 @@ Celcoin provides a sandbox at `sandbox-api.celcoin.com.br`. Set `CELCOIN_SANDBOX
 - `batch_topups` — Process multiple mobile top-ups
 - `detailed_reports` — Generate detailed transaction reports
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Celcoin Website](https://celcoin.com.br)
 - [Celcoin API Documentation](https://docs.celcoin.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

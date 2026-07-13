@@ -1,0 +1,36 @@
+{
+  "name": "@codespar/mcp-clip",
+  "version": "0.1.0",
+  "description": "MCP server for Clip (PayClip) — Mexico's leading native acquirer: payment links, card charges, refunds",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-clip": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "clip",
+    "payclip",
+    "payments",
+    "acquirer",
+    "payment-link",
+    "checkout",
+    "mexico"
+  ],
+  "mcpName": "io.github.codespar/mcp-clip"
+}

@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-mercado-pago",
-  "version": "0.2.1",
-  "description": "MCP server for Mercado Pago \u2014 payments, checkout, PIX, refunds for LATAM",
+  "version": "0.2.2",
+  "description": "MCP server for Mercado Pago — payments, checkout, PIX, refunds for LATAM",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

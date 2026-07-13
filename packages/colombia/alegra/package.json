@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-alegra",
-  "version": "0.2.1",
-  "description": "MCP server for Alegra \u2014 cloud accounting for LATAM (Colombian-founded)",
+  "version": "0.2.2",
+  "description": "MCP server for Alegra — cloud accounting for LATAM (Colombian-founded)",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

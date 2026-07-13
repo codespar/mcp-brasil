@@ -132,13 +132,13 @@ Every Chargebee account includes a free **test site** (`<your-site>-test.chargeb
 - `retrieve_quote` / `convert_quote`
 - Revenue reporting helpers
 
-Want a tool sooner? [Open an issue](https://github.com/codespar/mcp-dev-brasil/issues) or [PR](https://github.com/codespar/mcp-dev-brasil).
+Want a tool sooner? [Open an issue](https://github.com/codespar/mcp-dev-latam/issues) or [PR](https://github.com/codespar/mcp-dev-latam).
 
 ## Links
 
 - [Chargebee website](https://www.chargebee.com)
 - [Chargebee API docs](https://apidocs.chargebee.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing page](https://codespar.dev/mcp)
 
 ## Enterprise

@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-mercado-libre",
-  "version": "0.2.1",
-  "description": "MCP server for Mercado Libre \u2014 LATAM marketplace, product search, orders, sellers",
+  "version": "0.2.2",
+  "description": "MCP server for Mercado Libre — LATAM marketplace, product search, orders, sellers",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

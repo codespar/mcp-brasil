@@ -111,13 +111,13 @@ Circle provides a sandbox at `api-sandbox.circle.com`. Use a sandbox API key for
 - `smart_contract_calls` — Execute smart contract calls
 - `cross_chain_transfers` — Transfer assets across blockchains
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Circle Website](https://circle.com)
 - [Circle API Documentation](https://developers.circle.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-shopify",
-  "description": "MCP server for Shopify — global ecommerce platform Admin REST API (orders, products, customers, inventory, fulfillments, webhooks)",
+  "description": "MCP server for Shopify — Admin REST API (orders, products, customers, inventory, fulfillments)",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
     "subfolder": "packages/ecommerce/shopify"
   },
-  "version": "0.2.1",
+  "version": "0.2.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-shopify",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "transport": {
         "type": "stdio"
       },

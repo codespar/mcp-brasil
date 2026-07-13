@@ -116,13 +116,13 @@ PagSeguro provides a sandbox at `sandbox.api.pagseguro.com`. Set `PAGSEGURO_SAND
 - `get_installments` — Get installment options for a payment
 - `batch_refunds` — Process multiple refunds in a single request
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [PagBank Website](https://pagseguro.uol.com.br)
 - [PagBank API Documentation](https://developer.pagbank.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

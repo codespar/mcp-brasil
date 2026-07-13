@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-khipu",
-  "description": "MCP server for Khipu — Chilean instant bank-transfer payments (complement to Transbank card acquiring)",
+  "description": "MCP server for Khipu — Chilean instant bank-transfer payments (complements Transbank cards)",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
     "subfolder": "packages/payments/khipu"
   },
-  "version": "0.2.0-alpha.2",
+  "version": "0.2.0-alpha.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-khipu",
-      "version": "0.2.0-alpha.2",
+      "version": "0.2.0-alpha.3",
       "transport": {
         "type": "stdio"
       },

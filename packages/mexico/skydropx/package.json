@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-skydropx",
-  "version": "0.2.1",
-  "description": "MCP server for Skydropx \u2014 Mexican multi-carrier shipping aggregator",
+  "version": "0.2.2",
+  "description": "MCP server for Skydropx — Mexican multi-carrier shipping aggregator",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

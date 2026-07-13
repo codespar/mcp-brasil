@@ -1,0 +1,41 @@
+{
+  "name": "@codespar/mcp-kushki",
+  "version": "0.1.0",
+  "description": "MCP server for Kushki — omnichannel LATAM PSP: card charges, preauth/capture, PSE/SPEI transfer-in, cash, subscriptions",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-kushki": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "kushki",
+    "payments",
+    "psp",
+    "pse",
+    "spei",
+    "cash",
+    "subscriptions",
+    "mexico",
+    "colombia",
+    "chile",
+    "peru",
+    "ecuador"
+  ],
+  "mcpName": "io.github.codespar/mcp-kushki"
+}

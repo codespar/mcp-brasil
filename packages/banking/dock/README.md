@@ -143,13 +143,13 @@ PR welcome from anyone with a Dock sandbox.
 - TED / bank transfers (non-Pix rails)
 - Credit underwriting endpoints (Dock's credit stack)
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Dock](https://www.dock.tech)
 - [Dock Developers](https://developers.dock.tech) (gated — requires merchant login)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

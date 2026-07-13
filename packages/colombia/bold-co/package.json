@@ -1,0 +1,36 @@
+{
+  "name": "@codespar/mcp-bold-co",
+  "version": "0.1.0",
+  "description": "MCP server for Bold — Colombian acquirer: payment links for cards, PSE, Nequi and Botón Bancolombia",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-bold-co": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "bold",
+    "payments",
+    "payment-links",
+    "pse",
+    "nequi",
+    "cards",
+    "colombia"
+  ],
+  "mcpName": "io.github.codespar/mcp-bold-co"
+}

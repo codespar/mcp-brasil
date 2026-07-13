@@ -112,13 +112,13 @@ Sandbox availability varies by institution. Contact your financial institution f
 - `insurance_products` — List insurance products from institutions
 - `pension_products` — List pension products from institutions
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Open Finance Brasil](https://openfinancebrasil.org.br)
 - [Open Finance Brasil Developer Portal](https://openfinancebrasil.atlassian.net)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

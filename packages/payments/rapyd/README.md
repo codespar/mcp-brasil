@@ -2,7 +2,7 @@
 
 MCP server for [Rapyd](https://rapyd.net) — global collect + disburse across 100+ countries.
 
-Rapyd is the global counterpart to [dLocal](https://github.com/codespar/mcp-dev-brasil/tree/main/packages/payments/dlocal). Where dLocal is LatAm-deep (15+ countries, Pix/OXXO/PSE/SPEI), Rapyd is worldwide-wide: Asia, Africa, Europe, the Middle East, and LatAm via a single API — and crucially covers two categories dLocal doesn't:
+Rapyd is the global counterpart to [dLocal](https://github.com/codespar/mcp-dev-latam/tree/main/packages/payments/dlocal). Where dLocal is LatAm-deep (15+ countries, Pix/OXXO/PSE/SPEI), Rapyd is worldwide-wide: Asia, Africa, Europe, the Middle East, and LatAm via a single API — and crucially covers two categories dLocal doesn't:
 
 - **Cash pickup** — OXXO Pay, 7-Eleven, and country-specific cash networks for unbanked recipients
 - **Managed wallets** — the merchant holds a master account and provisions sub-wallets per end user (marketplace balances, creator payouts, cross-border P2P without opening a bank account per user)

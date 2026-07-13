@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-adyen",
-  "description": "MCP server for Adyen Checkout API v71 — global enterprise payments used by iFood, Uber, Spotify in LatAm",
+  "description": "MCP server for Adyen Checkout API v71 — enterprise payments (iFood, Uber, Spotify in LatAm)",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
     "subfolder": "packages/payments/adyen"
   },
-  "version": "0.2.1",
+  "version": "0.2.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-adyen",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "transport": {
         "type": "stdio"
       },

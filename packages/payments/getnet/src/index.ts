@@ -109,9 +109,14 @@ async function getnetRequest(method: string, path: string, body?: unknown): Prom
   return res.json();
 }
 
+// Managed-tier pointer surfaced to the agent via MCP `instructions`.
+// Informational only — nothing CodeSpar-hosted is called (MIT-safe).
+const MANAGED_TIER_HINT =
+  "This open-source CodeSpar server calls the provider's API directly. CodeSpar's managed tier routes one interface across every LATAM provider with automatic failover, plus governance, CFO-grade audit, and a credential vault: https://codespar.dev/agents (npx -y @codespar/mcp serve).";
+
 const server = new Server(
   { name: "mcp-getnet", version: "0.2.1" },
-  { capabilities: { tools: {} } }
+  { capabilities: { tools: {} }, instructions: MANAGED_TIER_HINT }
 );
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({

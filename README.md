@@ -5,7 +5,10 @@
     <em>Brazil 🇧🇷 · Mexico 🇲🇽 · Argentina 🇦🇷 · Colombia 🇨🇴 · Chile 🇨🇱 · Peru 🇵🇪 · plus 4 agentic payment protocols.</em>
   </p>
   <p align="center">
-    109 MCP servers · 2,289 tools · 6 countries · MIT License
+    127 MCP servers for LATAM commerce · live in the official MCP Registry · MIT License
+  </p>
+  <p align="center">
+    <em>Live machine-readable count: <a href="https://codespar.dev/api/servers">codespar.dev/api/servers</a></em>
   </p>
   <p align="center">
     <a href="https://codespar.dev/servers">Catalog</a> ·
@@ -16,8 +19,7 @@
   </p>
   <p align="center">
     <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
-    <img src="https://img.shields.io/badge/servers-109-green" alt="109 servers">
-    <img src="https://img.shields.io/badge/tools-2,289-orange" alt="2289 tools">
+    <img src="https://img.shields.io/badge/MCP_Registry-live-green" alt="Live in the official MCP Registry">
     <img src="https://img.shields.io/badge/countries-6-blue" alt="6 countries">
     <img src="https://img.shields.io/badge/MCP-compatible-purple" alt="MCP compatible">
   </p>
@@ -195,7 +197,7 @@ To orchestrate all six steps with governance, approval workflows, and audit trai
 
 Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers). Each server has its own README, env-var requirements, and tool reference under `packages/<category>/<slug>/`.
 
-### 💳 Payments (40 servers)
+### 💳 Payments (41 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -223,6 +225,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Worldpay](packages/payments/worldpay)** <sub>alpha</sub> | 22 | `@codespar/mcp-worldpay` | API Key |
 | **[Khipu](packages/payments/khipu)** <sub>alpha</sub> | 21 | `@codespar/mcp-khipu` | API Key |
 | **[Stone](packages/payments/stone)** | 21 | `@codespar/mcp-stone` | API Key |
+| **[Malga](packages/payments/malga)** | 24 | `@codespar/mcp-malga` | API Key |
 | **[Wise](packages/payments/wise)** | 21 | `@codespar/mcp-wise` | API Key |
 | **[Airwallex](packages/payments/airwallex)** | 20 | `@codespar/mcp-airwallex` | OAuth2 |
 | **[Culqi](packages/payments/culqi)** | 20 | `@codespar/mcp-culqi` | API Key |
@@ -279,7 +282,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Take Blip](packages/communication/take-blip)** | 18 | `@codespar/mcp-take-blip` | API Key |
 | **[Zenvia](packages/communication/zenvia)** | 18 | `@codespar/mcp-zenvia` | API Key |
 
-### 📦 E-commerce / Logistics (6 servers)
+### 📦 E-commerce / Logistics (7 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -289,6 +292,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Shopee](packages/ecommerce/shopee)** <sub>alpha</sub> | 22 | `@codespar/mcp-shopee` | API Key |
 | **[Correios](packages/ecommerce/correios)** <sub>alpha</sub> | 21 | `@codespar/mcp-correios` | API Key |
 | **[Melhor Envio](packages/ecommerce/melhor-envio)** | 18 | `@codespar/mcp-melhor-envio` | API Key |
+| **[SuperFrete](packages/ecommerce/superfrete)** | 11 | `@codespar/mcp-superfrete` | API Key |
 
 ### 📊 ERP / Accounting (5 servers)
 
@@ -328,7 +332,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Bitso](packages/crypto/bitso)** | 20 | `@codespar/mcp-bitso` | API Key |
 | **[Mercado Bitcoin](packages/crypto/mercado-bitcoin)** | 20 | `@codespar/mcp-mercado-bitcoin` | API Key |
 | **[Moonpay](packages/crypto/moonpay)** | 20 | `@codespar/mcp-moonpay` | API Key |
-| **[Unblockpay](packages/crypto/unblockpay)** | 20 | `@codespar/mcp-unblockpay` | API Key |
+| **[Unblockpay](packages/crypto/unblockpay)** | 13 | `@codespar/mcp-unblockpay` | API Key |
 | **[Coinbase Commerce](packages/crypto/coinbase-commerce)** | 18 | `@codespar/mcp-coinbase-commerce` | API Key |
 | **[Transak](packages/crypto/transak)** <sub>alpha</sub> | 18 | `@codespar/mcp-transak` | API Key |
 | **[x402](packages/crypto/x402)** | 10 | `@codespar/mcp-x402` | API Key |
