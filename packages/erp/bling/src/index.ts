@@ -171,7 +171,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           dataInicial:     { type: "string",  description: "Start date (YYYY-MM-DD)" },
           dataFinal:       { type: "string",  description: "End date (YYYY-MM-DD)" },
           excludeCanceled: { type: "boolean", description: "Exclude canceled orders. Default true." },
-          page:            { type: "number",  description: "Which summary page to fetch (default 1, 100 orders/page). Increment until hasMore=false." },
+          page:            { type: "number",  description: "Which summary page to fetch (default 1). Increment until hasMore=false." },
+          pageSize:        { type: "number",  description: "Orders fetched (and detailed) per call (default 25, max 100). Lower it if a client times out on dense pages." },
         },
         required: ["dataInicial", "dataFinal"],
       },
@@ -764,21 +765,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // for the orders on it. Call repeatedly incrementing `page` until
         // hasMore=false — each call costs a single summary request, so paging a
         // large range is O(pages), not O(pages × batches).
+        if (!a.dataInicial || !a.dataFinal) {
+          throw new Error("dataInicial and dataFinal are required (YYYY-MM-DD).");
+        }
         const excludeCanceled = a.excludeCanceled !== false;
         const page            = (a.page as number) || 1;
-        const PAGE_SIZE       = 100; // Bling summary page size
+        // Orders fetched (and detailed) per call. Bounds per-call latency so a
+        // dense page can't blow the MCP client timeout: the detail phase runs
+        // 2-at-a-time with a 700ms gap, so ~25 orders ≈ 9s, 100 ≈ 35s.
+        const pageSize        = Math.min(Math.max(Math.trunc(Number(a.pageSize)) || 25, 1), 100);
         const DELAY           = 700; // ms between detail pairs — stays under 3 req/sec
 
         // 1. Fetch just this page of order summaries (not the whole range).
         const p = new URLSearchParams();
         p.set("pagina", String(page));
-        p.set("limite", String(PAGE_SIZE));
-        if (a.dataInicial) p.set("dataInicial", String(a.dataInicial));
-        if (a.dataFinal)   p.set("dataFinal",   String(a.dataFinal));
+        p.set("limite", String(pageSize));
+        p.set("dataInicial", String(a.dataInicial));
+        p.set("dataFinal",   String(a.dataFinal));
         const res: any = await blingRequest("GET", `/pedidos/vendas?${p}`);
         const summaries: any[] = res?.data ?? [];
         // A full page implies there may be another; a short page is the last one.
-        const hasMore = summaries.length === PAGE_SIZE;
+        const hasMore = summaries.length === pageSize;
 
         const chunk = excludeCanceled
           ? summaries.filter((o: any) => o?.situacao?.valor !== CANCELED_STATUS)
@@ -815,7 +822,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         return text({
           page,
-          pageSize: PAGE_SIZE,
+          pageSize,
           fetchedOnPage: chunk.length,
           hasMore,
           nextPage: hasMore ? page + 1 : null,

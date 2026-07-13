@@ -47,7 +47,7 @@ describe("mcp-bling", () => {
     expect(opts.headers.Authorization).toBe("Bearer test-token");
   });
 
-  it("list_orders_with_items fetches only one summary page per call (no full-range re-fetch)", async () => {
+  it("list_orders_with_items fetches only the requested summary page (no full-range re-fetch)", async () => {
     mockFetch.mockImplementation((url: string) => {
       const isSummary = String(url).includes("/pedidos/vendas?");
       const body = isSummary
@@ -62,13 +62,17 @@ describe("mcp-bling", () => {
     await callToolHandler({
       params: {
         name: "list_orders_with_items",
-        arguments: { dataInicial: "2026-01-01", dataFinal: "2026-01-31", page: 1 },
+        arguments: { dataInicial: "2026-01-01", dataFinal: "2026-01-31", page: 3 },
       },
     });
 
-    // The fix: exactly one summary request per call, not a re-pull of the whole range.
     const summaryCalls = mockFetch.mock.calls.filter(([u]: any[]) => String(u).includes("/pedidos/vendas?"));
+    const detailCalls  = mockFetch.mock.calls.filter(([u]: any[]) => /\/pedidos\/vendas\/\d+/.test(String(u)));
+    // Exactly one summary request, keyed directly by `page` (pagina=3). The old
+    // code always started its summary walk at pagina=1, so this fails on it.
     expect(summaryCalls).toHaveLength(1);
-    expect(String(summaryCalls[0][0])).toContain("pagina=1");
+    expect(String(summaryCalls[0][0])).toContain("pagina=3");
+    // Details fetched only for the two orders on that page — nothing re-pulled.
+    expect(detailCalls).toHaveLength(2);
   });
 });
