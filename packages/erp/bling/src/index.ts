@@ -5,10 +5,11 @@
  *
  * Tools:
  *  Products & catalog
- *   - list_products, create_product
+ *   - list_products, get_product, create_product
  *   - list_categories, create_category
  *  Sales
- *   - list_orders, create_order
+ *   - list_orders_with_items, list_orders, get_order, create_order
+ *   - list_order_statuses
  *  Proposals
  *   - list_proposals, get_proposal, create_proposal
  *   - update_proposal, delete_proposal, update_proposal_status
@@ -97,6 +98,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
     {
+      name: "get_product",
+      description: "Get full details of a product by ID, including variations, stock info, dimensions, pricing, and supplier data",
+      inputSchema: {
+        type: "object",
+        properties: {
+          productId: { type: "number", description: "Product ID" },
+        },
+        required: ["productId"],
+      },
+    },
+    {
       name: "create_product",
       description: "Create a product in Bling",
       inputSchema: {
@@ -148,6 +160,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
     // ---------------- Sales orders ----------------
     {
+      name: "list_orders_with_items",
+      description: "Fetch sales orders with full line items (SKUs, qty, prices) for a date range. Returns batchSize orders at a time. Check hasMore and call again with nextBatchPage until hasMore=false.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          dataInicial:     { type: "string",  description: "Start date (YYYY-MM-DD)" },
+          dataFinal:       { type: "string",  description: "End date (YYYY-MM-DD)" },
+          excludeCanceled: { type: "boolean", description: "Exclude canceled orders. Default true." },
+          batchPage:       { type: "number",  description: "Which batch to fetch (default 1). Increment until hasMore=false." },
+          batchSize:       { type: "number",  description: "Orders per batch (default 25, max 30)." },
+        },
+        required: ["dataInicial", "dataFinal"],
+      },
+    },
+    {
       name: "list_orders",
       description: "List sales orders in Bling",
       inputSchema: {
@@ -159,6 +186,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           dataInicial: { type: "string", description: "Start date (YYYY-MM-DD)" },
           dataFinal: { type: "string", description: "End date (YYYY-MM-DD)" },
         },
+      },
+    },
+    {
+      name: "get_order",
+      description: "Get a single sales order by ID, including full line items (products, SKUs, quantities, prices)",
+      inputSchema: {
+        type: "object",
+        properties: {
+          orderId: { type: "number", description: "Sales order ID" },
+        },
+        required: ["orderId"],
       },
     },
     {
@@ -505,6 +543,36 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       },
     },
 
+    // ---------------- Order statuses (Situações) ----------------
+    {
+      name: "list_order_statuses",
+      description: "Get names and details for one or more order status IDs (situações). Pass an array of IDs to resolve them all at once.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          ids: {
+            type: "array",
+            items: { type: "number" },
+            description: "Array of situacao IDs to look up, e.g. [6, 9, 12, 280721]",
+          },
+        },
+        required: ["ids"],
+      },
+    },
+
+    // ---------------- Stores (Lojas / Canais de venda) ----------------
+    {
+      name: "list_stores",
+      description: "List all stores/sales channels (lojas) in Bling, including their IDs and names",
+      inputSchema: {
+        type: "object",
+        properties: {
+          page:  { type: "number", description: "Page number" },
+          limit: { type: "number", description: "Items per page" },
+        },
+      },
+    },
+
     // ---------------- Webhooks ----------------
     {
       name: "subscribe_webhook",
@@ -673,6 +741,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (a.type) p.set("tipo", String(a.type));
         return text(await blingRequest("GET", `/produtos?${p}`));
       }
+      case "get_product":
+        return text(await blingRequest("GET", `/produtos/${a.productId}`));
       case "create_product":
         return text(await blingRequest("POST", "/produtos", a));
 
@@ -687,6 +757,82 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return text(await blingRequest("POST", "/categorias/produtos", a));
 
       // ---- Sales orders ----
+      case "list_orders_with_items": {
+        // Fetches a chunk of order details (batchPage * batchSize orders at a time).
+        // Call repeatedly incrementing batchPage until hasMore=false.
+        const excludeCanceled = a.excludeCanceled !== false;
+        const batchPage       = (a.batchPage as number) || 1;
+        const batchSize       = (a.batchSize as number) || 25;
+        const DELAY           = 700; // ms between pairs — stays under 3 req/sec
+
+        // 1. Get all order summaries (paginated list, fast)
+        const allOrders: any[] = [];
+        let page = 1;
+        while (true) {
+          const p = new URLSearchParams();
+          p.set("pagina", String(page));
+          p.set("limite", "100");
+          if (a.dataInicial) p.set("dataInicial", String(a.dataInicial));
+          if (a.dataFinal)   p.set("dataFinal",   String(a.dataFinal));
+          const res: any = await blingRequest("GET", `/pedidos/vendas?${p}`);
+          const items: any[] = res?.data ?? [];
+          if (!items.length) break;
+          allOrders.push(...items);
+          if (items.length < 100) break;
+          page++;
+          await new Promise(r => setTimeout(r, 400));
+        }
+
+        const orders = excludeCanceled
+          ? allOrders.filter((o: any) => o?.situacao?.valor !== 2)
+          : allOrders;
+
+        const totalOrders = orders.length;
+        const start   = (batchPage - 1) * batchSize;
+        const end     = Math.min(start + batchSize, totalOrders);
+        const chunk   = orders.slice(start, end);
+        const hasMore = end < totalOrders;
+
+        // 2. Fetch details for this chunk (2 at a time)
+        const results: any[] = [];
+        for (let i = 0; i < chunk.length; i += 2) {
+          const pair = chunk.slice(i, i + 2);
+          const details = await Promise.allSettled(
+            pair.map((o: any) => blingRequest("GET", `/pedidos/vendas/${o.id}`))
+          );
+          for (let j = 0; j < pair.length; j++) {
+            const order  = pair[j];
+            const detail = details[j];
+            results.push({
+              id:      order.id,
+              numero:  order.numero,
+              data:    order.data,
+              loja_id: order?.loja?.id,
+              total:   order.total,
+              itens:   detail.status === "fulfilled"
+                ? ((detail.value as any)?.data?.itens ?? []).map((it: any) => ({
+                    sku:       it.codigo || "SIN_SKU",
+                    descricao: it.descricao || "",
+                    qty:       it.quantidade,
+                    valor:     it.valor,
+                  }))
+                : [],
+            });
+          }
+          if (i + 2 < chunk.length) await new Promise(r => setTimeout(r, DELAY));
+        }
+
+        return text({
+          batchPage,
+          batchSize,
+          totalOrders,
+          fetchedRange: `${start + 1}–${end}`,
+          hasMore,
+          nextBatchPage: hasMore ? batchPage + 1 : null,
+          orders: results,
+        });
+      }
+
       case "list_orders": {
         const p = new URLSearchParams();
         if (a.page) p.set("pagina", String(a.page));
@@ -696,6 +842,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (a.dataFinal) p.set("dataFinal", String(a.dataFinal));
         return text(await blingRequest("GET", `/pedidos/vendas?${p}`));
       }
+      case "get_order":
+        return text(await blingRequest("GET", `/pedidos/vendas/${a.orderId}`));
       case "create_order":
         return text(await blingRequest("POST", "/pedidos/vendas", a));
 
@@ -806,6 +954,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (a.page) p.set("pagina", String(a.page));
         if (a.limit) p.set("limite", String(a.limit));
         return text(await blingRequest("GET", `/formas-pagamentos?${p}`));
+      }
+
+      // ---- Order statuses ----
+      case "list_order_statuses": {
+        const ids: number[] = a.ids || [];
+        const results = await Promise.allSettled(
+          ids.map((id: number) => blingRequest("GET", `/situacoes/${id}`))
+        );
+        const data = results.map((r, i) =>
+          r.status === "fulfilled"
+            ? (r.value as any)?.data
+            : { id: ids[i], error: (r.reason as Error)?.message }
+        );
+        return text({ data });
+      }
+
+      // ---- Stores ----
+      case "list_stores": {
+        const p = new URLSearchParams();
+        if (a.page)  p.set("pagina", String(a.page));
+        if (a.limit) p.set("limite", String(a.limit));
+        return text(await blingRequest("GET", `/canais-venda?${p}`));
       }
 
       // ---- Webhooks ----
