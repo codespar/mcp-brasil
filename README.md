@@ -197,7 +197,7 @@ To orchestrate all six steps with governance, approval workflows, and audit trai
 
 Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers). Each server has its own README, env-var requirements, and tool reference under `packages/<category>/<slug>/`.
 
-### 💳 Payments (40 servers)
+### 💳 Payments (41 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -225,6 +225,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Worldpay](packages/payments/worldpay)** <sub>alpha</sub> | 22 | `@codespar/mcp-worldpay` | API Key |
 | **[Khipu](packages/payments/khipu)** <sub>alpha</sub> | 21 | `@codespar/mcp-khipu` | API Key |
 | **[Stone](packages/payments/stone)** | 21 | `@codespar/mcp-stone` | API Key |
+| **[Malga](packages/payments/malga)** | 24 | `@codespar/mcp-malga` | API Key |
 | **[Wise](packages/payments/wise)** | 21 | `@codespar/mcp-wise` | API Key |
 | **[Airwallex](packages/payments/airwallex)** | 20 | `@codespar/mcp-airwallex` | OAuth2 |
 | **[Culqi](packages/payments/culqi)** | 20 | `@codespar/mcp-culqi` | API Key |

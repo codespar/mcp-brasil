@@ -1,0 +1,54 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-malga",
+  "description": "MCP server for Malga — Brazilian payments orchestrator. Single API across multiple acquirers (Cielo, Rede, Stone, Adyen) with card, Pix, and boleto support.",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-latam",
+    "source": "github",
+    "subfolder": "packages/payments/malga"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-malga",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MALGA_CLIENT_ID",
+          "description": "Tenant identifier sent as X-Client-Id header on every request.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "MALGA_API_KEY",
+          "description": "Secret key sent as X-Api-Key header on every request.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "MALGA_SANDBOX",
+          "description": "Defaults to sandbox (https://sandbox-api.malga.io). Set to \"false\" for production (https://api.malga.io).",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ],
+  "provider": {
+    "homepage": "https://malga.io",
+    "logoUrl": "https://logo.clearbit.com/malga.io",
+    "logoFallback": "https://www.google.com/s2/favicons?domain=malga.io&sz=128",
+    "docsUrl": "https://docs.malga.io",
+    "sandbox": {
+      "available": true,
+      "url": "https://sandbox-api.malga.io"
+    }
+  }
+}
