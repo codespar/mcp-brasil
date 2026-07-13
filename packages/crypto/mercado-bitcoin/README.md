@@ -111,13 +111,13 @@ Mercado Bitcoin provides a sandbox via the dashboard for testing.
 - `margin_trading` — Margin trading operations
 - `lending` — Crypto lending operations
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Mercado Bitcoin Website](https://www.mercadobitcoin.com.br)
 - [Mercado Bitcoin API Documentation](https://api.mercadobitcoin.net/api/v4/docs)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

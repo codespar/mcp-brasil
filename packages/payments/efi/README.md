@@ -112,13 +112,13 @@ EFI provides a sandbox at `pix-h.api.efipay.com.br`. Set `EFI_SANDBOX=true` to u
 - `batch_charges` — Create multiple charges in a single request
 - `split_payments` — Configure split payment rules
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [EFI Pay Website](https://efipay.com.br)
 - [Gerencianet API Documentation](https://dev.gerencianet.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

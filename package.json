@@ -1,36 +1,36 @@
 {
-  "name": "@calmessimple/mcp-bling",
-  "version": "0.3.0",
-  "description": "MCP server for Bling ERP — orders, products, invoices, stock, AR/AP, webhooks. Fork of @codespar/mcp-bling with additional tools.",
-  "type": "module",
-  "main": "./dist/index.js",
-  "bin": {
-    "mcp-bling": "./dist/index.js"
-  },
+  "name": "mcp-dev-latam",
+  "version": "0.2.0",
+  "private": true,
+  "description": "MCP servers for Latin American commerce — Brazil, Mexico, Argentina, Colombia",
+  "workspaces": [
+    "packages/payments/*",
+    "packages/identity/*",
+    "packages/fiscal/*",
+    "packages/communication/*",
+    "packages/ecommerce/*",
+    "packages/banking/*",
+    "packages/erp/*",
+    "packages/crypto/*",
+    "packages/mexico/*",
+    "packages/argentina/*",
+    "packages/colombia/*",
+    "packages/shared"
+  ],
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "start:http": "MCP_HTTP=true node dist/index.js"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "express": "^4.21.2"
+    "build": "npm run build --workspaces",
+    "test": "vitest run",
+    "audit:catalog": "python3 scripts/audit-catalog.py",
+    "audit:catalog:json": "python3 scripts/audit-catalog.py --json",
+    "audit:catalog:write": "python3 scripts/audit-catalog.py --out docs/catalog-audit.md"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.5.0",
-    "typescript": "^5.8.0",
-    "vitest": "^4.1.7"
+    "dotenv": "^16.6.1",
+    "vitest": "^3.1.1"
   },
   "license": "MIT",
-  "keywords": [
-    "mcp",
-    "bling",
-    "erp",
-    "invoices",
-    "stock",
-    "brazil",
-    "sleepCalm"
-  ],
-  "mcpName": "io.github.calmessimple/mcp-bling"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codespar/mcp-dev-latam"
+  }
 }

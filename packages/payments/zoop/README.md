@@ -120,13 +120,13 @@ Zoop provides a sandbox environment accessible via the dashboard.
 - `detailed_reports` — Generate detailed financial reports
 - `webhook_management` — Register, list, and delete webhooks
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Zoop Website](https://zoop.com.br)
 - [Zoop API Documentation](https://docs.zoop.co)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

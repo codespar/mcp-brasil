@@ -11,6 +11,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # NPM_TOKEN lives as a secret on this environment; without this line the job
+    # only sees repository-level secrets and silently used a stale token.
+    environment: "codespar / production"
     steps:
       - uses: actions/checkout@v4
 

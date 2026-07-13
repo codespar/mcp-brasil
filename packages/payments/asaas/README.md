@@ -141,13 +141,13 @@ npx -y @codespar/mcp-asaas --demo
 - `get_fiscal_info` — Get fiscal/tax information for payments
 - `batch_payments` — Create multiple payments in a single request
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Asaas Website](https://www.asaas.com)
 - [Asaas API Documentation](https://docs.asaas.com)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

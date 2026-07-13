@@ -117,13 +117,13 @@ Evolution API is self-hosted. Deploy your own instance using Docker for testing.
 - `template_messages` — Send WhatsApp Business template messages
 - `label_management` — Create, update, and assign labels to chats
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Evolution API Documentation](https://doc.evolution-api.com)
 - [Evolution API GitHub](https://github.com/EvolutionAPI/evolution-api)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

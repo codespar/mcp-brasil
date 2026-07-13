@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-izipay",
-  "description": "MCP server for Izipay — Peru's enterprise acquirer (Niubiz). Card authorize/capture/refund, tokenization, cuotas, reconciliation.",
+  "description": "MCP server for Izipay — Peru enterprise acquirer (Niubiz): authorize/capture/refund, cuotas",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
     "subfolder": "packages/payments/izipay"
   },
-  "version": "0.2.0-alpha.2",
+  "version": "0.2.0-alpha.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-izipay",
-      "version": "0.2.0-alpha.2",
+      "version": "0.2.0-alpha.3",
       "transport": {
         "type": "stdio"
       },

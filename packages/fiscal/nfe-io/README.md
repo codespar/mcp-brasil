@@ -100,7 +100,7 @@ Pass `--demo` or set `MCP_DEMO=true` to return canned responses without hitting 
 ## Links
 
 - [NFe.io REST API docs](https://nfe.io/docs/rest-api/)
-- [CodeSpar MCP Brazil catalog](https://github.com/codespar/mcp-dev-brasil)
+- [CodeSpar MCP Brazil catalog](https://github.com/codespar/mcp-dev-latam)
 
 ## Enterprise
 

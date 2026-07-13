@@ -1,18 +1,18 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.codespar/mcp-konduto",
-  "description": "MCP server for Konduto — Brazilian fraud prevention, API-first order risk scoring, behavioral device intelligence, and blocklist/allowlist/reviewlist management",
+  "description": "MCP server for Konduto — Brazilian fraud prevention: order risk scoring, device intel, lists",
   "repository": {
     "url": "https://github.com/codespar/mcp-dev-latam",
     "source": "github",
     "subfolder": "packages/fraud/konduto"
   },
-  "version": "0.2.0-alpha.2",
+  "version": "0.2.0-alpha.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@codespar/mcp-konduto",
-      "version": "0.2.0-alpha.2",
+      "version": "0.2.0-alpha.3",
       "transport": {
         "type": "stdio"
       },

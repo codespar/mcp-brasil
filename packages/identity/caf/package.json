@@ -1,6 +1,6 @@
 {
   "name": "@codespar/mcp-caf",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "MCP server for Caf — Brazilian identity + Trust Platform (KYC/KYB, face authentication + liveness, document validation + OCR, orchestrated onboarding)",
   "type": "module",
   "main": "dist/index.js",
@@ -31,5 +31,6 @@
     "trust-platform",
     "brazil",
     "onboarding"
-  ]
+  ],
+  "mcpName": "io.github.codespar/mcp-caf"
 }

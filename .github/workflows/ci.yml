@@ -18,6 +18,23 @@ jobs:
       - run: npm run build --workspaces --if-present
       - run: npm test
 
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Catalog quality gate. audit-catalog.py walks every packages/*/*/server.json
+      # and fails (exit 1) on any HIGH finding: missing required fields, a name
+      # that isn't io.github.codespar/mcp-*, a version that disagrees with
+      # package.json, or a repository.url still on the legacy mcp-dev-brasil.
+      # This is what catches drift like a bumped package.json whose server.json
+      # was left stale, before it reaches the registry.
+      - name: Catalog audit (no HIGH findings)
+        run: npm run audit:catalog
+
   security:
     runs-on: ubuntu-latest
     steps:

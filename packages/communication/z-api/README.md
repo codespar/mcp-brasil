@@ -119,13 +119,13 @@ Z-API offers a free trial for testing. Create an account to get started.
 - `template_management` — Create and manage message templates
 - `catalog_products` — Manage WhatsApp Business catalog products
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Z-API Website](https://z-api.io)
 - [Z-API Developer Documentation](https://developer.z-api.io)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

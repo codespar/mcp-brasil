@@ -131,13 +131,13 @@ AP2 provides a sandbox environment for testing. Set `AP2_SANDBOX=true` to use it
 - Multi-currency support with automatic FX
 - Integration with x402 as payment method
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [AP2 (Google)](https://developers.google.com/ap2)
 - [AP2 Specification](https://github.com/anthropic-payments/ap2-spec)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

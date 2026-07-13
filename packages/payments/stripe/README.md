@@ -151,13 +151,13 @@ Every Stripe account has test mode built in — no separate signup. Use a `sk_te
 - PaymentMethod attach / detach / list
 - Webhook event construction helper
 
-Want a tool sooner? [Open an issue](https://github.com/codespar/mcp-dev-brasil/issues) or [PR](https://github.com/codespar/mcp-dev-brasil).
+Want a tool sooner? [Open an issue](https://github.com/codespar/mcp-dev-latam/issues) or [PR](https://github.com/codespar/mcp-dev-latam).
 
 ## Links
 
 - [Stripe website](https://stripe.com)
 - [Stripe API docs](https://stripe.com/docs/api)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing page](https://codespar.dev/mcp)
 
 ## Enterprise

@@ -109,13 +109,13 @@ x402 uses a Bearer API key from a registered facilitator.
 - Multi-token support (ETH, SOL beyond USDC)
 - Streaming payments for long-running agent tasks
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [x402 Protocol (Coinbase)](https://github.com/coinbase/x402)
 - [x402 Specification](https://www.x402.org)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

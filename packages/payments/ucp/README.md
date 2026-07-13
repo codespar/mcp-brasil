@@ -82,7 +82,7 @@ AI Agent
 ## Links
 
 - [Google UCP Announcement](https://cloud.google.com/blog)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise

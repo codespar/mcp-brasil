@@ -1,6 +1,6 @@
 {
   "name": "@codespar/mcp-iniciador",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "MCP server for Iniciador — Open Finance Brasil PISP (Pix payment initiation aggregator)",
   "type": "module",
   "main": "dist/index.js",
@@ -31,5 +31,6 @@
     "pisp",
     "ofb",
     "aggregator"
-  ]
+  ],
+  "mcpName": "io.github.codespar/mcp-iniciador"
 }

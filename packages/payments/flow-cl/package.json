@@ -1,0 +1,37 @@
+{
+  "name": "@codespar/mcp-flow-cl",
+  "version": "0.1.0",
+  "description": "MCP server for Flow — Chile-native PSP: hosted payment orders (Webpay, ETpay, cash), refunds, HMAC-signed API",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-flow-cl": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "flow",
+    "flow-cl",
+    "payments",
+    "psp",
+    "webpay",
+    "etpay",
+    "chile",
+    "clp"
+  ],
+  "mcpName": "io.github.codespar/mcp-flow-cl"
+}

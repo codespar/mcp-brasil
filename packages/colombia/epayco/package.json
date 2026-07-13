@@ -1,0 +1,36 @@
+{
+  "name": "@codespar/mcp-epayco",
+  "version": "0.1.0",
+  "description": "MCP server for ePayco — Colombian gateway (Davivienda): cards, PSE, Daviplata and cash networks",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-epayco": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "epayco",
+    "payments",
+    "pse",
+    "efecty",
+    "daviplata",
+    "cards",
+    "colombia"
+  ],
+  "mcpName": "io.github.codespar/mcp-epayco"
+}

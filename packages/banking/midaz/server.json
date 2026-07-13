@@ -1,0 +1,53 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-midaz",
+  "description": "MCP server for Midaz by Lerian — self-hosted double-entry ledger: accounts, balances, transactions",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-latam",
+    "source": "github",
+    "subfolder": "packages/banking/midaz"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-midaz",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MIDAZ_BASE_URL",
+          "description": "Base URL of your self-hosted Midaz onboarding service",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "MIDAZ_TRANSACTION_URL",
+          "description": "Base URL of the Midaz transaction service. Defaults to MIDAZ_BASE_URL.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "MIDAZ_API_KEY",
+          "description": "Bearer token when your deployment enforces auth",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        }
+      ]
+    }
+  ],
+  "provider": {
+    "homepage": "https://lerian.studio",
+    "logoUrl": "https://logo.clearbit.com/lerian.studio",
+    "logoFallback": "https://www.google.com/s2/favicons?domain=lerian.studio&sz=128",
+    "docsUrl": "https://docs.lerian.studio",
+    "sandbox": {
+      "available": false
+    }
+  }
+}

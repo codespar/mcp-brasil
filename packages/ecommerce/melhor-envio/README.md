@@ -110,13 +110,13 @@ Melhor Envio provides a sandbox at `sandbox.melhorenvio.com.br`. Set `MELHOR_ENV
 - `detailed_reports` — Generate detailed shipping reports
 - `webhook_management` — Register, list, and delete webhooks
 
-Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-brasil) or [request a tool](https://github.com/codespar/mcp-dev-brasil/issues).
+Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [request a tool](https://github.com/codespar/mcp-dev-latam/issues).
 
 ## Links
 
 - [Melhor Envio Website](https://melhorenvio.com.br)
 - [Melhor Envio API Documentation](https://docs.melhorenvio.com.br)
-- [MCP Dev Brasil](https://github.com/codespar/mcp-dev-brasil)
+- [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 
 ## Enterprise
