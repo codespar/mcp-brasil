@@ -46,6 +46,9 @@ import {
 const ACCESS_TOKEN = process.env.BLING_ACCESS_TOKEN || "";
 const BASE_URL = "https://www.bling.com.br/Api/v3";
 
+// Bling order `situacao.valor` code for a canceled order.
+const CANCELED_STATUS = 2;
+
 async function blingRequest(method: string, path: string, body?: unknown): Promise<unknown> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
@@ -161,15 +164,15 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     // ---------------- Sales orders ----------------
     {
       name: "list_orders_with_items",
-      description: "Fetch sales orders with full line items (SKUs, qty, prices) for a date range. Returns batchSize orders at a time. Check hasMore and call again with nextBatchPage until hasMore=false.",
+      description: "Fetch sales orders with full line items (SKUs, qty, prices) for a date range, one summary page (up to 100 orders) at a time. Check hasMore and call again with nextPage until hasMore=false.",
       inputSchema: {
         type: "object",
         properties: {
           dataInicial:     { type: "string",  description: "Start date (YYYY-MM-DD)" },
           dataFinal:       { type: "string",  description: "End date (YYYY-MM-DD)" },
           excludeCanceled: { type: "boolean", description: "Exclude canceled orders. Default true." },
-          batchPage:       { type: "number",  description: "Which batch to fetch (default 1). Increment until hasMore=false." },
-          batchSize:       { type: "number",  description: "Orders per batch (default 25, max 30)." },
+          page:            { type: "number",  description: "Which summary page to fetch (default 1). Increment until hasMore=false." },
+          pageSize:        { type: "number",  description: "Orders fetched (and detailed) per call (default 25, max 100). Lower it if a client times out on dense pages." },
         },
         required: ["dataInicial", "dataFinal"],
       },
@@ -758,42 +761,37 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       // ---- Sales orders ----
       case "list_orders_with_items": {
-        // Fetches a chunk of order details (batchPage * batchSize orders at a time).
-        // Call repeatedly incrementing batchPage until hasMore=false.
-        const excludeCanceled = a.excludeCanceled !== false;
-        const batchPage       = (a.batchPage as number) || 1;
-        const batchSize       = (a.batchSize as number) || 25;
-        const DELAY           = 700; // ms between pairs — stays under 3 req/sec
-
-        // 1. Get all order summaries (paginated list, fast)
-        const allOrders: any[] = [];
-        let page = 1;
-        while (true) {
-          const p = new URLSearchParams();
-          p.set("pagina", String(page));
-          p.set("limite", "100");
-          if (a.dataInicial) p.set("dataInicial", String(a.dataInicial));
-          if (a.dataFinal)   p.set("dataFinal",   String(a.dataFinal));
-          const res: any = await blingRequest("GET", `/pedidos/vendas?${p}`);
-          const items: any[] = res?.data ?? [];
-          if (!items.length) break;
-          allOrders.push(...items);
-          if (items.length < 100) break;
-          page++;
-          await new Promise(r => setTimeout(r, 400));
+        // Fetches ONE summary page (up to 100 orders) and the line-item details
+        // for the orders on it. Call repeatedly incrementing `page` until
+        // hasMore=false — each call costs a single summary request, so paging a
+        // large range is O(pages), not O(pages × batches).
+        if (!a.dataInicial || !a.dataFinal) {
+          throw new Error("dataInicial and dataFinal are required (YYYY-MM-DD).");
         }
+        const excludeCanceled = a.excludeCanceled !== false;
+        const page            = (a.page as number) || 1;
+        // Orders fetched (and detailed) per call. Bounds per-call latency so a
+        // dense page can't blow the MCP client timeout: the detail phase runs
+        // 2-at-a-time with a 700ms gap, so ~25 orders ≈ 9s, 100 ≈ 35s.
+        const pageSize        = Math.min(Math.max(Math.trunc(Number(a.pageSize)) || 25, 1), 100);
+        const DELAY           = 700; // ms between detail pairs — stays under 3 req/sec
 
-        const orders = excludeCanceled
-          ? allOrders.filter((o: any) => o?.situacao?.valor !== 2)
-          : allOrders;
+        // 1. Fetch just this page of order summaries (not the whole range).
+        const p = new URLSearchParams();
+        p.set("pagina", String(page));
+        p.set("limite", String(pageSize));
+        p.set("dataInicial", String(a.dataInicial));
+        p.set("dataFinal",   String(a.dataFinal));
+        const res: any = await blingRequest("GET", `/pedidos/vendas?${p}`);
+        const summaries: any[] = res?.data ?? [];
+        // A full page implies there may be another; a short page is the last one.
+        const hasMore = summaries.length === pageSize;
 
-        const totalOrders = orders.length;
-        const start   = (batchPage - 1) * batchSize;
-        const end     = Math.min(start + batchSize, totalOrders);
-        const chunk   = orders.slice(start, end);
-        const hasMore = end < totalOrders;
+        const chunk = excludeCanceled
+          ? summaries.filter((o: any) => o?.situacao?.valor !== CANCELED_STATUS)
+          : summaries;
 
-        // 2. Fetch details for this chunk (2 at a time)
+        // 2. Fetch details for this page (2 at a time to stay under the rate limit).
         const results: any[] = [];
         for (let i = 0; i < chunk.length; i += 2) {
           const pair = chunk.slice(i, i + 2);
@@ -823,12 +821,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         return text({
-          batchPage,
-          batchSize,
-          totalOrders,
-          fetchedRange: `${start + 1}–${end}`,
+          page,
+          pageSize,
+          fetchedOnPage: chunk.length,
           hasMore,
-          nextBatchPage: hasMore ? batchPage + 1 : null,
+          nextPage: hasMore ? page + 1 : null,
           orders: results,
         });
       }
