@@ -433,6 +433,8 @@ Status is shown on every package page at [codespar.dev/servers](https://codespar
 
 **Individual MCP servers are useful. Orchestrating many with governance is powerful.** That's what CodeSpar does.
 
+Part of a broader ecosystem index: **[Awesome Agentic Commerce LATAM](https://github.com/codespar/awesome-agentic-commerce-latam)** — a vendor-neutral list of the protocols, rails, providers, and regulation for agents that move money in Latin America.
+
 ---
 
 ## Contributing
