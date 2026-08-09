@@ -197,10 +197,11 @@ To orchestrate all six steps with governance, approval workflows, and audit trai
 
 Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers). Each server has its own README, env-var requirements, and tool reference under `packages/<category>/<slug>/`.
 
-### 💳 Payments (41 servers)
+### 💳 Payments (42 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
+| **[Rinne](packages/payments/rinne)** | 62 | `@codespar/mcp-rinne` | API Key |
 | **[Mercado Pago](packages/payments/mercado-pago)** | 30 | `@codespar/mcp-mercado-pago` | API Key |
 | **[Stripe](packages/payments/stripe)** | 30 | `@codespar/mcp-stripe` | API Key |
 | **[Zoop](packages/payments/zoop)** | 28 | `@codespar/mcp-zoop` | API Key |

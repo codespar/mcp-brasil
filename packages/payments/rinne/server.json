@@ -1,0 +1,68 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.codespar/mcp-rinne",
+  "description": "MCP server for Rinne — Brazilian card acquiring & payment infrastructure API. Merchants, affiliations, cards-on-file, 3D Secure, card/PIX transactions, banking/cashouts, pricing, and access management across a B2B2B organization/merchant hierarchy.",
+  "repository": {
+    "url": "https://github.com/codespar/mcp-dev-latam",
+    "source": "github",
+    "subfolder": "packages/payments/rinne"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@codespar/mcp-rinne",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "RINNE_API_KEY",
+          "description": "API key sent as x-api-key header on every request. Organization-level keys see all merchants; merchant-level keys are scoped to one merchant.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "RINNE_SANDBOX",
+          "description": "Defaults to sandbox (https://api-sandbox.rinne.com.br/core). Set to \"false\" for production (https://api.rinne.com.br/core).",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "RINNE_EMAIL",
+          "description": "Login identifier for the access-management tools (API Keys, Roles, Permissions, org Users, Zipcode lookup), which reject x-api-key by design and require a JWT session.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "RINNE_PASSWORD",
+          "description": "Login password paired with RINNE_EMAIL.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "RINNE_COMPANY_ID",
+          "description": "Company to select after JWT login, for accounts with access to multiple companies.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ],
+  "provider": {
+    "homepage": "https://rinne.com.br",
+    "logoUrl": "https://logo.clearbit.com/rinne.com.br",
+    "logoFallback": "https://www.google.com/s2/favicons?domain=rinne.com.br&sz=128",
+    "docsUrl": "https://docs.rinne.com.br",
+    "sandbox": {
+      "available": true,
+      "url": "https://api-sandbox.rinne.com.br/core"
+    }
+  }
+}
