@@ -453,7 +453,7 @@ const TOOLS = [
   // --- Transactions ---
   {
     name: "create_transaction",
-    description: 'Create a transaction — card (raw, stored, or Apple Pay/Google Pay) or PIX. For card, either: (1) "session-first" — call create_3ds_session first and pass its id as three_d_secure_session_id; or (2) "transaction-first" — pass require_3ds: true and the transaction comes back AWAITING_3DS, then call authenticate_transaction. For PIX, set payment_method: "PIX" and fill pix_data + consumer; the transaction comes back WAITING_PAYMENT with a QR code.',
+    description: "Create a transaction — card (raw, stored, or Apple Pay/Google Pay) or PIX. For card, either: (1) \"session-first\" — call create_3ds_session first and pass its id as three_d_secure_session_id; or (2) \"transaction-first\" — pass require_3ds: true and the transaction comes back AWAITING_3DS, then call authenticate_transaction. For PIX, set payment_method: \"PIX\" and fill pix_data + consumer; the transaction comes back WAITING_PAYMENT with a QR code.",
     inputSchema: {
       type: "object",
       properties: {
