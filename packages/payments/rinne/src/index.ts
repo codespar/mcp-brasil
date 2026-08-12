@@ -190,28 +190,72 @@ const MERCHANT_ID_PARAM = {
   description: "Merchant ID to scope this call to (uses /v1/merchants/{merchant_id}/...). Omit to act at the organization/self level with an org-scoped key.",
 };
 
-const CONTACT_SCHEMA = {
-  type: "object",
-  description: "Contact details.",
-  properties: {
-    name: { type: "string" },
-    email: { type: "string" },
-    phone: { type: "string" },
-    birth_date: { type: "string", description: "ISO 8601 date" },
-    occupation: { type: "string" },
-  },
-};
-
 const ADDRESS_SCHEMA = {
   type: "object",
   description: "Address.",
   properties: {
-    line: { type: "string" },
+    street: { type: "string" },
+    street_number: { type: "string" },
+    complement: { type: "string" },
+    neighborhood: { type: "string" },
     city: { type: "string" },
-    state: { type: "string" },
-    postal_code: { type: "string" },
+    state: { type: "string", description: "2-letter state code, e.g. SP" },
+    zipcode: { type: "string", description: "8 digits, no punctuation", pattern: "^[0-9]{8}$" },
     country: { type: "string", default: "BR" },
   },
+};
+const ADDRESS_SCHEMA_REQUIRED = {
+  ...ADDRESS_SCHEMA,
+  required: ["street", "neighborhood", "zipcode", "country", "state", "city"],
+};
+
+const CONTACT_SCHEMA = {
+  type: "object",
+  description: "Contact / responsible-person details.",
+  properties: {
+    first_name: { type: "string" },
+    last_name: { type: "string" },
+    email: { type: "string" },
+    phone: { type: "string", description: 'E.164 format, e.g. "+5511999999999". A bare local number (e.g. "11999999999") is rejected with 400 VALIDATION_ERROR (confirmed live against sandbox).' },
+    birth_date: { type: "string", description: 'Format "DD-MM-YYYY". NOT ISO 8601 — Rinne rejects every ISO 8601 variant with 400 VALIDATION_ERROR (confirmed live against sandbox).' },
+    document_number: { type: "string", description: "Responsible person's CPF" },
+    mother_name: { type: "string" },
+    address: ADDRESS_SCHEMA,
+    occupation: {
+      type: "string",
+      description: "Closed enum — free text is rejected. Defaults to OTHER if omitted.",
+      enum: [
+        "ADMINISTRATOR_MANAGER", "SALES_REPRESENTATIVE", "HR_ANALYST", "FINANCIAL_ANALYST", "SOFTWARE_DEVELOPER",
+        "MARKETING_PROFESSIONAL", "HEALTHCARE_PROFESSIONAL", "TEACHER", "ENGINEER", "LAWYER", "GENERAL_SERVICES",
+        "CONSTRUCTION_WORKER", "DRIVER", "RECEPTIONIST", "TECHNICIAN", "DESIGNER", "MACHINE_OPERATOR", "CONSULTANT",
+        "BEAUTY_PROFESSIONAL", "SECURITY_AGENT", "AGRICULTURAL_WORKER", "TRAVEL_AGENT", "JOURNALIST", "PSYCHOLOGIST",
+        "PUBLIC_SERVANT", "RESEARCHER", "ARTISAN", "RETIRED", "STUDENT", "SELF_EMPLOYED", "OTHER",
+      ],
+    },
+    role: { type: "string", description: "Defaults to PARTNER if omitted.", enum: ["PARTNER", "REPRESENTATIVE"] },
+    politically_exposed: { type: "boolean", default: false },
+    declared_income: { type: "number", description: "Defaults to 5000 if omitted." },
+    net_worth: { type: "number", description: "Defaults to 50000 if omitted." },
+  },
+};
+const CONTACT_SCHEMA_REQUIRED = {
+  ...CONTACT_SCHEMA,
+  required: ["first_name", "last_name", "phone", "email", "mother_name", "birth_date", "document_number", "address"],
+};
+
+const TRANSFER_CONFIGURATIONS_SCHEMA = {
+  type: "object",
+  description: "Payout schedule to the merchant's registered destination (PIX key or bank account).",
+  properties: {
+    automatic_transfer_enabled: { type: "boolean" },
+    transfer_frequency: { type: "string", enum: ["DAILY", "WEEKLY", "MONTHLY"] },
+    rail: { type: "string", enum: ["PIX"], description: "Only PIX is currently supported for automatic transfers." },
+    utc_hour_of_day: { type: "integer" },
+    day_of_week: { type: "integer", description: "Used when transfer_frequency is WEEKLY." },
+    day_of_month: { type: "integer", description: "Used when transfer_frequency is MONTHLY." },
+    min_balance: { type: "integer", description: "Minimum balance (cents) to keep before transferring." },
+  },
+  required: ["automatic_transfer_enabled", "transfer_frequency", "rail"],
 };
 
 const CARD_ON_FILE_SCHEMA = {
@@ -321,28 +365,48 @@ const TOOLS = [
   // --- Merchants ---
   {
     name: "create_merchant",
-    description: "Create a new merchant under your organization. Requires KYC data. Financial fields may be required by specific affiliation providers later.",
+    description: "Create a new merchant under your organization. Requires KYC data. IMPORTANT: Rinne does NOT reject a duplicate document_number here — confirmed live against sandbox (created 3 merchants with the same CNPJ, no error), contradicting the publicly documented 409 CONFLICT_ERROR behavior. Always call list_merchants with document_number first and dedupe yourself before calling this.",
     inputSchema: {
       type: "object",
       properties: {
         full_name: { type: "string", description: "Full legal name (razão social / nome completo)" },
-        name: { type: "string", description: "Trading/display name" },
+        name: { type: "string", description: "Trading/display name (optional)" },
         document_number: { type: "string", description: "CNPJ or CPF" },
         document_type: { type: "string", description: "e.g. CNPJ or CPF" },
+        document_tax_type: { type: "string", description: "Tax classification of document_number.", enum: ["PJ", "MEI", "ME", "PF"] },
         mcc: { type: "string", description: "Merchant Category Code — see list_mccs" },
-        contact: CONTACT_SCHEMA,
-        address: ADDRESS_SCHEMA,
-        declared_revenue: { type: "number", description: "Declared monthly/annual revenue (optional; some affiliation providers require it)" },
-        declared_income: { type: "number", description: "Declared personal income, for individual merchants (optional)" },
-        net_worth: { type: "number", description: "Declared net worth (optional)" },
+        contact: CONTACT_SCHEMA_REQUIRED,
+        address: ADDRESS_SCHEMA_REQUIRED,
+        transfer_configurations: TRANSFER_CONFIGURATIONS_SCHEMA,
+        declared_revenue: { type: "number", description: "Declared monthly/annual revenue (optional; defaults to 50000 for CNPJ)" },
+        company_logo_url: { type: "string" },
+        website_url: { type: "string" },
+        fee_policy_id: { type: "string", description: "Optional. Overrides the organization's default fee policy for this merchant." },
+        metadata: { type: "object", description: "Optional. Arbitrary key-value pairs — e.g. to tag which CodeSpar sales channel this merchant belongs to." },
+        bank_account: { type: "object", description: "Optional bank account details for this merchant." },
+        gateway_affiliation: { type: "object", description: "Optional gateway affiliation details." },
       },
-      required: ["full_name", "name", "document_number", "document_type", "mcc", "contact", "address"],
+      required: ["full_name", "document_number", "document_type", "document_tax_type", "mcc", "contact", "address", "transfer_configurations"],
     },
   },
   {
     name: "list_merchants",
-    description: "List merchants under your organization.",
-    inputSchema: { type: "object", properties: { page: { type: "integer", minimum: 1 }, limit: { type: "integer", minimum: 1, maximum: 100 } }, required: [] },
+    description: "List merchants under your organization, with optional filters. Use document_number to check for an existing merchant before create_merchant (Rinne itself does not enforce this).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        page: { type: "integer", minimum: 1 },
+        limit: { type: "integer", minimum: 1, maximum: 100 },
+        document_number: { type: "string", description: "Exact match (CPF or CNPJ)." },
+        document_type: { type: "string", description: "e.g. CPF, CNPJ" },
+        name: { type: "string", description: "Case-insensitive prefix match" },
+        full_name: { type: "string", description: "Case-insensitive prefix match" },
+        status: { type: "string", enum: ["pending_activation", "active", "inactive", "blocked"] },
+        created_at_from: { type: "string" },
+        created_at_to: { type: "string" },
+      },
+      required: [],
+    },
   },
   {
     name: "get_merchant",
@@ -957,12 +1021,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       // Merchants
       case "create_merchant": {
         const body: Record<string, unknown> = {
-          full_name: a.full_name, name: a.name, document_number: a.document_number,
-          document_type: a.document_type, mcc: a.mcc, contact: a.contact, address: a.address,
+          full_name: a.full_name, document_number: a.document_number,
+          document_type: a.document_type, document_tax_type: a.document_tax_type,
+          mcc: a.mcc, contact: a.contact, address: a.address,
+          transfer_configurations: a.transfer_configurations,
         };
+        if (a.name !== undefined) body.name = a.name;
         if (a.declared_revenue !== undefined) body.declared_revenue = a.declared_revenue;
-        if (a.declared_income !== undefined) body.declared_income = a.declared_income;
-        if (a.net_worth !== undefined) body.net_worth = a.net_worth;
+        if (a.company_logo_url !== undefined) body.company_logo_url = a.company_logo_url;
+        if (a.website_url !== undefined) body.website_url = a.website_url;
+        if (a.fee_policy_id !== undefined) body.fee_policy_id = a.fee_policy_id;
+        if (a.metadata !== undefined) body.metadata = a.metadata;
+        if (a.bank_account !== undefined) body.bank_account = a.bank_account;
+        if (a.gateway_affiliation !== undefined) body.gateway_affiliation = a.gateway_affiliation;
         return ok(await rinneRequest("POST", "/v1/merchants", body));
       }
 
@@ -970,6 +1041,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const params = new URLSearchParams();
         if (a.page) params.set("page", String(a.page));
         if (a.limit) params.set("limit", String(a.limit));
+        if (a.document_number) params.set("document_number", String(a.document_number));
+        if (a.document_type) params.set("document_type", String(a.document_type));
+        if (a.name) params.set("name", String(a.name));
+        if (a.full_name) params.set("full_name", String(a.full_name));
+        if (a.status) params.set("status", String(a.status));
+        if (a.created_at_from) params.set("created_at_from", String(a.created_at_from));
+        if (a.created_at_to) params.set("created_at_to", String(a.created_at_to));
         return ok(await rinneRequest("GET", `/v1/merchants?${params}`));
       }
 
