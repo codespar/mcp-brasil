@@ -7,6 +7,14 @@
  * for AI agents making payments. It defines who authorized a payment,
  * what limits apply, and maintains a complete audit trail.
  *
+ * NO LIVE ENDPOINT: BASE_URL below points at ap2.googleapis.com (and
+ * sandbox.ap2.googleapis.com), which is not a registered Google API
+ * service. The production host answers the Google frontend's generic
+ * "Error 404 (Not Found)" HTML page; the sandbox host fails the TLS
+ * handshake because the *.googleapis.com certificate does not cover a
+ * fourth label. AP2 is an open specification, not an API served here.
+ * The tool schemas below follow the spec; the calls do not land.
+ *
  * Tools:
  * - register_agent: Register an AI agent as a trusted payer in AP2
  * - get_agent: Get agent registration details and trust status

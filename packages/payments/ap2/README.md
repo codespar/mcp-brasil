@@ -8,6 +8,8 @@
 [![npm](https://img.shields.io/npm/v/@codespar/mcp-ap2)](https://www.npmjs.com/package/@codespar/mcp-ap2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+> **No live endpoint.** This server calls `https://ap2.googleapis.com/v1` (`BASE_URL`, `src/index.ts:60-62`). That address answers the Google frontend's generic `Error 404 (Not Found)` HTML page, which is what a `*.googleapis.com` name returns when no API service is registered under it; a registered service such as `storage.googleapis.com` answers a structured JSON API error instead. With `AP2_SANDBOX=true` the request does not complete the TLS handshake, because the `*.googleapis.com` certificate does not cover the fourth label in `sandbox.ap2.googleapis.com`. AP2 is an open specification; the 22 tool schemas below follow it, but calls made through them fail before reaching any service.
+
 ## What is AP2?
 
 AP2 (Agent-to-Agent Payment Protocol) is Google's open framework for **authorization, audit, and trust** in agentic payments. It answers the critical questions: *Who authorized this payment? What limits apply? What's the full audit trail?*

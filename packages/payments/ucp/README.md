@@ -5,6 +5,8 @@
 [![npm](https://img.shields.io/npm/v/@codespar/mcp-ucp)](https://www.npmjs.com/package/@codespar/mcp-ucp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+> **No live endpoint.** This server calls `https://commerce.googleapis.com/ucp/v1` (`BASE_URL`, `src/index.ts:69-71`). That address answers the Google frontend's generic `Error 404 (Not Found)` HTML page, which is what a `*.googleapis.com` name returns when no API service is registered under it; a registered service such as `storage.googleapis.com` answers a structured JSON API error instead. With `UCP_SANDBOX=true` the request does not complete the TLS handshake, because the `*.googleapis.com` certificate does not cover the fourth label in `sandbox.commerce.googleapis.com`. UCP is an open specification; the 20 tool schemas below follow it, but calls made through them fail before reaching any service.
+
 ## What is UCP?
 
 **Universal Commerce Protocol (UCP)** is Google's open standard for agentic commerce. It enables AI agents to autonomously discover products, build carts, checkout, manage orders, and track deliveries — without screen-scraping or bespoke merchant integrations.

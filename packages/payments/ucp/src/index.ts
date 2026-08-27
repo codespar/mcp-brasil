@@ -56,6 +56,13 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
+// NO LIVE ENDPOINT: BASE_URL below points at commerce.googleapis.com (and
+// sandbox.commerce.googleapis.com), which is not a registered Google API
+// service. The production host answers the Google frontend's generic
+// "Error 404 (Not Found)" HTML page; the sandbox host fails the TLS
+// handshake because the *.googleapis.com certificate does not cover a
+// fourth label. UCP is an open specification, not an API served here.
+// The tool schemas below follow the spec; the calls do not land.
 const API_KEY = process.env.UCP_API_KEY || "";
 const MERCHANT_ID = process.env.UCP_MERCHANT_ID || "";
 const SANDBOX = process.env.UCP_SANDBOX === "true";
