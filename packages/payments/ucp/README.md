@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/@codespar/mcp-ucp)](https://www.npmjs.com/package/@codespar/mcp-ucp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-> **No live endpoint.** Checked on 2026-08-27. This server's `BASE_URL` (`src/index.ts:71-73`) is `https://commerce.googleapis.com/ucp/v1`, which answers HTTP 404 with Google's generic `Error 404 (Not Found)` HTML page instead of an API response. With `UCP_SANDBOX=true` the address becomes `https://sandbox.commerce.googleapis.com/ucp/v1`, which fails the TLS handshake, because the certificate served there covers `*.googleapis.com` and not the extra label. As controls on the same run, `storage.googleapis.com` and `translate.googleapis.com` each answered a structured JSON API error. UCP is a published specification and this package ships tool definitions written for it; we have not checked them against a conforming implementation, and no call made through this server currently reaches a service.
+> **No live endpoint.** Checked on 2026-08-27. This server's `BASE_URL` (`src/index.ts:71-73`) is `https://commerce.googleapis.com/ucp/v1`, which answers HTTP 404 with Google's generic `Error 404 (Not Found)` HTML page instead of an API response. With `UCP_SANDBOX=true` the address becomes `https://sandbox.commerce.googleapis.com/ucp/v1`, which fails the TLS handshake, because the certificate served there covers `*.googleapis.com` and not the extra label. UCP is a published specification and this package ships tool definitions written for it; we have not checked them against a conforming implementation, and no call made through this server currently reaches a service.
 
 ## What is UCP?
 

@@ -72,7 +72,7 @@ Four servers for the emerging agentic payment stack:
 > | `@codespar/mcp-ap2` | `https://ap2.googleapis.com/v1` (`packages/payments/ap2/src/index.ts:62-64`) | HTTP 404, the same generic HTML page |
 > | `@codespar/mcp-x402` | `https://api.x402.org/v1` (`packages/crypto/x402/src/index.ts:40`) | `NXDOMAIN`, the host does not resolve |
 >
-> Controls on the same network and resolvers: `storage.googleapis.com` and `translate.googleapis.com` each answered a structured JSON API error, and `x402.org` itself resolved and answered HTTP 200. The sandbox addresses selected by `UCP_SANDBOX` and `AP2_SANDBOX` fail earlier still, at TLS, because the certificate served there covers `*.googleapis.com` and not the extra label in `sandbox.commerce.googleapis.com` or `sandbox.ap2.googleapis.com`.
+> Every path these servers actually call failed on the same run, which is what the claim above rests on. A generic 404 by itself does not prove a name has no service behind it: `translate.googleapis.com/v1`, a registered service asked for a path it does not serve, answers the same generic page.
 >
 > UCP, AP2, and x402 are published specifications, and these three packages ship tool definitions written for them. We have not checked those definitions against a conforming implementation, and no call made through the three servers currently reaches a service.
 

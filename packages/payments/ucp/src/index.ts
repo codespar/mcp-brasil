@@ -58,9 +58,8 @@ import {
 
 // NO LIVE ENDPOINT (checked 2026-08-27): commerce.googleapis.com answers
 // HTTP 404 with Google's generic "Error 404 (Not Found)" HTML page instead
-// of an API response, while storage.googleapis.com and
-// translate.googleapis.com each answered a structured JSON API error on the
-// same run. sandbox.commerce.googleapis.com fails the TLS handshake, because
+// of an API response. sandbox.commerce.googleapis.com fails the TLS
+// handshake, because
 // the certificate served there covers *.googleapis.com and not the extra
 // label. UCP is a published specification; these tool definitions have not
 // been checked against a conforming implementation, and calls made through

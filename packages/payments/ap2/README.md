@@ -8,7 +8,7 @@
 [![npm](https://img.shields.io/npm/v/@codespar/mcp-ap2)](https://www.npmjs.com/package/@codespar/mcp-ap2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-> **No live endpoint.** Checked on 2026-08-27. This server's `BASE_URL` (`src/index.ts:62-64`) is `https://ap2.googleapis.com/v1`, which answers HTTP 404 with Google's generic `Error 404 (Not Found)` HTML page instead of an API response. With `AP2_SANDBOX=true` the address becomes `https://sandbox.ap2.googleapis.com/v1`, which fails the TLS handshake, because the certificate served there covers `*.googleapis.com` and not the extra label. As controls on the same run, `storage.googleapis.com` and `translate.googleapis.com` each answered a structured JSON API error. AP2 is a published specification and this package ships tool definitions written for it; we have not checked them against a conforming implementation, and no call made through this server currently reaches a service.
+> **No live endpoint.** Checked on 2026-08-27. This server's `BASE_URL` (`src/index.ts:62-64`) is `https://ap2.googleapis.com/v1`, which answers HTTP 404 with Google's generic `Error 404 (Not Found)` HTML page instead of an API response. With `AP2_SANDBOX=true` the address becomes `https://sandbox.ap2.googleapis.com/v1`, which fails the TLS handshake, because the certificate served there covers `*.googleapis.com` and not the extra label. AP2 is a published specification and this package ships tool definitions written for it; we have not checked them against a conforming implementation, and no call made through this server currently reaches a service.
 
 ## What is AP2?
 
@@ -74,19 +74,19 @@ Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
 | `get_authorization` | Get authorization details including status, limits, and expiry |
 | `list_authorizations` | List payment authorizations with optional filters |
 | `execute_payment` | Execute an authorized payment. |
-| `get_audit_trail` | Get the complete audit trail for a transaction — every authorization, approval, execution, and settlement e... |
+| `get_audit_trail` | Get the complete audit trail for a transaction — every authorization, approval, execution, and settlement e.. |
 | `list_audit_events` | List audit events across all transactions with filters |
 | `list_payment_methods` | List payment methods offered by the AP2 partner network |
 | `get_transaction` | Get full transaction details including authorization, execution, and settlement status |
 | `list_transactions` | List transactions with optional filters |
-| `create_intent_mandate` | Create an AP2 intent mandate — a Verifiable Credential expressing the user's intent to delegate a transacti... |
-| `create_cart_mandate` | Create an AP2 cart mandate — a signed, locked-cart commitment from a merchant binding line items, totals, a... |
+| `create_intent_mandate` | Create an AP2 intent mandate — a Verifiable Credential expressing the user's intent to delegate a transacti.. |
+| `create_cart_mandate` | Create an AP2 cart mandate — a signed, locked-cart commitment from a merchant binding line items, totals, a.. |
 | `create_payment_mandate` | Create an AP2 payment mandate — the final Verifiable Credential authorizing settlement against a cart mandate. |
 | `verify_credential` | Verify a Verifiable Credential (intent, cart, or payment mandate). |
 | `create_presentation` | Create a Verifiable Presentation bundling one or more credentials (e.g. |
 | `verify_presentation` | Verify a Verifiable Presentation and all embedded credentials, including holder binding and challenge nonce. |
 | `resolve_did` | Resolve a Decentralized Identifier (DID) to its DID document via the AP2 universal resolver. |
-| `create_receipt` | Create a signed receipt for a settled payment — a tamper-evident record linking transaction, mandates, and... |
+| `create_receipt` | Create a signed receipt for a settled payment — a tamper-evident record linking transaction, mandates, and.. |
 | `verify_receipt` | Verify a receipt's signature, issuer, and chain back to the originating mandates. |
 
 ## Authentication
