@@ -55,16 +55,26 @@ Each MCP server in this repo wraps a real provider — payments, fiscal, logisti
 
 ## Agentic Payment Protocols
 
-Four servers that bridge the emerging agentic payment stack:
+Four servers for the emerging agentic payment stack:
 
 | Protocol | Server | Tools | What it does |
 |----------|--------|-------|-------------|
 | **[Google UCP](packages/payments/ucp)** <sub>no live endpoint</sub> | `@codespar/mcp-ucp` | 20 | Universal Commerce Protocol — agentic shopping, cart, checkout, orders, delivery, identity. |
-| **[Stripe ACP](packages/payments/stripe-acp)** | `@codespar/mcp-stripe-acp` | 24 | Agentic Commerce Protocol — AI agent checkout, payment delegation, products, invoices. Live in ChatGPT with 1M+ Shopify merchants. |
-| **[x402](packages/crypto/x402)** | `@codespar/mcp-x402` | 10 | HTTP-native micropayments by Coinbase — when an agent hits a 402, it pays USDC on Base/Solana and retries. Pure HTTP, no checkout UI. |
+| **[Stripe ACP](packages/payments/stripe-acp)** | `@codespar/mcp-stripe-acp` | 24 | Agentic Commerce Protocol — AI agent checkout, payment delegation, products, invoices. |
+| **[x402](packages/crypto/x402)** <sub>no live endpoint</sub> | `@codespar/mcp-x402` | 10 | HTTP-native micropayments by Coinbase — when an agent hits a 402, it pays USDC on Base/Solana and retries. Pure HTTP, no checkout UI. |
 | **[AP2](packages/payments/ap2)** <sub>no live endpoint</sub> | `@codespar/mcp-ap2` <sub>alpha</sub> | 22 | Google's Agent-to-Agent Payment Protocol — authorization, audit trails, scoped spend limits. |
 
-> **No live endpoint behind UCP and AP2.** `@codespar/mcp-ucp` calls `https://commerce.googleapis.com/ucp/v1` (`BASE_URL`, `packages/payments/ucp/src/index.ts:69-71`) and `@codespar/mcp-ap2` calls `https://ap2.googleapis.com/v1` (`BASE_URL`, `packages/payments/ap2/src/index.ts:60-62`). Both addresses answer the Google frontend's generic `Error 404 (Not Found)` HTML page, which is what a `*.googleapis.com` name returns when no API service is registered under it; for contrast, a registered service such as `storage.googleapis.com` answers a structured JSON API error. The sandbox addresses selected by `UCP_SANDBOX` / `AP2_SANDBOX` do not complete the TLS handshake at all, because the `*.googleapis.com` certificate does not cover the fourth label in `sandbox.commerce.googleapis.com` / `sandbox.ap2.googleapis.com`. UCP and AP2 are open specifications; the 42 tool schemas in these two packages follow those specifications, but calls made through them fail before reaching any service.
+> **No live endpoint behind UCP, AP2, and x402.** Checked on 2026-08-27:
+>
+> | Server | `BASE_URL` in source | What that address answered |
+> |---|---|---|
+> | `@codespar/mcp-ucp` | `https://commerce.googleapis.com/ucp/v1` (`packages/payments/ucp/src/index.ts:71-73`) | HTTP 404, Google's generic `Error 404 (Not Found)` HTML page |
+> | `@codespar/mcp-ap2` | `https://ap2.googleapis.com/v1` (`packages/payments/ap2/src/index.ts:62-64`) | HTTP 404, the same generic HTML page |
+> | `@codespar/mcp-x402` | `https://api.x402.org/v1` (`packages/crypto/x402/src/index.ts:40`) | `NXDOMAIN`, the host does not resolve |
+>
+> Controls on the same network and resolvers: `storage.googleapis.com` and `translate.googleapis.com` each answered a structured JSON API error, and `x402.org` itself resolved and answered HTTP 200. The sandbox addresses selected by `UCP_SANDBOX` and `AP2_SANDBOX` fail earlier still, at TLS, because the certificate served there covers `*.googleapis.com` and not the extra label in `sandbox.commerce.googleapis.com` or `sandbox.ap2.googleapis.com`.
+>
+> UCP, AP2, and x402 are published specifications, and these three packages ship tool definitions written for them. We have not checked those definitions against a conforming implementation, and no call made through the three servers currently reaches a service.
 
 ### The Autonomy Spectrum
 
@@ -213,7 +223,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Stripe ACP](packages/payments/stripe-acp)** | 24 | `@codespar/mcp-stripe-acp` | API Key |
 | **[Iugu](packages/payments/iugu)** | 23 | `@codespar/mcp-iugu` | API Key |
 | **[Openpay](packages/payments/openpay)** | 23 | `@codespar/mcp-openpay` | API Key |
-| **[AP2](packages/payments/ap2)** <sub>alpha</sub> | 22 | `@codespar/mcp-ap2` | API Key |
+| **[AP2](packages/payments/ap2)** <sub>alpha</sub> <sub>no live endpoint</sub> | 22 | `@codespar/mcp-ap2` | API Key |
 | **[Braintree](packages/payments/braintree)** | 22 | `@codespar/mcp-braintree` | API Key |
 | **[Braspag](packages/payments/braspag)** | 22 | `@codespar/mcp-braspag` | API Key |
 | **[Cielo](packages/payments/cielo)** | 22 | `@codespar/mcp-cielo` | API Key |
@@ -235,7 +245,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Getnet](packages/payments/getnet)** | 20 | `@codespar/mcp-getnet` | OAuth2 |
 | **[Izipay](packages/payments/izipay)** <sub>alpha</sub> | 20 | `@codespar/mcp-izipay` | API Key |
 | **[Picpay](packages/payments/picpay)** <sub>alpha</sub> | 20 | `@codespar/mcp-picpay` | API Key |
-| **[UCP](packages/payments/ucp)** | 20 | `@codespar/mcp-ucp` | API Key |
+| **[UCP](packages/payments/ucp)** <sub>no live endpoint</sub> | 20 | `@codespar/mcp-ucp` | API Key |
 | **[Vindi](packages/payments/vindi)** | 20 | `@codespar/mcp-vindi` | API Key |
 | **[Paypal](packages/payments/paypal)** | 19 | `@codespar/mcp-paypal` | OAuth2 |
 | **[Transbank](packages/payments/transbank)** <sub>alpha</sub> | 19 | `@codespar/mcp-transbank` | API Key |
@@ -350,7 +360,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Coinbase Commerce](packages/crypto/coinbase-commerce)** | 18 | `@codespar/mcp-coinbase-commerce` | API Key |
 | **[Transak](packages/crypto/transak)** <sub>alpha</sub> | 18 | `@codespar/mcp-transak` | API Key |
 | **[Coinbase CDP](packages/crypto/coinbase-cdp)** | 15 | `@codespar/mcp-coinbase-cdp` | API Key |
-| **[x402](packages/crypto/x402)** | 10 | `@codespar/mcp-x402` | API Key |
+| **[x402](packages/crypto/x402)** <sub>no live endpoint</sub> | 10 | `@codespar/mcp-x402` | API Key |
 
 ### 🇦🇷 Argentina (6 servers)
 

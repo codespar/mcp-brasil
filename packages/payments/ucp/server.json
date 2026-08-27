@@ -31,7 +31,6 @@
     "homepage": "https://www.google.com",
     "logoUrl": "https://logo.clearbit.com/google.com",
     "logoFallback": "https://www.google.com/s2/favicons?domain=google.com&sz=128",
-    "docsUrl": "https://developers.google.com/agents/commerce",
     "sandbox": {
       "available": false
     }

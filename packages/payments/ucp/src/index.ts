@@ -42,9 +42,9 @@
  * - get_profile: Get buyer profile and preferences
  *
  * Environment:
- *   UCP_API_KEY      — API key for UCP platform
- *   UCP_MERCHANT_ID  — Default merchant ID
- *   UCP_SANDBOX      — Set to "true" for sandbox mode
+ *   UCP_API_KEY      — sent as Authorization: Bearer
+ *   UCP_MERCHANT_ID  — sent as the X-Merchant-Id header
+ *   UCP_SANDBOX      — "true" switches BASE_URL to the sandbox host
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -56,13 +56,15 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-// NO LIVE ENDPOINT: BASE_URL below points at commerce.googleapis.com (and
-// sandbox.commerce.googleapis.com), which is not a registered Google API
-// service. The production host answers the Google frontend's generic
-// "Error 404 (Not Found)" HTML page; the sandbox host fails the TLS
-// handshake because the *.googleapis.com certificate does not cover a
-// fourth label. UCP is an open specification, not an API served here.
-// The tool schemas below follow the spec; the calls do not land.
+// NO LIVE ENDPOINT (checked 2026-08-27): commerce.googleapis.com answers
+// HTTP 404 with Google's generic "Error 404 (Not Found)" HTML page instead
+// of an API response, while storage.googleapis.com and
+// translate.googleapis.com each answered a structured JSON API error on the
+// same run. sandbox.commerce.googleapis.com fails the TLS handshake, because
+// the certificate served there covers *.googleapis.com and not the extra
+// label. UCP is a published specification; these tool definitions have not
+// been checked against a conforming implementation, and calls made through
+// this server do not reach a service.
 const API_KEY = process.env.UCP_API_KEY || "";
 const MERCHANT_ID = process.env.UCP_MERCHANT_ID || "";
 const SANDBOX = process.env.UCP_SANDBOX === "true";
