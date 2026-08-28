@@ -7,6 +7,14 @@
  * for AI agents making payments. It defines who authorized a payment,
  * what limits apply, and maintains a complete audit trail.
  *
+ * NO LIVE ENDPOINT (checked 2026-08-27): ap2.googleapis.com answers HTTP
+ * 404 with Google's generic "Error 404 (Not Found)" HTML page instead of an
+ * API response. sandbox.ap2.googleapis.com fails the TLS handshake, because the
+ * certificate served there covers *.googleapis.com and not the extra label.
+ * AP2 is a published specification; these tool definitions have not been
+ * checked against a conforming implementation, and calls made through this
+ * server do not reach a service.
+ *
  * Tools:
  * - register_agent: Register an AI agent as a trusted payer in AP2
  * - get_agent: Get agent registration details and trust status
@@ -32,9 +40,9 @@
  * - verify_receipt: Verify a receipt's signature and integrity
  *
  * Environment:
- *   AP2_API_KEY    — API key for AP2 platform
- *   AP2_AGENT_ID   — Registered agent ID
- *   AP2_SANDBOX    — Set to "true" for sandbox mode
+ *   AP2_API_KEY    — sent as Authorization: Bearer
+ *   AP2_AGENT_ID   — sent as the X-Agent-Id header
+ *   AP2_SANDBOX    — "true" switches BASE_URL to the sandbox host
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -227,7 +235,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "list_payment_methods",
-      description: "List available payment methods from AP2 partner network (Visa, Mastercard, Stripe, PayPal, etc.)",
+      description: "List payment methods offered by the AP2 partner network.",
       inputSchema: {
         type: "object",
         properties: {

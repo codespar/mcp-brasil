@@ -1,18 +1,20 @@
 # @codespar/mcp-ap2
 
 
-> **Alpha release** — published under the `alpha` npm dist-tag. Endpoint paths follow public docs and BACEN/provider conventions but have not been fully live-validated. Pin exact versions during `0.x.x-alpha`. Install with `npm install <pkg>@alpha`.
+> **Alpha release** — published under the `alpha` npm dist-tag. Pin exact versions during `0.x.x-alpha`. Install with `npm install <pkg>@alpha`.
 
 > MCP server for **AP2** — Google's Agent-to-Agent Payment Protocol (authorization, audit, and trust for agentic payments)
 
 [![npm](https://img.shields.io/npm/v/@codespar/mcp-ap2)](https://www.npmjs.com/package/@codespar/mcp-ap2)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+> **No live endpoint.** Checked on 2026-08-27. This server's `BASE_URL` (`src/index.ts:62-64`) is `https://ap2.googleapis.com/v1`, which answers HTTP 404 with Google's generic `Error 404 (Not Found)` HTML page instead of an API response. With `AP2_SANDBOX=true` the address becomes `https://sandbox.ap2.googleapis.com/v1`, which fails the TLS handshake, because the certificate served there covers `*.googleapis.com` and not the extra label. AP2 is a published specification and this package ships tool definitions written for it; we have not checked them against a conforming implementation, and no call made through this server currently reaches a service.
+
 ## What is AP2?
 
 AP2 (Agent-to-Agent Payment Protocol) is Google's open framework for **authorization, audit, and trust** in agentic payments. It answers the critical questions: *Who authorized this payment? What limits apply? What's the full audit trail?*
 
-With 60+ partners including Visa, Mastercard, Stripe, PayPal, and Square, AP2 is the emerging standard for agent payment governance.
+The specification is published at [ap2-protocol.org](https://ap2-protocol.org).
 
 ## Quick Start
 
@@ -72,44 +74,34 @@ Add to `.cursor/mcp.json` or `.vscode/mcp.json`:
 | `get_authorization` | Get authorization details including status, limits, and expiry |
 | `list_authorizations` | List payment authorizations with optional filters |
 | `execute_payment` | Execute an authorized payment. |
-| `get_audit_trail` | Get the complete audit trail for a transaction — every authorization, approval, execution, and settlement e... |
+| `get_audit_trail` | Get the complete audit trail for a transaction — every authorization, approval, execution, and settlement e.. |
 | `list_audit_events` | List audit events across all transactions with filters |
-| `list_payment_methods` | List available payment methods from AP2 partner network (Visa, Mastercard, Stripe, PayPal, etc.) |
+| `list_payment_methods` | List payment methods offered by the AP2 partner network |
 | `get_transaction` | Get full transaction details including authorization, execution, and settlement status |
 | `list_transactions` | List transactions with optional filters |
-| `create_intent_mandate` | Create an AP2 intent mandate — a Verifiable Credential expressing the user's intent to delegate a transacti... |
-| `create_cart_mandate` | Create an AP2 cart mandate — a signed, locked-cart commitment from a merchant binding line items, totals, a... |
+| `create_intent_mandate` | Create an AP2 intent mandate — a Verifiable Credential expressing the user's intent to delegate a transacti.. |
+| `create_cart_mandate` | Create an AP2 cart mandate — a signed, locked-cart commitment from a merchant binding line items, totals, a.. |
 | `create_payment_mandate` | Create an AP2 payment mandate — the final Verifiable Credential authorizing settlement against a cart mandate. |
 | `verify_credential` | Verify a Verifiable Credential (intent, cart, or payment mandate). |
 | `create_presentation` | Create a Verifiable Presentation bundling one or more credentials (e.g. |
 | `verify_presentation` | Verify a Verifiable Presentation and all embedded credentials, including holder binding and challenge nonce. |
 | `resolve_did` | Resolve a Decentralized Identifier (DID) to its DID document via the AP2 universal resolver. |
-| `create_receipt` | Create a signed receipt for a settled payment — a tamper-evident record linking transaction, mandates, and... |
+| `create_receipt` | Create a signed receipt for a settled payment — a tamper-evident record linking transaction, mandates, and.. |
 | `verify_receipt` | Verify a receipt's signature, issuer, and chain back to the originating mandates. |
 
 ## Authentication
 
-AP2 uses a Bearer API key and requires a registered Agent ID.
+The server sends `AP2_API_KEY` as an `Authorization: Bearer` header and `AP2_AGENT_ID` as an `X-Agent-Id` header on every request (`src/index.ts:69-73`).
 
-### Get your credentials
-
-1. Visit the [AP2 Developer Portal](https://developers.google.com/ap2)
-2. Register your application
-3. Generate an API key
-4. Register your agent to get an Agent ID
-5. Set the environment variables
-
-## Sandbox / Testing
-
-AP2 provides a sandbox environment for testing. Set `AP2_SANDBOX=true` to use it.
+There is no portal issuing those credentials. The developer portal this README used to link, `developers.google.com/ap2`, answers HTTP 404, as does the `ap2-spec` repository it pointed at. The published specification is at [ap2-protocol.org](https://ap2-protocol.org).
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `AP2_API_KEY` | Yes | API key from AP2 |
-| `AP2_AGENT_ID` | Yes | Registered agent ID |
-| `AP2_SANDBOX` | No | Set to `true` for sandbox mode |
+| `AP2_API_KEY` | Yes | Sent as `Authorization: Bearer` |
+| `AP2_AGENT_ID` | Yes | Sent as the `X-Agent-Id` header |
+| `AP2_SANDBOX` | No | `true` switches `BASE_URL` to `https://sandbox.ap2.googleapis.com/v1`, which fails TLS |
 
 ## Use Cases
 
@@ -135,8 +127,7 @@ Want to contribute? [Open a PR](https://github.com/codespar/mcp-dev-latam) or [r
 
 ## Links
 
-- [AP2 (Google)](https://developers.google.com/ap2)
-- [AP2 Specification](https://github.com/anthropic-payments/ap2-spec)
+- [AP2 specification](https://ap2-protocol.org)
 - [MCP Dev LATAM](https://github.com/codespar/mcp-dev-latam)
 - [Landing Page](https://codespar.dev/mcp)
 

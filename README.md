@@ -5,10 +5,10 @@
     <em>Brazil 🇧🇷 · Mexico 🇲🇽 · Argentina 🇦🇷 · Colombia 🇨🇴 · Chile 🇨🇱 · Peru 🇵🇪 · plus 4 agentic payment protocols.</em>
   </p>
   <p align="center">
-    127 MCP servers for LATAM commerce · live in the official MCP Registry · MIT License
+    MCP servers for LATAM commerce · live in the official MCP Registry · MIT License
   </p>
   <p align="center">
-    <em>Live machine-readable count: <a href="https://codespar.dev/api/servers">codespar.dev/api/servers</a></em>
+    <em>Machine-readable catalog: <a href="https://codespar.dev/api/servers">codespar.dev/api/servers</a></em>
   </p>
   <p align="center">
     <a href="https://codespar.dev/servers">Catalog</a> ·
@@ -55,14 +55,26 @@ Each MCP server in this repo wraps a real provider — payments, fiscal, logisti
 
 ## Agentic Payment Protocols
 
-Four servers that bridge the emerging agentic payment stack:
+Four servers for the emerging agentic payment stack:
 
 | Protocol | Server | Tools | What it does |
 |----------|--------|-------|-------------|
-| **[Google UCP](packages/payments/ucp)** | `@codespar/mcp-ucp` | 20 | Universal Commerce Protocol — agentic shopping, cart, checkout, orders, delivery, identity. Google's full commerce stack for AI agents. |
-| **[Stripe ACP](packages/payments/stripe-acp)** | `@codespar/mcp-stripe-acp` | 24 | Agentic Commerce Protocol — AI agent checkout, payment delegation, products, invoices. Live in ChatGPT with 1M+ Shopify merchants. |
-| **[x402](packages/crypto/x402)** | `@codespar/mcp-x402` | 10 | HTTP-native micropayments by Coinbase — when an agent hits a 402, it pays USDC on Base/Solana and retries. Pure HTTP, no checkout UI. |
-| **[AP2](packages/payments/ap2)** | `@codespar/mcp-ap2` <sub>alpha</sub> | 22 | Google's Agent-to-Agent Payment Protocol — authorization, audit trails, scoped spend limits. 60+ partners including Visa, Mastercard, Stripe, PayPal. |
+| **[Google UCP](packages/payments/ucp)** <sub>no live endpoint</sub> | `@codespar/mcp-ucp` | 20 | Universal Commerce Protocol — agentic shopping, cart, checkout, orders, delivery, identity. |
+| **[Stripe ACP](packages/payments/stripe-acp)** | `@codespar/mcp-stripe-acp` | 24 | Agentic Commerce Protocol — AI agent checkout, payment delegation, products, invoices. |
+| **[x402](packages/crypto/x402)** <sub>no live endpoint</sub> | `@codespar/mcp-x402` | 10 | HTTP-native micropayments by Coinbase — when an agent hits a 402, it pays USDC on Base/Solana and retries. Pure HTTP, no checkout UI. |
+| **[AP2](packages/payments/ap2)** <sub>no live endpoint</sub> | `@codespar/mcp-ap2` <sub>alpha</sub> | 22 | Google's Agent-to-Agent Payment Protocol — authorization, audit trails, scoped spend limits. |
+
+> **No live endpoint behind UCP, AP2, and x402.** Checked on 2026-08-27:
+>
+> | Server | `BASE_URL` in source | What that address answered |
+> |---|---|---|
+> | `@codespar/mcp-ucp` | `https://commerce.googleapis.com/ucp/v1` (`packages/payments/ucp/src/index.ts:71-73`) | HTTP 404, Google's generic `Error 404 (Not Found)` HTML page |
+> | `@codespar/mcp-ap2` | `https://ap2.googleapis.com/v1` (`packages/payments/ap2/src/index.ts:62-64`) | HTTP 404, the same generic HTML page |
+> | `@codespar/mcp-x402` | `https://api.x402.org/v1` (`packages/crypto/x402/src/index.ts:40`) | `NXDOMAIN`, the host does not resolve |
+>
+> Every path these servers actually call failed on the same run, which is what the claim above rests on. A generic 404 by itself does not prove a name has no service behind it: `translate.googleapis.com/v1`, a registered service asked for a path it does not serve, answers the same generic page.
+>
+> UCP, AP2, and x402 are published specifications, and these three packages ship tool definitions written for them. We have not checked those definitions against a conforming implementation, and no call made through the three servers currently reaches a service.
 
 ### The Autonomy Spectrum
 
@@ -197,7 +209,7 @@ To orchestrate all six steps with governance, approval workflows, and audit trai
 
 Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers). Each server has its own README, env-var requirements, and tool reference under `packages/<category>/<slug>/`.
 
-### 💳 Payments (42 servers)
+### 💳 Payments (46 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -211,7 +223,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Stripe ACP](packages/payments/stripe-acp)** | 24 | `@codespar/mcp-stripe-acp` | API Key |
 | **[Iugu](packages/payments/iugu)** | 23 | `@codespar/mcp-iugu` | API Key |
 | **[Openpay](packages/payments/openpay)** | 23 | `@codespar/mcp-openpay` | API Key |
-| **[AP2](packages/payments/ap2)** <sub>alpha</sub> | 22 | `@codespar/mcp-ap2` | API Key |
+| **[AP2](packages/payments/ap2)** <sub>alpha</sub> <sub>no live endpoint</sub> | 22 | `@codespar/mcp-ap2` | API Key |
 | **[Braintree](packages/payments/braintree)** | 22 | `@codespar/mcp-braintree` | API Key |
 | **[Braspag](packages/payments/braspag)** | 22 | `@codespar/mcp-braspag` | API Key |
 | **[Cielo](packages/payments/cielo)** | 22 | `@codespar/mcp-cielo` | API Key |
@@ -233,7 +245,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Getnet](packages/payments/getnet)** | 20 | `@codespar/mcp-getnet` | OAuth2 |
 | **[Izipay](packages/payments/izipay)** <sub>alpha</sub> | 20 | `@codespar/mcp-izipay` | API Key |
 | **[Picpay](packages/payments/picpay)** <sub>alpha</sub> | 20 | `@codespar/mcp-picpay` | API Key |
-| **[UCP](packages/payments/ucp)** | 20 | `@codespar/mcp-ucp` | API Key |
+| **[UCP](packages/payments/ucp)** <sub>no live endpoint</sub> | 20 | `@codespar/mcp-ucp` | API Key |
 | **[Vindi](packages/payments/vindi)** | 20 | `@codespar/mcp-vindi` | API Key |
 | **[Paypal](packages/payments/paypal)** | 19 | `@codespar/mcp-paypal` | OAuth2 |
 | **[Transbank](packages/payments/transbank)** <sub>alpha</sub> | 19 | `@codespar/mcp-transbank` | API Key |
@@ -243,8 +255,12 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Efi](packages/payments/efi)** | 18 | `@codespar/mcp-efi` | API Key |
 | **[Pix BCB](packages/payments/pix-bcb)** | 18 | `@codespar/mcp-pix-bcb` | API Key |
 | **[Chargebee](packages/payments/chargebee)** | 15 | `@codespar/mcp-chargebee` | API Key |
+| **[Kushki](packages/payments/kushki)** | 10 | `@codespar/mcp-kushki` | API Key |
+| **[Flow.cl](packages/payments/flow-cl)** | 8 | `@codespar/mcp-flow-cl` | API Key |
+| **[Niubiz](packages/payments/niubiz)** | 4 | `@codespar/mcp-niubiz` | User/Password |
+| **[PagBrasil](packages/payments/pagbrasil)** | 3 | `@codespar/mcp-pagbrasil` | API Key |
 
-### 🏦 Banking (12 servers)
+### 🏦 Banking (16 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -256,10 +272,14 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Matera](packages/banking/matera)** <sub>alpha</sub> | 22 | `@codespar/mcp-matera` | OAuth2 |
 | **[Dock](packages/banking/dock)** <sub>alpha</sub> | 20 | `@codespar/mcp-dock` | OAuth2 |
 | **[Open Finance](packages/banking/open-finance)** | 18 | `@codespar/mcp-open-finance` | API Key |
+| **[Pluggy](packages/banking/pluggy)** | 16 | `@codespar/mcp-pluggy` | API Key |
 | **[C6](packages/banking/c6)** <sub>alpha</sub> | 14 | `@codespar/mcp-c6` | OAuth2 |
 | **[Banco Do Brasil](packages/banking/banco-do-brasil)** <sub>alpha</sub> | 13 | `@codespar/mcp-banco-do-brasil` | OAuth2 |
 | **[Sicoob](packages/banking/sicoob)** <sub>alpha</sub> | 13 | `@codespar/mcp-sicoob` | OAuth2 |
 | **[BTG](packages/banking/btg)** <sub>alpha</sub> | 12 | `@codespar/mcp-btg` | OAuth2 |
+| **[Iniciador](packages/banking/iniciador)** | 9 | `@codespar/mcp-iniciador` | API Key |
+| **[Pomelo](packages/banking/pomelo)** | 9 | `@codespar/mcp-pomelo` | OAuth2 |
+| **[Midaz](packages/banking/midaz)** | 5 | `@codespar/mcp-midaz` | API Key (optional) |
 
 ### 📄 Fiscal (Brasil) (4 servers)
 
@@ -305,7 +325,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Quickbooks](packages/erp/quickbooks)** | 22 | `@codespar/mcp-quickbooks` | API Key |
 | **[Tiny](packages/erp/tiny)** | 21 | `@codespar/mcp-tiny` | API Key |
 
-### 🪪 Identity & KYC (5 servers)
+### 🪪 Identity & KYC (8 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -314,6 +334,9 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Onfido](packages/identity/onfido)** | 20 | `@codespar/mcp-onfido` | API Key |
 | **[Persona](packages/identity/persona)** | 20 | `@codespar/mcp-persona` | API Key |
 | **[Unico](packages/identity/unico)** <sub>alpha</sub> | 18 | `@codespar/mcp-unico` | OAuth2 |
+| **[Certta](packages/identity/certta)** | 11 | `@codespar/mcp-certta` | API Key |
+| **[BigDataCorp](packages/identity/bigdatacorp)** | 10 | `@codespar/mcp-bigdatacorp` | API Key |
+| **[Caf](packages/identity/caf)** | 9 | `@codespar/mcp-caf` | API Key |
 
 ### 🛡️ Fraud & Risk (4 servers)
 
@@ -324,7 +347,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Konduto](packages/fraud/konduto)** <sub>alpha</sub> | 18 | `@codespar/mcp-konduto` | API Key |
 | **[Legiti](packages/fraud/legiti)** <sub>alpha</sub> | 18 | `@codespar/mcp-legiti` | API Key |
 
-### 🪙 Crypto / Stablecoins (9 servers)
+### 🪙 Crypto / Stablecoins (10 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -336,9 +359,10 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Unblockpay](packages/crypto/unblockpay)** | 13 | `@codespar/mcp-unblockpay` | API Key |
 | **[Coinbase Commerce](packages/crypto/coinbase-commerce)** | 18 | `@codespar/mcp-coinbase-commerce` | API Key |
 | **[Transak](packages/crypto/transak)** <sub>alpha</sub> | 18 | `@codespar/mcp-transak` | API Key |
-| **[x402](packages/crypto/x402)** | 10 | `@codespar/mcp-x402` | API Key |
+| **[Coinbase CDP](packages/crypto/coinbase-cdp)** | 15 | `@codespar/mcp-coinbase-cdp` | API Key |
+| **[x402](packages/crypto/x402)** <sub>no live endpoint</sub> | 10 | `@codespar/mcp-x402` | API Key |
 
-### 🇦🇷 Argentina (5 servers)
+### 🇦🇷 Argentina (6 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -347,8 +371,9 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[AFIP](packages/argentina/afip)** <sub>alpha</sub> | 20 | `@codespar/mcp-afip` | API Key |
 | **[Andreani](packages/argentina/andreani)** <sub>alpha</sub> | 18 | `@codespar/mcp-andreani` | API Key |
 | **[BCRA](packages/argentina/bcra)** | 16 | `@codespar/mcp-bcra` | No auth |
+| **[Payway](packages/argentina/payway)** | 6 | `@codespar/mcp-payway` | API Key |
 
-### 🇨🇴 Colombia (5 servers)
+### 🇨🇴 Colombia (8 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -357,8 +382,11 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Alegra](packages/colombia/alegra)** | 20 | `@codespar/mcp-alegra` | API Key |
 | **[Coordinadora](packages/colombia/coordinadora)** <sub>alpha</sub> | 19 | `@codespar/mcp-coordinadora` | API Key |
 | **[Nequi](packages/colombia/nequi)** <sub>alpha</sub> | 16 | `@codespar/mcp-nequi` | OAuth2 |
+| **[Cobre](packages/colombia/cobre)** | 8 | `@codespar/mcp-cobre` | API Key |
+| **[ePayco](packages/colombia/epayco)** | 8 | `@codespar/mcp-epayco` | API Key |
+| **[Bold](packages/colombia/bold-co)** | 7 | `@codespar/mcp-bold-co` | API Key |
 
-### 🇲🇽 Mexico (6 servers)
+### 🇲🇽 Mexico (7 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -368,6 +396,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Bind ERP](packages/mexico/bind-erp)** | 20 | `@codespar/mcp-bind-erp` | API Key |
 | **[Facturapi](packages/mexico/facturapi)** | 20 | `@codespar/mcp-facturapi` | API Key |
 | **[STP/SPEI](packages/mexico/stp-spei)** <sub>alpha</sub> | 18 | `@codespar/mcp-stp-spei` | API Key |
+| **[Clip](packages/mexico/clip)** | 6 | `@codespar/mcp-clip` | API Key |
 
 
 ---

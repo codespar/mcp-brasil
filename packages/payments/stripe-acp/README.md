@@ -9,8 +9,6 @@
 
 The **Agentic Commerce Protocol (ACP)** is an open standard co-developed by Stripe and OpenAI. It enables AI agents to complete purchases on behalf of users — the agent handles the checkout UX, while the seller handles inventory, pricing, and payment processing.
 
-ACP is live in ChatGPT with 1M+ Shopify merchants connected.
-
 This MCP server covers both **ACP protocol operations** (checkout sessions, payment delegation) and **standard Stripe API operations** (customers, products, invoices, subscriptions).
 
 ## Quick Start

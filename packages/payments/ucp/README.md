@@ -5,6 +5,8 @@
 [![npm](https://img.shields.io/npm/v/@codespar/mcp-ucp)](https://www.npmjs.com/package/@codespar/mcp-ucp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+> **No live endpoint.** Checked on 2026-08-27. This server's `BASE_URL` (`src/index.ts:71-73`) is `https://commerce.googleapis.com/ucp/v1`, which answers HTTP 404 with Google's generic `Error 404 (Not Found)` HTML page instead of an API response. With `UCP_SANDBOX=true` the address becomes `https://sandbox.commerce.googleapis.com/ucp/v1`, which fails the TLS handshake, because the certificate served there covers `*.googleapis.com` and not the extra label. UCP is a published specification and this package ships tool definitions written for it; we have not checked them against a conforming implementation, and no call made through this server currently reaches a service.
+
 ## What is UCP?
 
 **Universal Commerce Protocol (UCP)** is Google's open standard for agentic commerce. It enables AI agents to autonomously discover products, build carts, checkout, manage orders, and track deliveries — without screen-scraping or bespoke merchant integrations.
@@ -75,9 +77,9 @@ AI Agent
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `UCP_API_KEY` | Yes | API key for UCP platform |
-| `UCP_MERCHANT_ID` | No | Default merchant ID |
-| `UCP_SANDBOX` | No | Set to `true` for sandbox mode |
+| `UCP_API_KEY` | Yes | Sent as `Authorization: Bearer` |
+| `UCP_MERCHANT_ID` | No | Sent as the `X-Merchant-Id` header |
+| `UCP_SANDBOX` | No | `true` switches `BASE_URL` to `https://sandbox.commerce.googleapis.com/ucp/v1`, which fails TLS |
 
 ## Links
 
@@ -91,11 +93,9 @@ Need governance, budget limits, and audit trails for agent payments? [CodeSpar E
 
 ## Authentication
 
-Set these environment variables before launching the server:
+The server sends `UCP_API_KEY` as an `Authorization: Bearer` header and `UCP_MERCHANT_ID` as an `X-Merchant-Id` header on every request (`src/index.ts:78-83`).
 
-- `UCP_API_KEY` *(required, secret)* — API key for ucp
-
-Issue credentials at the provider's developer portal: <https://developers.google.com/agents/commerce>.
+There is no portal issuing those credentials. The developer portal this README used to link, `developers.google.com/agents/commerce`, answers HTTP 404.
 
 ## License
 

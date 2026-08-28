@@ -33,7 +33,7 @@
     "logoFallback": "https://www.google.com/s2/favicons?domain=x402.org&sz=128",
     "docsUrl": "https://x402.org",
     "sandbox": {
-      "available": true
+      "available": false
     }
   }
 }

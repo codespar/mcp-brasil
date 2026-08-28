@@ -42,9 +42,9 @@
  * - get_profile: Get buyer profile and preferences
  *
  * Environment:
- *   UCP_API_KEY      — API key for UCP platform
- *   UCP_MERCHANT_ID  — Default merchant ID
- *   UCP_SANDBOX      — Set to "true" for sandbox mode
+ *   UCP_API_KEY      — sent as Authorization: Bearer
+ *   UCP_MERCHANT_ID  — sent as the X-Merchant-Id header
+ *   UCP_SANDBOX      — "true" switches BASE_URL to the sandbox host
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -56,6 +56,14 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
+// NO LIVE ENDPOINT (checked 2026-08-27): commerce.googleapis.com answers
+// HTTP 404 with Google's generic "Error 404 (Not Found)" HTML page instead
+// of an API response. sandbox.commerce.googleapis.com fails the TLS
+// handshake, because
+// the certificate served there covers *.googleapis.com and not the extra
+// label. UCP is a published specification; these tool definitions have not
+// been checked against a conforming implementation, and calls made through
+// this server do not reach a service.
 const API_KEY = process.env.UCP_API_KEY || "";
 const MERCHANT_ID = process.env.UCP_MERCHANT_ID || "";
 const SANDBOX = process.env.UCP_SANDBOX === "true";
