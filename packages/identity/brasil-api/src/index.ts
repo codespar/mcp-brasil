@@ -52,10 +52,19 @@ function validationError(msg: string) {
 
 const BASE_URL = "https://brasilapi.com.br/api";
 
+// Every request must identify itself. Node's fetch (undici) supplies
+// "User-Agent: node" when the caller leaves the header out, and BrasilAPI's
+// edge answers 403 Forbidden to that UA on /cnpj, so get_cnpj failed for
+// every user of this server. Measured live on 2026-08-28:
+//   /cnpj/v1/00000000000191 with "node" -> 403; with this string -> 200.
+// Format follows the other servers in this repo (see payments/malga,
+// payments/rinne).
+const USER_AGENT = "codespar-mcp-dev-latam/mcp-brasil-api/0.2.2";
+
 async function brasilApiRequest(path: string): Promise<unknown> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "User-Agent": USER_AGENT },
   });
   if (!res.ok) {
     const err = await res.text();

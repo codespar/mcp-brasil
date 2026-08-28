@@ -122,6 +122,24 @@ Run the Mercado Pago contract test locally:
 
 Never commit `.env` or any token. Use only **sandbox** credentials from the Test credentials section — never Production.
 
+Run the BrasilAPI contract test locally. No credential is needed (the API is
+public), so the gate is only an opt-in to hitting the network:
+
+```bash
+BRASIL_API_CONTRACT=1 npx vitest run packages/identity/brasil-api/src/__tests__/contract.test.ts
+```
+
+It covers a case a mocked test cannot see: BrasilAPI's edge answers `403` to
+the User-Agent Node's `fetch` sends by default, so `get_cnpj` only works while
+the server sets its own User-Agent header.
+
+**A package that adds a contract test must exclude tests from its build.**
+`test-utils/contract.ts` lives outside every package's `rootDir`, so a
+`tsconfig.json` without `"exclude": ["src/__tests__"]` makes `npm run build`
+fail *and* emit a CommonJS `test-utils/contract.js` next to it, which then
+breaks every contract test file in the repo with "Vitest cannot be imported in
+a CommonJS module using require()". Add the `exclude` in the same commit.
+
 ### Why this matters (for maintainers)
 
 Every existing test in this repo mocks the network (`vi.mock` + `global.fetch`).

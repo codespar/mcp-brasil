@@ -241,3 +241,79 @@ describe("mcp-brasil-api", () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Outbound HTTP identity
+//
+// Node's fetch (undici) fills in "User-Agent: node" when the caller does not
+// set one, and BrasilAPI's edge answers 403 to that UA on the CNPJ route, so
+// get_cnpj fails in normal use for everyone running this server. Measured
+// live against brasilapi.com.br on 2026-08-28 (Node v25.5.0):
+//
+//   GET /cnpj/v1/00000000000191  User-Agent: node                  -> 403
+//   GET /cnpj/v1/00000000000191  User-Agent: codespar-mcp-dev-...  -> 200
+//   GET /cep/v1/01001000         User-Agent: node                  -> 200
+//
+// (the CEP route answers 200 either way, which is why only CNPJ surfaced).
+// These tests pin the header on the request this server actually builds; the
+// live half of the evidence is in contract.test.ts, behind BRASIL_API_CONTRACT.
+// ---------------------------------------------------------------------------
+describe("outbound HTTP identity", () => {
+  // What undici puts on the wire when no User-Agent is supplied. This is the
+  // value BrasilAPI rejects, so it is the value the request must not carry.
+  const NODE_DEFAULT_UA = "node";
+
+  function headersOfCall(callIndex: number): Headers {
+    const [, init] = mockFetch.mock.calls[callIndex];
+    return new Headers((init?.headers ?? {}) as HeadersInit);
+  }
+
+  it("sends an identifying User-Agent on get_cnpj", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ cnpj: "00000000000191" }),
+    });
+
+    await callToolHandler({
+      params: { name: "get_cnpj", arguments: { cnpj: "00000000000191" } },
+    });
+
+    const headers = headersOfCall(0);
+
+    // Positive control for this assertion's instrument: a header the server
+    // has always set must be visible here. If this one is null the probe is
+    // broken and the User-Agent assertions below mean nothing.
+    expect(headers.get("content-type")).toBe("application/json");
+
+    const ua = headers.get("user-agent");
+    expect(
+      ua,
+      "no User-Agent on the outgoing request: undici will send 'node' and BrasilAPI answers 403 on /cnpj",
+    ).not.toBeNull();
+    expect(ua).not.toBe(NODE_DEFAULT_UA);
+    expect(ua).toMatch(/mcp-brasil-api\/\d+\.\d+\.\d+/);
+  });
+
+  it("sends it on every route, not only CNPJ", async () => {
+    const routes: Array<[string, Record<string, unknown>]> = [
+      ["get_cep", { cep: "01001000" }],
+      ["get_banks", {}],
+      ["get_holidays", { year: 2026 }],
+    ];
+
+    for (const [name, args] of routes) {
+      mockFetch.mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({}) });
+      await callToolHandler({ params: { name, arguments: args } });
+    }
+
+    expect(mockFetch.mock.calls).toHaveLength(routes.length);
+
+    routes.forEach(([name], i) => {
+      const headers = headersOfCall(i);
+      expect(headers.get("content-type"), `${name}: probe broken`).toBe("application/json");
+      const ua = headers.get("user-agent");
+      expect(ua, `${name} went out without a User-Agent`).not.toBeNull();
+      expect(ua, `${name} went out with the Node default UA`).not.toBe(NODE_DEFAULT_UA);
+    });
+  });
+});
