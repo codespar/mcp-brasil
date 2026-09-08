@@ -118,6 +118,47 @@ describe("mcp-cpfcnpj", () => {
       expect(parsed.ok).toBe(false);
       expect(parsed.provider_status).toBe(0);
       expect(parsed.error).toBe("documento nao encontrado");
+      expect(result.isError).toBe(true);
+    });
+
+    it("fails closed on a non-numeric provider status", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ status: "pending" })),
+      });
+
+      const result = await callToolHandler({
+        params: { name: "companies_lookup", arguments: { cnpj: "27272134000118" } },
+      });
+
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(result.isError).toBe(true);
+    });
+
+    it("fails closed on a non-JSON 2xx body", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve("<html>upstream error</html>"),
+      });
+
+      const result = await callToolHandler({
+        params: { name: "companies_lookup", arguments: { cnpj: "27272134000118" } },
+      });
+
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(result.isError).toBe(true);
+    });
+
+    it("rejects a CNPJ whose check digits are not numeric", async () => {
+      const result = await callToolHandler({
+        params: { name: "companies_lookup", arguments: { cnpj: "272721340001AB" } },
+      });
+      expect(result.isError).toBe(true);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it("rejects a malformed CNPJ before any HTTP call", async () => {
@@ -182,6 +223,7 @@ describe("mcp-cpfcnpj", () => {
       const parsed = JSON.parse(result.content[0].text);
       expect(parsed.ok).toBe(false);
       expect(parsed.error).toContain("CPFCNPJ_TOKEN");
+      expect(result.isError).toBe(true);
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
@@ -199,6 +241,7 @@ describe("mcp-cpfcnpj", () => {
       const parsed = JSON.parse(result.content[0].text);
       expect(parsed.ok).toBe(false);
       expect(parsed.status).toBe(403);
+      expect(result.isError).toBe(true);
     });
 
     it("sends an identifying User-Agent that is not the Node default", async () => {

@@ -1,7 +1,7 @@
 {
   "name": "@codespar/mcp-cpfcnpj",
   "version": "0.1.0",
-  "description": "MCP server for cpfcnpj.com.br — official Brazilian CPF and CNPJ lookups in real time (D+0), no leaked or scraped databases",
+  "description": "MCP server for cpfcnpj.com.br, official Brazilian CPF and CNPJ lookups in real time (D+0), no leaked or scraped databases",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {

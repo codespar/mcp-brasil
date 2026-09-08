@@ -8,7 +8,7 @@ Give an agent a CNPJ and it returns razao social, fantasia, address, IBGE codes 
 
 - **Official data, in real time (D+0).** Results come straight from the government registries, not from a monthly snapshot.
 - **No leaked or scraped databases.** The service does not resell breached dumps or crawled data. Every response traces back to the authoritative registry.
-- **Certified security posture.** The provider operates under an information-security certification program (ISO/IEC <ISO_CERT>), which matters when the lookup feeds a regulated onboarding or lending decision.
+- **Certified security and compliance posture.** The provider runs a certified program covering information security, privacy and compliance (ISO/IEC 27001, ISO/IEC 27701 and ISO 37301), which matters when the lookup feeds a regulated onboarding or lending decision.
 
 ## Quick Start
 

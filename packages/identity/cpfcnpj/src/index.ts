@@ -12,7 +12,8 @@
  *
  * Data source: official government registries queried in real time (D+0).
  * The service does not resell leaked or scraped databases, and it operates
- * under an information-security certification program (ISO/IEC <ISO_CERT>).
+ * under a certified program covering information security, privacy and
+ * compliance (ISO/IEC 27001, ISO/IEC 27701 and ISO 37301).
  *
  * Source endpoint:
  *   GET https://api.cpfcnpj.com.br/{token}/{pacote}/{documento}
@@ -47,7 +48,10 @@ import { z } from "zod";
 const cpfSchema = z.string().regex(/^\d{11}$/, "CPF must be 11 digits");
 const cnpjSchema = z
   .string()
-  .regex(/^[0-9A-Z]{14}$/, "CNPJ must be 14 alphanumeric characters");
+  .regex(
+    /^[0-9A-Z]{12}\d{2}$/,
+    "CNPJ must be 14 characters: 12 alphanumeric plus 2 numeric check digits",
+  );
 
 const CNPJ_PACKAGES = new Set(["5", "6"]);
 const CPF_PACKAGES = new Set(["1", "3"]);
@@ -130,22 +134,34 @@ async function cpfCnpjLookup(
     };
   }
 
-  // The provider reports success or failure in the payload `status` field
-  // (1 success, 0 error), independent of the HTTP status.
-  const providerStatus =
-    body && typeof body === "object" && "status" in body
-      ? Number((body as Record<string, unknown>).status)
-      : undefined;
-
-  if (providerStatus === 0) {
-    const message =
-      body && typeof body === "object" && "message" in body
-        ? String((body as Record<string, unknown>).message)
-        : "The provider returned status 0 for this document.";
+  // A 2xx with a non-JSON body (a proxy or CDN error page, say) is not a
+  // valid lookup. Fail closed instead of forwarding it as a success.
+  if (typeof body !== "object" || body === null) {
     return {
       ok: false,
       status: res.status,
-      provider_status: 0,
+      documento,
+      pacote,
+      error: "The provider returned a non-JSON body on an HTTP success.",
+      data: body,
+    };
+  }
+
+  // The provider reports success or failure in the payload `status` field
+  // (1 success, 0 error), independent of the HTTP status. Anything that is
+  // not exactly numeric 1 (0, a string, a missing field, NaN) is treated as
+  // a failure, so a malformed body never reads as a successful lookup.
+  const providerStatus = Number((body as Record<string, unknown>).status);
+
+  if (providerStatus !== 1) {
+    const message =
+      "message" in body
+        ? String((body as Record<string, unknown>).message)
+        : "The provider did not return status 1 for this document.";
+    return {
+      ok: false,
+      status: res.status,
+      provider_status: Number.isNaN(providerStatus) ? undefined : providerStatus,
       documento,
       pacote,
       error: message,
@@ -156,7 +172,7 @@ async function cpfCnpjLookup(
   return {
     ok: true,
     status: res.status,
-    provider_status: providerStatus,
+    provider_status: 1,
     documento,
     pacote,
     data: body,
@@ -164,8 +180,12 @@ async function cpfCnpjLookup(
 }
 
 function ok(result: CpfCnpjResult) {
+  // Surface a failed lookup through the protocol-level `isError` flag too,
+  // matching the sibling servers and this file's own validation branches, so
+  // a client that branches on `isError` does not read a failure as a success.
   return {
     content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    ...(result.ok ? {} : { isError: true as const }),
   };
 }
 
