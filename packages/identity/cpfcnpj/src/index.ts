@@ -148,10 +148,14 @@ async function cpfCnpjLookup(
   }
 
   // The provider reports success or failure in the payload `status` field
-  // (1 success, 0 error), independent of the HTTP status. Anything that is
-  // not exactly numeric 1 (0, a string, a missing field, NaN) is treated as
-  // a failure, so a malformed body never reads as a successful lookup.
-  const providerStatus = Number((body as Record<string, unknown>).status);
+  // (1 success, 0 error), independent of the HTTP status. Only a real JSON
+  // number 1 counts as success: a string "1", a boolean true, or any other
+  // coercible value is treated as a failure, so a malformed or proxied body
+  // never reads as a successful lookup. Comparing the raw value (not a
+  // Number() coercion, which would map "1"/true/[1] onto 1) keeps this
+  // fail-closed.
+  const rawStatus = (body as Record<string, unknown>).status;
+  const providerStatus = typeof rawStatus === "number" ? rawStatus : NaN;
 
   if (providerStatus !== 1) {
     const message =

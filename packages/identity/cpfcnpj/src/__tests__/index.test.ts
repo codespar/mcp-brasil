@@ -137,6 +137,38 @@ describe("mcp-cpfcnpj", () => {
       expect(result.isError).toBe(true);
     });
 
+    it("fails closed on a string provider status that looks like 1", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ status: "1", razao: "X" })),
+      });
+
+      const result = await callToolHandler({
+        params: { name: "companies_lookup", arguments: { cnpj: "27272134000118" } },
+      });
+
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(result.isError).toBe(true);
+    });
+
+    it("fails closed on a boolean provider status", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: () => Promise.resolve(JSON.stringify({ status: true, razao: "X" })),
+      });
+
+      const result = await callToolHandler({
+        params: { name: "companies_lookup", arguments: { cnpj: "27272134000118" } },
+      });
+
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(result.isError).toBe(true);
+    });
+
     it("fails closed on a non-JSON 2xx body", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
