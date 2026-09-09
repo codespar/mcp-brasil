@@ -1,0 +1,37 @@
+{
+  "name": "@codespar/mcp-cpfcnpj",
+  "version": "0.1.0",
+  "description": "MCP server for cpfcnpj.com.br, official Brazilian CPF and CNPJ lookups in real time (D+0), no leaked or scraped databases",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "mcp-cpfcnpj": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "cpfcnpj",
+    "cpf",
+    "cnpj",
+    "identity",
+    "kyc",
+    "kyb",
+    "brazil"
+  ],
+  "mcpName": "io.github.codespar/mcp-cpfcnpj"
+}

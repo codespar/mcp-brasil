@@ -325,7 +325,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Quickbooks](packages/erp/quickbooks)** | 22 | `@codespar/mcp-quickbooks` | API Key |
 | **[Tiny](packages/erp/tiny)** | 21 | `@codespar/mcp-tiny` | API Key |
 
-### 🪪 Identity & KYC (8 servers)
+### 🪪 Identity & KYC (9 servers)
 
 | Server | Tools | npm | Auth |
 |---|---|---|---|
@@ -337,6 +337,7 @@ Browse the full catalog at [codespar.dev/servers](https://codespar.dev/servers).
 | **[Certta](packages/identity/certta)** | 11 | `@codespar/mcp-certta` | API Key |
 | **[BigDataCorp](packages/identity/bigdatacorp)** | 10 | `@codespar/mcp-bigdatacorp` | API Key |
 | **[Caf](packages/identity/caf)** | 9 | `@codespar/mcp-caf` | API Key |
+| **[CPF/CNPJ](packages/identity/cpfcnpj)** | 2 | `@codespar/mcp-cpfcnpj` | Token |
 
 ### 🛡️ Fraud & Risk (4 servers)
 
